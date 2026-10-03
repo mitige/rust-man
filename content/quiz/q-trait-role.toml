@@ -1,0 +1,8 @@
+id = "q-trait-role"
+category = "types"
+difficulty = 2
+question = "Qu'est-ce qu'un `trait` en Rust, au fond ?"
+choices = ["Une classe de base dont les structs héritent, comme en Java", "Une macro qui génère automatiquement du code pour tes structs", "Un type générique qui remplace `dyn` à la compilation", "Un contrat : un ensemble de méthodes qu'un type s'engage à fournir, utilisable comme borne générique"]
+answer = 3
+explanation = '''Un trait déclare des capacités (« ce type sait s'afficher », « ce type sait se comparer ») sous forme de signatures de méthodes, et n'importe quel type peut l'implémenter. Rust n'a pas d'héritage : le polymorphisme passe par les traits comme bornes (`fn f<T: Display>(x: T)`) ou via `dyn Trait`. Règle générale : un trait dit CE QU'UN TYPE SAIT FAIRE, pas ce qu'il EST. Piège de débutant : chercher à reproduire l'héritage de classes avec des traits — les champs ne se « dérivent » pas, seules les méthodes sont partagées.'''
+related = ["traits", "trait-bounds", "generics"]

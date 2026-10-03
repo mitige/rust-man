@@ -1,0 +1,125 @@
+id = "tests"
+title = "tests — #[test] et cargo test, le filet de sécurité"
+category = "outils"
+tags = ["tests", "cargo-test", "assert", "cfg-test", "tdd"]
+difficulty = 2
+semaine = "S04"
+synopsis = "Un test = une fonction #[test] ; cargo test les découvre et les lance en parallèle."
+description = '''
+## En une phrase
+
+En Rust, un test est une fonction ordinaire marquée **`#[test]`**, rangée dans un `mod tests` à côté du code — `cargo test` découvre tout et exécute en parallèle.
+
+## En pratique
+
+1. Le trio d'assertions : `assert!(cond)`, `assert_eq!(a, b)`, `assert_ne!(a, b)`. Préfère `assert_eq!` à `assert!(a == b)` : en cas d'échec, il affiche la valeur de gauche et de droite — le message fait la moitié du débogage.
+
+2. La convention du test **unitaire**, dans le MÊME fichier que le code :
+
+```rust
+#[cfg(test)]          // compilé UNIQUEMENT par cargo test, jamais dans le binaire
+mod tests {
+    use super::*;     // le test unitaire voit TOUT, même le privé
+
+    #[test]
+    fn additionne() {
+        assert_eq!(add(2, 2), 4);
+    }
+}
+```
+
+C'est la force du modèle : tu testes l'intérieur du module sans rien exposer en `pub`.
+
+3. `#[should_panic]` vérifie qu'un code panique bien :
+
+```rust
+#[test]
+#[should_panic(expected = "zéro")]   // le message doit contenir "zéro"
+fn division_par_zero() {
+    diviser(1.0, 0.0);
+}
+```
+
+4. Les tests **d'intégration** vivent dans le dossier `tests/` à la RACINE du projet (à côté de `src/`). Chaque fichier y est un crate séparé qui utilise ta bibliothèque par son nom, comme un vrai utilisateur : il ne voit que le `pub`.
+
+```
+mon_projet/
+├── src/lib.rs     ← tests unitaires dedans (mod tests, accès privé)
+└── tests/
+    └── api.rs     ← tests d'intégration : use mon_projet::...;  (pub only)
+```
+
+5. Piloter `cargo test` :
+
+- `cargo test additionne` : ne lance que les tests dont le nom contient « additionne » (filtre par sous-chaîne).
+- `cargo test -- --nocapture` : affiche tes `println!` (capturés et cachés sinon, sauf échec).
+- `cargo test -- --test-threads=1` : exécution séquentielle si tes tests partagent une ressource.
+
+6. Esprit TDD : écris le test qui échoue, code jusqu'au vert, refactorise. `cargo test` relance toute la suite en une seconde — la boucle est faite pour ça, exploite-la.
+
+## À retenir
+
+- Un test = une `fn` + `#[test]` ; `#[cfg(test)] mod tests` n'existe que sous `cargo test`.
+- Tests unitaires (même fichier) : accès au privé. Tests d'intégration (dossier `tests/`) : vue utilisateur, `pub` uniquement.
+- `assert_eq!` > `assert!(a == b)` pour la qualité du message d'échec.
+- `#[should_panic(expected = "...")]` teste les panics, avec filtre sur le message.
+- `cargo test <filtre>` pour viser un test, `-- --nocapture` pour voir les `println!`.
+'''
+example = '''
+// Fichier unique : code + tests unitaires. Vérifie-le avec :
+//   rustc --test tests.rs && ./tests        (harnais de test)
+//   cargo test                              (dans un vrai projet)
+
+fn diviser(a: f64, b: f64) -> f64 {
+    if b == 0.0 {
+        panic!("division par zéro");
+    }
+    a / b
+}
+
+fn est_paire(n: i32) -> bool {
+    n % 2 == 0
+}
+
+fn main() {
+    println!("10 / 4 = {}", diviser(10.0, 4.0));
+    println!("4 est paire : {}", est_paire(4));
+    println!("Lance `cargo test` pour exécuter les tests ci-dessous.");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*; // les tests unitaires voient le privé
+
+    #[test]
+    fn division_classique() {
+        assert_eq!(diviser(10.0, 4.0), 2.5);
+    }
+
+    #[test]
+    fn parite() {
+        assert!(est_paire(4));
+        assert_ne!(est_paire(3), true);
+    }
+
+    #[test]
+    #[should_panic(expected = "zéro")]
+    fn division_par_zero_panique() {
+        diviser(1.0, 0.0);
+    }
+}
+'''
+gotchas = [
+    "Oublier `#[cfg(test)]` : tes tests partent dans le binaire et alourdissent chaque compilation.",
+    "Compter sur l'ordre des tests : ils tournent en parallèle, dans un ordre non garanti — chaque test doit être indépendant.",
+    "Chercher tes `println!` dans la sortie : cargo les capture — utilise `cargo test -- --nocapture`.",
+    "Un `assert_eq!` entre flottants calculés mord sur l'égalité exacte : compare avec une marge (`(a - b).abs() < 1e-9`).",
+    "Un `#[should_panic]` sans `expected` passe même si c'est une AUTRE panic que celle que tu visais.",
+    "Mettre des tests d'intégration dans `src/` : le dossier `tests/` à la racine n'a accès qu'au `pub`, c'est précisément son intérêt.",
+]
+exercises = [
+    "Écris `fn palindrome(s: &str) -> bool` en TDD : d'abord trois tests (vrai, faux, avec casse et espaces), puis le code jusqu'au vert.",
+    "Ajoute un test `#[should_panic(expected = \"vide\")]` sur une fonction qui refuse une entrée vide, et vérifie qu'il échoue si tu changes le message.",
+    "Déplace un test unitaire vers `tests/api.rs` et constate que la fonction privée n'est plus accessible.",
+]
+related = ["cargo-bases", "debugging", "panic", "rustdoc"]

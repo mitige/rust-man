@@ -1,0 +1,84 @@
+id = "conseils-cours"
+title = "conseils-cours — articuler rust-man avec tes cours"
+category = "pratique"
+tags = ["methode", "cours", "revision", "flashcards", "partiel"]
+difficulty = 1
+semaine = "S01"
+synopsis = "Avant : survole la fiche. Pendant : note les questions. Après : refais les exemples à la main."
+description = '''
+## En une phrase
+
+rust-man ne remplace ni ton cours ni ta pratique : c'est un **compagnon de révision** qui s'utilise avant, pendant et après chaque cours, en petites doses régulières.
+
+## En pratique
+
+1. **Avant le cours (10 min)** : survole la fiche du sujet du jour. Pas besoin de tout comprendre — le but est d'arriver avec des crochets mentaux où accrocher les explications du prof.
+
+2. **Pendant le cours** : note les QUESTIONS, pas le code. « Pourquoi `&self` et pas `self` ici ? » vaut plus que recopier un slide. Le soir, cherche les réponses dans rust-man.
+
+3. **Après le cours (30 min)** : refais les exemples À LA MAIN, sans regarder le corrigé. Lis la fiche, ferme-la, code, compile, compare. La différence entre relire et refaire, c'est la différence entre RECONNAÎTRE et SAVOIR.
+
+4. **Le soir même** : fais le quiz de la fiche. Un quiz raté n'est pas un échec, c'est un pointeur précis vers la section à relire demain.
+
+5. **Préparer un partiel** : transforme les sections « À retenir » en flashcards (question au recto, réponse au verso), révise en répétition espacée (J+1, J+3, J+7), et fais un exam blanc : un exercice de cours refait de zéro, chronométré, sans aide.
+
+6. **L'IA, bonne et mauvaise élève** : utilise-la pour VÉRIFIER ta compréhension — « voici ce que je crois avoir compris du move : … corrige-moi » — jamais pour coder à ta place. Un TP réussi par l'IA, c'est un partiel raté par toi : c'est elle qui s'est entraînée.
+
+## À retenir
+
+- Avant : survoler pour préparer les crochets. Pendant : noter les questions. Après : refaire à la main.
+- Refaire sans le corrigé bat relire le corrigé : la pratique active gagne toujours.
+- Un quiz raté est une information, pas un jugement.
+- Partiel = flashcards des « À retenir » + répétition espacée + exam blanc chronométré.
+- L'IA vérifie ta compréhension ; si elle code à ta place, c'est elle qui apprend Rust.
+'''
+example = '''
+// Un mini-système de flashcards dans le terminal :
+// l'outil de révision dont parle la fiche, en une trentaine de lignes.
+
+fn main() {
+    // (question, réponse attendue) — alimente-le avec TES fiches de cours
+    let cartes = [
+        ("Que signifie « move » en Rust ?", "transfert de possession"),
+        ("Différence entre String et &str ?", "possédée vs empruntée"),
+        ("Que retourne v.first() sur un Vec ?", "Option"),
+    ];
+
+    // En vrai tu lirais stdin ; ici on simule tes réponses du jour
+    let mes_reponses = ["transfert de possession", "je sais plus", "Option"];
+
+    let mut score = 0;
+    for (i, ((question, attendu), reponse)) in
+        cartes.iter().zip(mes_reponses.iter()).enumerate()
+    {
+        println!("Carte {} — {question}", i + 1);
+        println!("  toi : {reponse}");
+        if reponse == attendu {
+            score += 1;
+        } else {
+            println!("  attendu : {attendu}   <- carte à refaire demain");
+        }
+    }
+
+    let total = cartes.len();
+    println!("Score : {score}/{total}");
+    if score < total {
+        println!("Conseil : exam blanc sur les cartes ratées (J+1, J+3, J+7).");
+    } else {
+        println!("Parfait : prochaine séance demain — répétition espacée.");
+    }
+}
+'''
+gotchas = [
+    "Découvrir les fiches la veille du partiel : la régularité bat le bachotage, toujours.",
+    "Regarder la solution « pour gagner du temps » : le temps gagné aujourd'hui est un point perdu au partiel.",
+    "Enchaîner les quiz sans refaire les exemples : savoir reconnaître n'est pas savoir produire.",
+    "Faire générer tes TP par une IA : elle s'entraîne à ta place — utilise-la pour expliquer TES erreurs, pas pour écrire SON code.",
+    "Sauter les fiches des semaines précédentes : Rust est cumulatif, l'ownership revient dans chaque chapitre.",
+]
+exercises = [
+    "Fabrique cinq flashcards à partir des « À retenir » de la semaine et teste-toi demain, puis dans trois jours.",
+    "Refais l'exemple principal du dernier cours de mémoire, puis compare ligne par ligne avec l'original.",
+    "Explique à l'IA ce que tu as compris du borrow checker et demande-lui de corriger UNIQUEMENT tes imprécisions.",
+]
+related = ["bienvenue", "roadmap", "methode-apprentissage", "lire-la-doc", "premier-programme"]

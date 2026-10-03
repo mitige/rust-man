@@ -1,0 +1,15 @@
+id = "q-rustc-vs-cargo"
+category = "demarrer"
+difficulty = 1
+question = "Quelle est la différence entre `rustc` et `cargo` ?"
+choices = [
+    "`rustc` est le compilateur ; `cargo` est l’outil de gestion de projet qui l’invoque pour toi",
+    "`cargo` compile le code ; `rustc` ne sert qu’à formater les sources",
+    "Les deux font exactement la même chose, `cargo` est juste un alias plus moderne",
+    "`rustc` gère les dépendances externes ; `cargo` se contente d’exécuter le binaire final",
+]
+answer = 0
+explanation = '''
+`rustc` est le compilateur : il prend un fichier .rs et produit un binaire. `cargo` est la couche au-dessus : il gère le projet (Cargo.toml, dépendances, profils de compilation) et appelle `rustc` avec les bons arguments. On peut compiler un fichier seul avec `rustc hello.rs`, mais dès qu’il y a des dépendances, cargo devient indispensable. Le piège : croire que cargo remplace rustc — non, il l’orchestre.
+'''
+related = ["cargo-bases", "premier-programme"]

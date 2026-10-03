@@ -1,0 +1,97 @@
+id = "idiomes-rust"
+title = "idiomes-rust — écrire rustacean"
+category = "pratique"
+tags = ["idiomes", "style", "iterateurs", "option", "conventions"]
+difficulty = 3
+semaine = "S05"
+synopsis = "Itérateurs, Option/Result, new(), &str en paramètre, types qui interdisent les mauvais états : le style rustacean."
+description = '''
+## En une phrase
+
+Écrire rustacean, c'est **laisser le système de types travailler à ta place** : itérateurs plutôt qu'indices, `Option`/`Result` plutôt que sentinelles, et des types où les mauvais états sont non représentables.
+
+## En pratique
+
+1. **Itérateurs, pas indices** : `for x in &v` ou `v.iter().map(...)` — pas de `for i in 0..v.len()`. Plus lisible, zéro risque de dépassement, souvent aussi rapide (voire plus : pas de bounds-check par accès).
+
+2. **Option/Result, pas de sentinelles** : fini le `-1` ou la chaîne vide pour dire « absent ». `Option<T>` rend l'absence explicite, et le compilateur t'OBLIGE à la gérer — une sentinelle, elle, passe en silence jusqu'au bug.
+
+3. **new() conventionnel** : le constructeur d'une struct s'appelle `new`, prend les champs essentiels, retourne `Self`. Les variantes portent des noms parlants : `with_capacity`, `from_parts`…
+
+4. **&str en paramètre, jamais &String** : `fn f(s: &str)` accepte une `String` (via Deref), un littéral, une slice. `&String` n'accepte que les `String` — moins général, et clippy te sermonne (ptr_arg).
+
+5. **Mauvais états non représentables** : au lieu d'un `statut: String` qui peut valoir « nimp », un enum ; au lieu de deux booléens contradictoires (`actif` + `archive` : que vaut `true/true` ?), un enum à trois états. Si l'état invalide ne compile pas, il ne buggue pas.
+
+6. **Privé par défaut** : tout est privé sauf `pub` explicite. Expose le minimum : l'appelant passe par tes méthodes, tes invariants restent protégés à l'intérieur.
+
+7. **Les petits gestes** : `unwrap_or_default()` plutôt qu'un match verbeux, `format!` plutôt qu'une concaténation à la main, `impl Display` plutôt qu'une méthode `to_string()` maison.
+
+## À retenir
+
+- Un indice est un accident d'implémentation : pense en itérateurs.
+- Une sentinelle (`-1`, `""`) est un mensonge invisible pour le type ; `Option` dit la vérité.
+- `new()` pour construire, `&str` pour lire, `String` pour posséder, `&mut` pour modifier.
+- Si un état est invalide, rends-le non représentable : le compilateur devient ton testeur.
+- Privé par défaut, `pub` au compte-goutte : ton API est ce que tu exposes, rien de plus.
+'''
+example = '''
+// Les idiomes rustacean appliqués à une mini gestion de tâches.
+
+// Mauvais états non représentables : un enum, pas une chaîne « priorité »
+enum Priorite {
+    Basse,
+    Haute,
+}
+
+struct Tache {
+    titre: String, // privé par défaut : on passe par les méthodes
+    priorite: Priorite,
+}
+
+impl Tache {
+    // Convention : le constructeur s'appelle new() et retourne Self
+    fn new(titre: &str, priorite: Priorite) -> Self {
+        Tache { titre: titre.to_string(), priorite }
+    }
+}
+
+// &str en paramètre (jamais &String) : accepte String, littéraux, slices…
+fn affiche(titre: &str) -> String {
+    format!(">> {titre}") // format! plutôt que la concaténation à la main
+}
+
+fn main() {
+    let taches = vec![
+        Tache::new("réviser le match", Priorite::Haute),
+        Tache::new("faire les quiz rust-man", Priorite::Basse),
+    ];
+
+    // Option plutôt qu'une sentinelle (« » ou -1) pour dire « absent »
+    let premiere: Option<&Tache> = taches.first();
+
+    // unwrap_or_default : un défaut propre, pas de unwrap()
+    let titre = premiere.map(|t| t.titre.clone()).unwrap_or_default();
+    println!("{}", affiche(&titre));
+
+    // Itérateurs plutôt que les indices : lisible, sans risque de dépassement
+    let nb_hautes = taches
+        .iter()
+        .filter(|t| matches!(t.priorite, Priorite::Haute))
+        .count();
+    println!("{nb_hautes} tâche(s) haute priorité sur {}", taches.len());
+}
+'''
+gotchas = [
+    "Écrire `fn f(s: &String)` : ça compile mais c'est strictement moins général que `&str` — clippy râle (ptr_arg).",
+    "Garder un `unwrap()` « parce que c'est sûr » : `unwrap_or_default()` ou `?` expriment mieux l'intention et survivent aux changements.",
+    "Mettre tout en `pub` pour « aller plus vite » : tu renonces à faire respecter tes invariants par le compilateur.",
+    "Chaîner des `push_str` pour construire une phrase : `format!` est plus lisible et tout aussi efficace.",
+    "Encoder un état avec deux booléens (`actif`, `archive`) : si `true/true` ne veut rien dire, un enum tranche définitivement.",
+    "Oublier `#[derive(Debug)]` sur tes types publics : ni toi ni tes utilisateurs ne pourrez les afficher pour déboguer.",
+]
+exercises = [
+    "Reprends un TP et remplace toutes les boucles à indices par des itérateurs ; fais passer clippy et corrige ce qu'il signale.",
+    "Trouve dans ton code un couple de booléens ou une chaîne-sentinelle, et remplace-le par un enum qui interdit les états absurdes.",
+    "Passe une struct en champs privés + `new()` + méthodes, et observe comment le code appelant se clarifie.",
+]
+related = ["iterateurs", "option", "string-vs-str", "clippy", "structs"]

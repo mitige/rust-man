@@ -1,0 +1,100 @@
+id = "operateur-question"
+title = "? — propage l’erreur en un caractère"
+category = "erreurs"
+tags = ["operateur-question", "propagation", "from", "result", "option"]
+difficulty = 3
+semaine = "S04"
+synopsis = "let x = f()?;  // Ok → x reçoit la valeur, Err → return Err(...) immédiat"
+description = '''
+## En une phrase
+
+`?` placé après un `Result` (ou une `Option`) **déplie le Ok ou propage le Err immédiatement** : un seul caractère qui remplace tout un match.
+
+## En pratique
+
+1. `expr?` est un raccourci pour « sors la valeur, ou retourne l’erreur à l’appelant » :
+
+```rust
+// sans ? :
+let f = match File::open("a.txt") { Ok(f) => f, Err(e) => return Err(e) };
+// avec ? :
+let f = File::open("a.txt")?;
+```
+
+```
+let v = peut_echouer()?;
+          │ Ok(x)  → v = x, on continue
+          └ Err(e) → return Err(e.into())   // l’appelant décidera
+```
+
+2. Conversion automatique via `From` : si ta fonction déclare `Result<_, MonErreur>` et que l’appel produit `Err(io::Error)`, `?` applique `From<io::Error>` pour convertir. Sans l’impl `From`, ça ne compile pas — voir la fiche erreurs-custom.
+3. `?` marche aussi avec `Option` : `x?` sur `None` fait `return None`. Parfait pour chaîner des étapes qui peuvent toutes échouer.
+
+```rust
+fn racine_carree_texte(s: &str) -> Option<f64> {
+    let n: f64 = s.trim().parse().ok()?;
+    Some(n.sqrt())
+}
+```
+
+4. Où c’est autorisé : UNIQUEMENT dans une fonction dont le type de retour est compatible — `Result` pour un `?` sur Result, `Option` pour un `?` sur Option. Dans une `fn` qui renvoie `i32`, ça ne compile pas.
+5. `main` peut renvoyer un Result : `fn main() -> Result<(), Box<dyn std::error::Error>>`. En cas d’`Err`, son `Debug` s’affiche et le processus quitte avec le code 1 — idéal pour les petits outils.
+6. Pas de mélange : `?` sur un Result dans une fonction Option (ou l’inverse) ne compile pas. Convertis d’abord avec `ok()` / `ok_or()`.
+
+## À retenir
+
+- `?` = « donne-moi la valeur, sinon remonte l’erreur à l’appelant ».
+- L’erreur propagée est convertie via `From` si les types diffèrent — c’est ce qui rend les enums d’erreurs custom si puissants.
+- Fonctionne avec `Result` ET avec `Option`, mais jamais de mélange entre les deux.
+- Interdit hors d’une fonction au retour compatible ; `main() -> Result<(), E>` est ta porte de sortie.
+- Chaque `?` est une sortie de secours : le code placé après ne tourne pas si l’étape échoue.
+'''
+example = '''
+use std::error::Error;
+
+fn somme_deux_nombres(a: &str, b: &str) -> Result<i32, std::num::ParseIntError> {
+    let x: i32 = a.parse()?;   // Err -> on sort de la fonction immédiatement
+    let y: i32 = b.parse()?;   // pareil : pas de match, pas de bruit
+    Ok(x + y)
+}
+
+// ? fonctionne aussi avec Option : None court-circuite en None
+fn premier_chiffre_carre(s: &str) -> Option<u32> {
+    let c = s.chars().find(|c| c.is_ascii_digit())?;
+    let d = c.to_digit(10)?;
+    Some(d * d)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    // L’équivalent « match long » d’un seul ? :
+    let x: i32 = match "10".parse() {
+        Ok(v) => v,
+        Err(e) => return Err(Box::new(e)),
+    };
+    println!("match long : {x}");
+
+    // Le ? convertit ParseIntError en Box<dyn Error> tout seul
+    let s = somme_deux_nombres("10", "32")?;
+    println!("somme : {s}");
+
+    if let Err(e) = somme_deux_nombres("10", "oops") {
+        println!("erreur propagée : {e}");
+    }
+
+    println!("carré : {:?}", premier_chiffre_carre("a3b"));
+    Ok(())
+}
+'''
+gotchas = [
+    "`?` ne compile que si le retour de la fonction est compatible : `?` sur un Result exige un retour Result, pas `i32`.",
+    "Mélanger les mondes : `?` sur une Option dans une fonction Result (ou l’inverse) ne compile pas — convertis avec `ok()` ou `ok_or()` d’abord.",
+    "Si l’erreur produite et l’erreur déclarée diffèrent sans `impl From`, le `?` échoue à compiler : `map_err` en solution de secours.",
+    "`main() -> Result<(), Box<dyn Error>>` est légal : un Err affiche son Debug et quitte avec le code 1.",
+    "Chaque `?` est une sortie anticipée : tout code placé après ne s’exécute pas si l’étape échoue — vérifie tes nettoyages.",
+]
+exercises = [
+    "Réécris `somme_deux_nombres` avec deux `match` explicites à la place des `?`, et compare la lisibilité.",
+    "Écris `fn lire_config(chemin: &str) -> Result<u32, Box<dyn Error>>` qui lit un fichier avec `fs::read_to_string` puis parse son contenu, avec deux `?`.",
+    "Dans une fonction `-> Option<usize>`, utilise `?` pour renvoyer la longueur du premier mot d’une phrase, seulement s’il commence par une majuscule.",
+]
+related = ["result", "option", "erreurs-custom", "unwrap-expect", "conversions"]

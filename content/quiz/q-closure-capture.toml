@@ -1,0 +1,8 @@
+id = "q-closure-capture"
+category = "types"
+difficulty = 3
+question = "Quel mode de capture cette closure utilise-t-elle ?\n\n```rust\nlet nom = String::from(\"Ana\");\nlet affiche = || println!(\"{nom}\");\naffiche();\nprintln!(\"{nom}\");\n```"
+choices = ["Elle prend possession de `nom` (move), donc le dernier `println!` ne compile pas", "Elle capture `nom` par emprunt immuable `&nom`, donc `nom` reste utilisable après", "Elle copie `nom` dans la closure", "Elle capture une référence mutable `&mut nom`"]
+answer = 1
+explanation = '''Sans le mot-clé `move`, une closure capture chaque variable de la façon la moins restrictive possible : ici `println!` ne fait que lire `nom`, donc un emprunt immuable `&String` suffit. `nom` garde sa propriété et le dernier `println!` compile et affiche bien « Ana ». Règle générale : le compilateur choisit `&`, `&mut` ou possession selon ce que le corps de la closure exige réellement. Piège : croire que toute closure vole ses variables — ce n'est le cas qu'avec `move` ou si le corps l'exige.'''
+related = ["closures", "emprunts", "ownership"]

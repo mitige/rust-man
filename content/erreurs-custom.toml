@@ -1,0 +1,116 @@
+id = "erreurs-custom"
+title = "erreurs custom — ton propre enum d’erreurs"
+category = "erreurs"
+tags = ["error", "enum", "from", "display", "thiserror", "anyhow"]
+difficulty = 4
+semaine = "S06"
+synopsis = "enum MonErreur { Io(io::Error), Parse(ParseIntError) } + Display + Error + From = le ? devient magique."
+description = '''
+## En une phrase
+
+Une erreur custom est un **enum dont chaque variante est une cause d’échec**, décoré de `Display`, `std::error::Error` et des impls `From` qui font marcher `?`.
+
+## En pratique
+
+1. L’enum liste les échecs possibles ; les variantes transportent les erreurs des dépendances :
+
+```rust
+#[derive(Debug)]
+enum MonErreur {
+    Io(std::io::Error),
+    Parse(std::num::ParseIntError),
+    Metier(String),
+}
+```
+
+2. `Display` (écrit à la main) = message pour l’utilisateur ; `Debug` (dérivé) = pour toi. Le trait `Error` exige les deux.
+3. `impl std::error::Error` : les méthodes par défaut suffisent souvent ; surcharge `source()` pour relier la cause racine et permettre de remonter toute la chaîne :
+
+```rust
+fn source(&self) -> Option<&(dyn Error + 'static)> {
+    match self {
+        MonErreur::Io(e) | MonErreur::Parse(e) => Some(e),
+        _ => None,
+    }
+}
+```
+
+4. `From<E>` : sans lui, `?` sur une erreur de type `E` ne compile pas. Une impl par dépendance et tout devient fluide :
+
+```rust
+impl From<std::io::Error> for MonErreur {
+    fn from(e: std::io::Error) -> Self { MonErreur::Io(e) }
+}
+```
+
+5. Les crates qui écrivent le boilerplate pour toi : **thiserror** dérive `Display`, `Error` et `From` via `#[derive(Error)]` et `#[error("...")]` — le standard pour les bibliothèques ; **anyhow** fond tout dans un `anyhow::Result<T>` unique, avec `.context("...")` pour ajouter du contexte — le standard pour les applications. (Toutes deux via cargo, pas rustc seul.)
+6. Cas simple : `Box<dyn Error>` comme type d’erreur unique. Parfait dans `main` ou un prototype ; pauvre en API de bibliothèque, car les appelants ne peuvent plus matcher sur les variantes.
+
+## À retenir
+
+- Enum d’erreurs + `Display` + `Error` + `From` = le quatuor qui rend `?` magique.
+- `Debug` pour le développeur, `Display` pour l’utilisateur, `source()` pour la chaîne des causes.
+- Bibliothèque → ses propres types d’erreur (thiserror) ; application → agrégation (anyhow).
+- `Box<dyn Error>` : rapide pour prototyper, pauvre pour les appelants.
+- Sans `From`, `?` ne convertit rien : `map_err(MonErreur::Io)` en solution de secours.
+'''
+example = '''
+use std::{error::Error, fmt, num::ParseIntError};
+
+// 1. Une variante par source d’échec possible
+#[derive(Debug)]
+enum NoteError {
+    Vide,
+    Parse(ParseIntError),
+    HorsLimites(i32),
+}
+
+// 2. Display : le message destiné à l’utilisateur
+impl fmt::Display for NoteError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            NoteError::Vide => write!(f, "aucune note fournie"),
+            NoteError::Parse(e) => write!(f, "note illisible : {e}"),
+            NoteError::HorsLimites(n) => write!(f, "note {n} hors de 0..=20"),
+        }
+    }
+}
+
+// 3. Error : les méthodes par défaut suffisent ici
+impl Error for NoteError {}
+
+// 4. From : rend ? capable de convertir ParseIntError tout seul
+impl From<ParseIntError> for NoteError {
+    fn from(e: ParseIntError) -> Self { NoteError::Parse(e) }
+}
+
+fn lire_note(saisie: &str) -> Result<u8, NoteError> {
+    if saisie.trim().is_empty() { return Err(NoteError::Vide); }
+    let n: i32 = saisie.trim().parse()?;   // conversion automatique via From
+    if !(0..=20).contains(&n) { return Err(NoteError::HorsLimites(n)); }
+    Ok(n as u8)
+}
+
+fn main() {
+    for saisie in ["", "abc", "42", "17"] {
+        match lire_note(saisie) {
+            Ok(n) => println!("{saisie:?} -> note {n}/20"),
+            Err(e) => println!("{saisie:?} -> erreur : {e}"),
+        }
+    }
+}
+'''
+gotchas = [
+    "Sans `impl From<ParseIntError> for MonErreur`, le `?` ne compile pas : la conversion n’est jamais magique, elle est implémentée.",
+    "`Debug` se dérive, `Display` s’écrit à la main : confondre les deux donne des messages illisibles pour l’utilisateur.",
+    "`Box<dyn Error>` est confortable dans main mais pauvre en API : les appelants ne peuvent plus matcher sur les variantes.",
+    "Oublier `source()` casse la chaîne des causes : un bon diagnostic remonte jusqu’à l’erreur d’origine.",
+    "thiserror et anyhow ne s’installent que via cargo (pas rustc seul) : thiserror pour les bibliothèques, anyhow pour les applications.",
+    "Un enum d’erreurs qui grandit trop est un signal : découpe par module plutôt qu’un MegaErreur fourre-tout.",
+]
+exercises = [
+    "Ajoute une variante `Io(std::io::Error)` et son `From` à l’exemple, puis lis les notes depuis un fichier texte.",
+    "Dans un projet cargo, réécris l’enum avec `thiserror` et compare le nombre de lignes de boilerplate économisées.",
+    "Provoque une erreur Parse et affiche toute la chaîne des causes en bouclant sur `source()`.",
+]
+related = ["result", "operateur-question", "enums", "traits", "crates-io"]

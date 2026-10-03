@@ -1,0 +1,8 @@
+id = "q-option-null"
+category = "erreurs"
+difficulty = 2
+question = "En Rust, pourquoi le type `Option<T>` remplace-t-il le `null` des autres langages ?"
+choices = ["Parce que `null` est réservé pour les pointeurs bruts en Rust", "Parce que `Option` est plus rapide à l'exécution qu'un pointeur nul", "Parce qu'on ne peut pas utiliser un `Option` sans gérer explicitement le cas `None` : le compilateur l'exige", "Par simple convention de style, `null` existe aussi en Rust"]
+answer = 2
+explanation = '''En Rust, une référence ne peut jamais être nulle : l'absence de valeur se modélise avec l'enum `Option<T>` (`Some(v)` ou `None`). Comme `Option<T>` n'est pas du même type que `T`, tu ne peux pas utiliser la valeur sans l'extraire — donc le compilateur t'oblige à traiter le cas `None`. C'est ce qui élimine toute une classe de bugs (le fameux « billion dollar mistake » de Tony Hoare). Piège : croire qu'on peut comparer directement un `Option<i32>` à un `i32` sans `match` ou `if let`.'''
+related = ["option", "enums", "match"]

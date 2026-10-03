@@ -1,0 +1,15 @@
+id = "q-dbg-macro"
+category = "outils"
+difficulty = 2
+question = "Que fait exactement `let x = dbg!(calcule());` ?"
+choices = [
+    "Affiche la valeur puis la consomme : `x` récupère `()` et le résultat est perdu",
+    "Affiche la valeur sur stdout, exactement comme `println!`",
+    "Ne fait rien en build `--release` : la macro y est retirée automatiquement",
+    "Affiche fichier, ligne, expression et valeur sur stderr, puis REND la valeur qui est stockée dans `x`",
+]
+answer = 3
+explanation = '''
+`dbg!` prend la valeur par possession, affiche sur stderr sa position (fichier:ligne), l’expression écrite et sa valeur formatée avec `Debug`, puis rend la valeur — tu peux donc l’insérer au milieu d’une expression, comme dans `dbg!(x) + 1`. C’est ce qui la distingue de `println!`, qui emprunte ses arguments et écrit sur stdout. Règle générale : `dbg!` pour inspecter au vol pendant le debug, `println!` pour la vraie sortie du programme. Piège : `dbg!` n’est PAS retirée en release — pense à nettoyer tes `dbg!` avant de livrer.
+'''
+related = ["debugging", "methodologie-debug"]

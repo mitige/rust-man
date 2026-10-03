@@ -1,0 +1,109 @@
+id = "iter-avance"
+title = "iter-avance — la boîte à pipelines"
+category = "collections"
+tags = ["iterateurs", "fold", "zip", "flatten", "partition", "collect"]
+difficulty = 4
+semaine = "S06"
+synopsis = '''v.iter().enumerate().filter(...).map(...).collect::<Vec<_>>() // tout au collect'''
+description = '''
+## En une phrase
+
+Au-delà de `map`/`filter`, les itérateurs forment un **langage de pipelines** : tu chaînes des transformations paresseuses, et le consommateur final (`collect`, `sum`, `fold`…) déclenche tout.
+
+## En pratique
+
+1. `enumerate()` : `(index, élément)` — le `for i in 0..len` sans le risque de débordement.
+2. `zip(autre)` : avance deux itérateurs en parallèle et **s'arrête au plus court**. `chain(autre)` : les met bout à bout.
+3. `flatten()` : itérateur d'itérateurs → séquence à plat. `flat_map(f)` = `map(f)` puis `flatten`, en un seul passage.
+4. `take_while(p)` / `skip_while(p)` : prends (ou saute) **tant que** `p` est vraie — contrairement à `filter`, ça s'arrête (ou démarre) définitivement au premier échec.
+5. `scan(etat, f)` (mention) : comme `fold`, mais émet chaque étape intermédiaire — pratique pour des sommes cumulées.
+6. `fold(init, |acc, x| ...)` : plie tout en une seule valeur. Il n'y a **pas de `reduce` dans la std** (il vit dans la crate itertools) ; pour « premier élément comme initiale », fais `iter.next()` puis `fold`, ou un pattern avec Option.
+7. `partition(p)` : scinde en **deux collections** d'un coup (ceux qui passent, ceux qui échouent) :
+
+```rust
+let (pairs, impairs): (Vec<_>, Vec<_>) =
+    (1..10).partition(|n| n % 2 == 0);
+```
+
+8. `find(p)` → `Option<&T>` (l'**élément**), `position(p)` → `Option<usize>` (l'**index**). Retiens : find trouve la valeur, position trouve la place.
+9. Agrégats : `count()`, `sum()`, `max_by(|a, b| a.cmp(b))`, `min_by_key(|x| x.len())` — les trois derniers renvoient des `Option` (itérateur vide possible).
+10. Le pipeline type, paresseux jusqu'au bout :
+
+```rust
+let v: Vec<_> = data.iter()
+    .filter(|x| x.is_valid())
+    .map(|x| x.normalise())
+    .take(3)
+    .collect(); // c'est ICI que tout s'exécute
+```
+
+## À retenir
+
+- `enumerate` = avec l'index ; `zip` = en parallèle ; `chain` = bout à bout.
+- `flat_map` = map + flatten en un passage.
+- `take_while` n'est pas `filter` : il coupe au premier faux, définitivement.
+- `fold(init, f)` plie tout ; `reduce` n'existe pas dans la std.
+- `partition` donne deux collections ; `find` donne l'élément, `position` l'index.
+- Rien ne s'exécute sans consommateur final : `collect`, `sum`, `count`, `for`…
+'''
+example = '''
+fn main() {
+    let notes = [12, 8, 15, 9, 17];
+
+    // enumerate : (index, valeur)
+    for (i, n) in notes.iter().enumerate() {
+        println!("copie {} : {}", i + 1, n);
+    }
+
+    // zip : deux itérateurs en parallèle, s'arrête au plus court
+    let noms = ["alice", "bob", "carol"];
+    for (nom, note) in noms.iter().zip(notes.iter()) {
+        println!("{} -> {}", nom, note);
+    }
+
+    // chain : bout à bout ; flatten : aplatit un niveau
+    let bout_a_bout: Vec<i32> = [1, 2].into_iter().chain([3, 4]).collect();
+    let plat: Vec<i32> = vec![vec![5, 6], vec![7]].into_iter().flatten().collect();
+    println!("chain {:?} / flatten {:?}", bout_a_bout, plat);
+
+    // flat_map : map puis aplatit, en un passage
+    let lettres: Vec<char> = ["hi", "yo"].iter().flat_map(|s| s.chars()).collect();
+    println!("flat_map : {:?}", lettres);
+
+    // take_while : prend TANT QUE la condition tient, puis s'arrête
+    let tete: Vec<_> = notes.iter().take_while(|&&n| n < 16).collect();
+    println!("take_while < 16 : {:?}", tete); // 17 stoppe tout
+
+    // fold : plie en une valeur (reduce n'est pas dans la std)
+    let somme = notes.iter().fold(0, |acc, n| acc + n);
+    println!("fold somme : {}", somme);
+
+    // partition : deux collections d'un coup
+    let (admis, ajournes): (Vec<i32>, Vec<i32>) =
+        notes.iter().copied().partition(|n| *n >= 10);
+    println!("admis {:?} / ajournés {:?}", admis, ajournes);
+
+    // find -> l'élément (Option), position -> l'index (Option)
+    println!("find > 14 : {:?}", notes.iter().find(|&&n| n > 14));
+    println!("position > 14 : {:?}", notes.iter().position(|&n| n > 14));
+
+    // Agrégats : count, max_by (Option car vide possible)
+    let nb_admis = notes.iter().filter(|&&n| n >= 10).count();
+    let max = notes.iter().max_by(|a, b| a.cmp(b));
+    println!("{} admis, max = {:?}", nb_admis, max);
+}
+'''
+gotchas = [
+    "Un itérateur sans consommateur (collect, sum, for...) ne fait RIEN : map tout seul ne produit qu'un warning.",
+    "zip s'arrête au plus court des deux : les éléments en trop sont ignorés silencieusement.",
+    "take_while n'est pas filter : au premier élément faux, il s'arrête pour de bon, même si la suite redevient vraie.",
+    "fold(0, f) : le type de l'initiale (0, 0u32, 0.0, String::new()) fixe le type du résultat.",
+    "partition collecte les DEUX côtés : si tu n'en veux qu'un, filter est plus simple et moins coûteux.",
+    "max_by / min_by / find renvoient None sur un itérateur vide : c'est un Option, pas un panic.",
+]
+exercises = [
+    "Avec enumerate et filter, affiche les index des notes supérieures à la moyenne d'un &[f64].",
+    "Aplatis un Vec<Vec<i32>> avec flatten, puis refais-le avec flat_map, et compare les deux écritures.",
+    "Reconstruis une String CSV du genre 1,2,3 depuis un Vec<i32> avec fold — attention au séparateur final.",
+]
+related = ["iterateurs", "closures", "vec", "option", "hashmap"]

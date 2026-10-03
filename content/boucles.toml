@@ -1,0 +1,99 @@
+id = "boucles"
+title = "boucles — loop, while, for : trois outils, un favori"
+category = "bases"
+tags = ["loop", "while", "for", "range", "break", "label"]
+difficulty = 2
+semaine = "S02"
+synopsis = "for i in 0..10 { }  // 0..10 va de 0 à 9 — et break peut renvoyer une valeur à loop"
+description = '''
+## En une phrase
+
+Rust a **trois boucles** — `loop` infinie qui peut renvoyer une valeur, `while` conditionnelle, et `for` qui parcourt tout itérable — et c'est `for` que tu écriras le plus.
+
+## En pratique
+
+1. `loop { }` : boucle infinie, on en sort avec `break`. Spécialité : `break valeur;` fait de la boucle entière une expression.
+
+```rust
+let x = loop {
+    break 42; // la boucle vaut 42
+};
+```
+
+2. `while cond { }` : répète tant que la condition (booléenne !) est vraie ; vérifiée avant chaque tour.
+3. `for x in iter { }` : parcourt n'importe quel itérable — ranges, tableaux, itérateurs. C'est l'idiome de Rust.
+4. Ranges : `0..10` va de 0 à 9 (borne exclue), `0..=10` inclut 10, `.rev()` inverse le sens.
+5. `continue` saute au tour suivant ; `break` sort de la boucle courante.
+6. Labels : `'outer: loop { ... break 'outer; }` pour sortir d'une boucle englobante depuis une boucle imbriquée.
+7. Quand préférer for ? Dès que tu parcours une collection ou un intervalle : pas d'index à gérer, pas de dépassement de tableau possible, intention limpide. while et loop restent pour les conditions ouvertes : attente, recherche, boucle de jeu.
+
+## À retenir
+
+- loop = infinie, et break valeur en fait une expression
+- while = tant que bool ; for = pour chaque élément
+- 0..10 exclut 10 ; 0..=10 l'inclut
+- 'label: + break 'label pilote les boucles imbriquées
+- for sur une collection > while + index : zéro panique d'index
+- continue passe au tour suivant
+'''
+example = '''
+fn main() {
+    // loop : infinie... sauf que break peut renvoyer une valeur
+    let mut tentative = 0;
+    let seuil = loop {
+        tentative += 1;
+        if tentative * tentative > 50 {
+            break tentative; // break donne une valeur au loop
+        }
+    };
+    println!("premier carré > 50 : {seuil}² = {}", seuil * seuil);
+
+    // while : la condition est vérifiée avant chaque tour
+    let mut countdown = 3;
+    while countdown > 0 {
+        println!("{countdown}...");
+        countdown -= 1;
+    }
+
+    // for sur un range : 0..5 s'arrête à 4
+    for i in 0..5 {
+        print!("{i} ");
+    }
+    println!();
+    // 0..=5 inclut 5, .rev() inverse
+    for i in (0..=5).rev() {
+        print!("{i} ");
+    }
+    println!();
+
+    // for sur un tableau : pas d'index, pas de dépassement possible
+    let jours = ["lun", "mar", "mer"];
+    for (n, jour) in jours.iter().enumerate() {
+        println!("jour {} : {jour}", n + 1);
+    }
+
+    // labels : break cible la boucle nommée
+    'recherche: for x in 1..=5 {
+        for y in 1..=5 {
+            if x * y == 12 {
+                println!("{x} × {y} = 12, trouvé");
+                break 'recherche;
+            }
+        }
+    }
+}
+'''
+gotchas = [
+    "0..10 exclut la borne haute : pour aller de 0 à 10 inclus, écris 0..=10.",
+    "loop { } sans break est vraiment infini : Ctrl+C devient ton seul recours.",
+    "break avec une valeur ne marche que dans loop, pas dans while ni dans for.",
+    "while i < tab.len() avec tab[i] peut paniquer si i dérape ; for x in &tab en est immunisé.",
+    "Sans label, break et continue ne concernent que la boucle la plus interne.",
+    "Le label s'écrit avec UNE apostrophe et deux-points : 'outer: loop { }, puis break 'outer;",
+]
+exercises = [
+    "Affiche la table de 7 (7 × 1 … 7 × 10) avec un for sur un range.",
+    "Trouve le premier multiple de 7 strictement supérieur à 100 avec un loop et un break-valeur.",
+    "Calcule la moyenne d'un tableau de notes avec for et enumerate, sans jamais indexer à la main.",
+]
+related = ["conditions", "expressions-vs-instructions", "tableaux", "iterateurs", "match"]

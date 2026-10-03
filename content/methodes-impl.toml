@@ -1,0 +1,120 @@
+id = "methodes-impl"
+title = "impl — des fonctions greffées sur ton type"
+category = "bases"
+tags = ["impl", "methodes", "self", "fonctions-associees", "new"]
+difficulty = 2
+semaine = "S03"
+synopsis = "impl Rectangle { fn aire(&self) -> u32 { self.l * self.h } }  // appel : rect.aire()"
+description = '''
+## En une phrase
+
+Un bloc `impl` greffe des fonctions sur ton type : **méthodes avec `self`** (appelées sur une instance) et fonctions associées sans `self` (appelées sur le type).
+
+## En pratique
+
+1. **La forme de base** :
+
+```rust
+impl Compte {
+    fn solde(&self) -> i64 { self.solde }
+}
+```
+
+Appel : `c.solde()`. Dans le corps, `self` désigne l'instance.
+
+2. **Les trois visages de `self`** — c'est de l'ownership déguisé en signature :
+
+| Signature   | Emprunt            | Usage typique                        |
+|-------------|--------------------|--------------------------------------|
+| `&self`     | lecture seule      | le cas par défaut, 90 % des méthodes |
+| `&mut self` | écriture           | modifier l'instance                  |
+| `self`      | consomme (déplace) | transformation, fermeture, builder   |
+
+3. **Fonctions associées** : pas de `self` — ce sont des fonctions rangées *dans* le type, appelées avec `::` :
+
+```rust
+impl Compte {
+    fn new(titulaire: String) -> Compte {
+        Compte { titulaire, solde: 0 }
+    }
+}
+let c = Compte::new(String::from("Awa"));
+```
+
+4. **La convention `new()`** : Rust n'a pas de constructeur magique. Par convention, le constructeur principal s'appelle `new`, prend ses paramètres et renvoie l'instance. Tout l'écosystème la suit — fais pareil.
+
+5. **Plusieurs blocs `impl`** : tu peux éclater les méthodes en plusieurs blocs pour le même type — utile pour organiser un gros type, indispensable pour les génériques plus tard.
+
+6. **`Self` avec majuscule** désigne le type courant dans le bloc : `fn vide() -> Self` signifie `-> Compte`. Pratique quand le nom du type change.
+
+## À retenir
+
+- `impl Type { ... }` : méthodes (`self`) et fonctions associées (sans `self`) au même endroit.
+- `&self` lit, `&mut self` modifie, `self` consomme — choisis le plus faible qui suffit.
+- Fonction associée = appelée `Type::fonction()`, sans instance.
+- `new()` est une convention, pas un mot-clé : respecte-la.
+- Plusieurs blocs `impl` par type : autorisés et courants.
+- `Self` = raccourci du type courant à l'intérieur du bloc.
+'''
+example = '''
+struct Compte {
+    titulaire: String,
+    solde: i64, // en centimes
+}
+
+// Premier bloc impl : les méthodes de lecture
+impl Compte {
+    // &self : emprunte en lecture seule — le cas le plus fréquent
+    fn solde(&self) -> i64 {
+        self.solde
+    }
+
+    fn afficher(&self) {
+        println!("{} : {:.2} €", self.titulaire, self.solde as f64 / 100.0);
+    }
+}
+
+// Second bloc impl : les blocs peuvent se multiplier pour un même type
+impl Compte {
+    // Fonction associée : pas de self, appelée Compte::new(...)
+    // La convention veut que le constructeur principal s'appelle new()
+    fn new(titulaire: String) -> Compte {
+        Compte { titulaire, solde: 0 }
+    }
+
+    // &mut self : emprunte en écriture pour modifier l'instance
+    fn deposer(&mut self, montant: i64) {
+        self.solde += montant;
+    }
+
+    // self : consomme l'instance, qui n'existe plus après l'appel
+    fn cloturer(self) -> String {
+        println!("clôture du compte, solde final : {} cts", self.solde);
+        self.titulaire
+    }
+}
+
+fn main() {
+    let mut c = Compte::new(String::from("Awa"));
+    c.deposer(150_00);
+    c.deposer(25_00);
+    c.afficher();
+    println!("solde lu : {} centimes", c.solde());
+
+    let nom = c.cloturer(); // c est déplacée : plus utilisable ensuite
+    println!("compte de {nom} clôturé");
+}
+'''
+gotchas = [
+    "Oublier le `&` devant `self` quand tu voulais juste lire : la méthode consomme l'instance, et l'appel suivant ne compile plus.",
+    "Dans une méthode `&self`, lire `self.titulaire` est OK, mais le **déplacer** hors de l'instance est refusé — tu n'as qu'un emprunt.",
+    "Appeler une méthode `&mut self` sur une variable non `mut` : le compilateur refuse, ajoute `mut` au `let`.",
+    "`Compte::solde(&c)` fonctionne (forme UFCS), mais `Compte::solde()` sans instance échoue : une méthode a besoin de son `self`.",
+    "Deux méthodes du même nom dans deux blocs `impl` du même type = erreur de duplication.",
+]
+exercises = [
+    "Pour `struct Rectangle { l: u32, h: u32 }`, écris `new`, `aire(&self)` et `agrandir(&mut self, facteur: u32)`, puis enchaîne les trois.",
+    "Ajoute un second constructeur `fn carre(cote: u32) -> Self` et une méthode `fn contient(&self, autre: &Rectangle) -> bool`.",
+    "Écris `fn moitie(self) -> Rectangle` qui consomme l'instance ; vérifie à la compilation que l'original n'est plus utilisable.",
+]
+related = ["structs", "enums", "ownership", "emprunts", "emprunts-mutables"]

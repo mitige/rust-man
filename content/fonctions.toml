@@ -1,0 +1,86 @@
+id = "fonctions"
+title = "fn — paramètres typés, retour annoncé"
+category = "bases"
+tags = ["fn", "parametres", "retour", "snake-case", "return"]
+difficulty = 1
+semaine = "S01"
+synopsis = "fn aire(l: u32, h: u32) -> u32 { l * h }  // dernière expression sans ; = valeur de retour"
+description = '''
+## En une phrase
+
+Une fonction Rust **annonce exactement ce qu'elle prend et ce qu'elle rend** : types des paramètres obligatoires, type de retour après `->`, corps évalué comme une expression.
+
+## En pratique
+
+1. Déclaration : `fn nom(param: Type, autre: Type) -> Retour { ... }`.
+2. Les types des paramètres sont OBLIGATOIRES : Rust n'infère jamais une signature (l'inférence ne vit qu'à l'intérieur du corps).
+3. Sans `-> Type`, le retour est le type unit `()` : la fonction « ne renvoie rien ».
+4. Le corps est un bloc-expression : la DERNIÈRE expression, sans `;`, est la valeur renvoyée.
+
+```rust
+fn carre(n: i32) -> i32 {
+    n * n // pas de ; ici : c'est le retour
+}
+```
+
+5. `return expr;` sert aux sorties précoces en plein milieu du corps ; en fin de fonction, préfère l'expression nue — c'est l'idiome Rust.
+6. Nommage : snake_case (aire_rectangle, pas aireRectangle). Le compilateur avertit sinon.
+7. Une fonction peut être définie DANS une autre fonction — pratique pour un helper local. Mais elle ne capture pas les variables autour d'elle (pour ça, il faudra les closures).
+
+## À retenir
+
+- fn nom(param: Type) -> Retour : tout est annoncé dans la signature
+- sans ->, le retour est ()
+- dernière expression sans ; = valeur de retour
+- return = sortie précoce, pas fin de fonction idiomatique
+- snake_case, sinon avertissement du compilateur
+- fn imbriquée possible, mais sans capture de variables locales
+'''
+example = '''
+// Rust impose le type des paramètres ET celui du retour
+fn aire_rectangle(largeur: u32, hauteur: u32) -> u32 {
+    largeur * hauteur // expression finale : pas de point-virgule
+}
+
+// return sert surtout à sortir tôt
+fn est_valide(score: i32) -> bool {
+    if score < 0 {
+        return false; // sortie anticipée
+    }
+    score <= 100 // expression de retour, idiomatique
+}
+
+// sans ->, la fonction renvoie le type unit ()
+fn affiche_resume(nom: &str, score: i32) {
+    // une fonction peut en contenir une autre
+    fn barre(n: i32) -> String {
+        "█".repeat(n.max(0).min(10) as usize)
+    }
+    println!("{nom} : {} ({score}/100)", barre(score / 10));
+}
+
+fn main() {
+    let a = aire_rectangle(6, 7);
+    println!("aire du rectangle : {a}");
+
+    for s in [120, 42, -3] {
+        println!("score {s} valide ? {}", est_valide(s));
+    }
+
+    affiche_resume("Ada", 75);
+}
+'''
+gotchas = [
+    "Un ; après l'expression finale la transforme en instruction : « mismatched types, expected i32, found () ».",
+    "fn f(x) { } ne compile pas : chaque paramètre exige un type explicite, jamais d'inférence en signature.",
+    "Oublier le -> Type alors que le corps produit une valeur : même erreur de types, dans l'autre sens.",
+    "Mettre return à la dernière ligne est un réflexe C ou Python : en Rust, l'expression finale nue est l'idiome.",
+    "Une fonction en camelCase déclenche l'avertissement non_snake_case de rustc.",
+    "Une fn imbriquée ne voit PAS les variables de la fonction englobante : passe-les en paramètres.",
+]
+exercises = [
+    "Écris celsius_vers_fahrenheit(c: f64) -> f64 (formule : c * 9.0 / 5.0 + 32.0) et teste 0, 100 et -40.",
+    "Écris max3(a: i32, b: i32, c: i32) -> i32 sans utiliser un seul return.",
+    "Ajoute un garde-fou avec return précoce qui refuse une note hors 0..=20 en renvoyant une valeur sentinelle.",
+]
+related = ["expressions-vs-instructions", "types-scalaires", "conditions", "methodes-impl", "variables-mutabilite"]

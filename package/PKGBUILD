@@ -1,0 +1,31 @@
+# Maintainer: ev
+pkgname=rust-man
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Documentation Rust interactive dans le terminal, pour apprendre Rust à côté des cours"
+arch=('x86_64')
+url="https://example.invalid/rust-man"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cargo' 'rust')
+options=('!debug' '!lto')
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --locked
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --release
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 "target/release/rust-man" "$pkgdir/usr/bin/rust-man"
+  install -Dm755 "target/release/rust-nano" "$pkgdir/usr/bin/rust-nano"
+  install -Dm644 "README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

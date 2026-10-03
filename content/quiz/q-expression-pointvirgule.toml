@@ -1,0 +1,23 @@
+id = "q-expression-pointvirgule"
+category = "bases"
+difficulty = 2
+question = '''
+Pourquoi ce code ne compile-t-il pas ?
+
+```rust
+fn plus_un(x: i32) -> i32 {
+    x + 1;
+}
+```
+'''
+choices = [
+    "Avec le `;`, `x + 1` devient une instruction qui vaut `()` : la fonction annonce un i32 mais ne renvoie rien",
+    "Il manque le mot-clé `return`, obligatoire pour renvoyer une valeur en Rust",
+    "i32 ne supporte pas l’opérateur `+` sans implémenter explicitement le trait Add",
+    "Le point-virgule est interdit sur la dernière ligne d’une fonction : c’est une règle de style imposée par le compilateur",
+]
+answer = 0
+explanation = '''
+En Rust, la dernière expression d’un bloc SANS point-virgule est la valeur du bloc — c’est le retour implicite de la fonction. Ajouter `;` transforme l’expression en instruction, dont la valeur est `()`, d’où le mismatch avec le i32 annoncé. Le `;` n’est donc pas du style : il change la sémantique. Le piège : croire que `return` est obligatoire — il ne sert que pour les retours anticipés au milieu d’une fonction.
+'''
+related = ["expressions-vs-instructions", "fonctions"]

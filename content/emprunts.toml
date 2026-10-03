@@ -1,0 +1,93 @@
+id = "emprunts"
+title = "emprunts — regarder sans prendre"
+category = "ownership"
+tags = ["reference", "emprunt", "deref", "lecture", "pointeur"]
+difficulty = 2
+semaine = "S03"
+synopsis = "let r = &s;  // r emprunte s — s reste la propriétaire"
+description = '''
+## En une phrase
+
+Une référence `&T` permet d'**utiliser une valeur sans en prendre possession** : tu empruntes, tu consultes, tu rends — rien n'est déplacé.
+
+## En pratique
+
+Créer un emprunt : `&` devant la variable.
+
+```rust
+let s = String::from("abc");
+let r = &s;     // r emprunte s — s reste la propriétaire
+```
+
+Les faits qui comptent :
+
+1. **Plusieurs `&` en même temps** : autant de lecteurs simultanés que tu veux.
+2. Une référence **ne possède pas** : quand `r` sort du scope, rien n'est libéré — le `drop` est l'affaire du propriétaire.
+3. **Lecture seule** : modifier à travers un `&T` est interdit.
+
+```rust
+let r = &s;
+r.push('!'); // ne compile pas : emprunt en lecture seule
+```
+
+4. **Déréférencement** : `*r` accède à la valeur pointée (`let n = *r;`).
+5. **Auto-deref** : pour les méthodes et les champs, Rust insère les `*` tout seul — `rv.len()` vaut `(*rv).len()`. C'est pour ça qu'on écrit rarement `*` explicitement hors calcul.
+6. Comparées aux pointeurs C, les références Rust sont **jamais nulles** (l'absence se code `Option<&T>`), **jamais pendantes** (le compilateur le prouve, fiche `lifetimes`), et sans arithmétique de pointeurs.
+
+```
+s  ──possède──►  "abc" (tas)
+r  ──regarde──┘   (r ne possède rien)
+```
+
+Une signature `fn lire(s: &String)` — ou mieux `fn lire(s: &str)` — annonce : « je consulte, je ne garde rien ».
+
+## À retenir
+
+- `&T` = emprunt en lecture : la valeur reste à son propriétaire.
+- Lecteurs multiples OK, en même temps, sans limite de nombre.
+- Pas de drop pour une référence : elle ne possède rien.
+- `*r` déréférence ; l'auto-deref gère méthodes et champs tout seul.
+- Jamais nulle, jamais pendante — contrairement au pointeur C.
+'''
+example = '''
+fn main() {
+    let s = String::from("bonjour");
+
+    // Plusieurs emprunts simultanés : aucun problème
+    let r1 = &s;
+    let r2 = &s;
+    println!("r1 = {r1}, r2 = {r2}, s = {s}"); // s reste utilisable
+
+    // Une référence ne possède rien : rien n'est libéré à sa mort
+    let longueur = compter(&s); // on PRÊTE s, on ne la donne pas
+    println!("{s} fait {longueur} octets"); // s toujours là après l'appel
+
+    // Déréférencement explicite avec *
+    let n = 21;
+    let p = &n;
+    let double = *p * 2; // *p lit la valeur pointée
+    println!("double de {n} = {double}");
+
+    // Auto-deref : les méthodes traversent la référence toutes seules
+    let v = vec![3, 1, 2];
+    let rv = &v;
+    println!("len via référence : {}", rv.len()); // comme (*rv).len()
+}
+
+fn compter(texte: &str) -> usize {
+    texte.len() // la fonction consulte, elle ne possède pas
+}
+'''
+gotchas = [
+    "Penser qu'un & prolonge la vie de la valeur — non : la valeur doit survivre à tous ses emprunts, pas l'inverse.",
+    "Essayer de modifier à travers un &T — c'est lecture seule ; il faut un &mut T (fiche emprunts-mutables).",
+    "Croire que drop s'applique à la référence — seul le propriétaire libère la valeur.",
+    "Chercher le pointeur nul de C : une référence Rust n'est jamais nulle, l'absence se code Option<&T>.",
+    "S'attendre à une adresse en affichant une référence : println! affiche la valeur pointée grâce à l'auto-deref de Display.",
+]
+exercises = [
+    "Écris une fonction est_vide(mot: &str) -> bool qui emprunte, et appelle-la trois fois sur la même String.",
+    "Crée trois références sur la même String et affiche-les toutes dans un seul println!.",
+    "Tente de modifier la valeur via un & et lis l'erreur du compilateur jusqu'au bout.",
+]
+related = ["ownership", "emprunts-mutables", "slices", "lifetimes"]

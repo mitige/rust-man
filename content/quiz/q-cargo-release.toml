@@ -1,0 +1,15 @@
+id = "q-cargo-release"
+category = "outils"
+difficulty = 1
+question = "Quelle est la vraie différence entre `cargo build` et `cargo build --release` ?"
+choices = [
+    "`--release` désactive le borrow checker pour gagner du temps à l’exécution",
+    "`--release` active les optimisations du compilateur : compilation plus lente, mais binaire beaucoup plus rapide",
+    "`--release` est obligatoire pour pouvoir exécuter le programme",
+    "`--release` ajoute des symboles de debug pour pouvoir utiliser un débogueur",
+]
+answer = 1
+explanation = '''
+Le profil release ne change ni le langage ni les vérifications : c’est le même code, simplement compilé avec les optimisations (inlining, élimination de code mort…), ce qui rallonge la compilation mais accélère énormément l’exécution. Règle générale : développe en debug pour itérer vite, mesure et livre en `--release`. Piège associé : le dépassement d’entier (un `i32` qui déborde) panique en debug mais fait un wrap silencieux en release — ne construis jamais ta logique sur un panic qui n’existe qu’en debug.
+'''
+related = ["cargo-bases", "cargo-toml"]

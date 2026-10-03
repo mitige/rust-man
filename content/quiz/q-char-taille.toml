@@ -1,0 +1,15 @@
+id = "q-char-taille"
+category = "bases"
+difficulty = 2
+question = "Quelle est la taille d’un `char` en Rust ?"
+choices = [
+    "1 octet, comme le char du C",
+    "4 octets : un char est un « Unicode scalar value »",
+    "2 octets, comme le char de Java",
+    "Ça dépend du caractère stocké : de 1 à 4 octets",
+]
+answer = 1
+explanation = '''
+Un `char` Rust fait TOUJOURS 4 octets et représente un Unicode scalar value : il peut contenir un accent, un idéogramme ou un emoji dans un espace fixe. Ce qui varie de 1 à 4 octets, c’est l’encodage UTF-8 d’un caractère DANS une `String` ou une `&str` — ne pas confondre les deux. Piège qui en découle : on ne peut pas indexer une `&str` par position (`s[2]` ne compile pas), car la position en octets ne correspond pas au nième caractère.
+'''
+related = ["types-scalaires", "chaines-bases"]

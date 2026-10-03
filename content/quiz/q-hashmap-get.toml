@@ -1,0 +1,8 @@
+id = "q-hashmap-get"
+category = "collections"
+difficulty = 1
+question = "Que renvoie `scores.get(&\"ana\")` sur un `HashMap<String, i32>` qui ne contient pas la clé `\"ana\"` ?"
+choices = ["`0`, la valeur par défaut de `i32`", "Une clé `\"ana\"` est insérée automatiquement avec `0` puis renvoyée", "`None`, car `get` renvoie un `Option<&i32>`", "Le programme panique, clé introuvable"]
+answer = 2
+explanation = '''`HashMap::get` renvoie `Option<&V>` : `Some(&valeur)` si la clé existe, `None` sinon — jamais de panic, jamais d'insertion cachée. C'est cohérent avec la philosophie de Rust : l'absence est un cas à gérer explicitement. Règle générale : `get` pour un accès incertain (`unwrap_or(&0)` pour un défaut), `map[&cle]` seulement si la présence est garantie — car l'indexation PANIQUE sur clé absente, contrairement à Python. Piège : oublier que `get` prend une référence sur la clé (`&\"ana\"`, pas `\"ana\"`).'''
+related = ["hashmap", "option", "entry-api"]

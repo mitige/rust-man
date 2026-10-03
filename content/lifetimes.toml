@@ -1,0 +1,108 @@
+id = "lifetimes"
+title = "lifetimes — prouver que rien ne pend"
+category = "ownership"
+tags = ["lifetime", "duree-de-vie", "elision", "reference", "static"]
+difficulty = 4
+semaine = "S05"
+synopsis = "fn f<'a>(x: &'a str, y: &'a str) -> &'a str  // le retour vit aussi longtemps que le pire cas"
+description = '''
+## En une phrase
+
+Les lifetimes **décrivent** au compilateur combien de temps chaque référence reste valide — elles ne changent rien à l'exécution, elles prouvent qu'**aucune référence ne pend**.
+
+## En pratique
+
+Le problème qu'elles résolvent :
+
+```rust
+let r;
+{
+    let s = String::from("temp");
+    r = &s;             // ne compile pas : s meurt à la fin du bloc
+}
+println!("{r}");        // r pendrait → refusé, merci qui ?
+```
+
+Dans une signature, quand plusieurs références entrent et qu'une sort, le compilateur doit savoir **laquelle** autorise le retour :
+
+```rust
+fn plus_long<'a>(x: &'a str, y: &'a str) -> &'a str
+```
+
+Lecture : « le retour vit **au moins aussi longtemps que le plus court** des deux emprunts ». L'appelant ne pourra utiliser le résultat que tant que `x` ET `y` sont valides. Point crucial : **les annotations décrivent, elles ne changent rien** — aucune vie n'est allongée ni raccourcie ; on donne au compilateur de quoi vérifier.
+
+L'**élision** dispense d'écrire les annotations dans 3 cas :
+
+1. Chaque référence en paramètre reçoit sa propre lifetime.
+2. Une seule lifetime en entrée → elle est donnée à toutes les sorties (`fn f(s: &str) -> &str` : rien à écrire).
+3. `&self` ou `&mut self` parmi les paramètres → sa lifetime gagne les sorties.
+
+Deux entrées + sortie référence + pas de self → ambiguïté → annotation obligatoire (cas de `plus_long`).
+
+Dans une **struct**, toute référence stockée se déclare :
+
+```rust
+struct Extrait<'a> { texte: &'a str } // l'extrait ne survit pas au document
+```
+
+`'static` = « vit tout le programme » : c'est la lifetime des littéraux de chaînes. Ne la mets pas partout pour faire taire le compilateur : il te refusera ailleurs, plus méchamment.
+
+## À retenir
+
+- Les lifetimes existent pour interdire les références pendantes — rien d'autre.
+- `'a` relie entrées et sortie : le retour vit au moins aussi longtemps que le pire cas.
+- Annotations = description, jamais modification : la réalité décide, la signature constate.
+- Élision : 3 règles ; si l'ambiguïté reste, tu écris les annotations à la main.
+- Struct avec référence = lifetime déclarée ; `'static` = durée du programme.
+'''
+example = '''
+// 'a relie entrées et sortie : le retour vit aussi longtemps que le pire cas
+fn plus_long<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() >= y.len() { x } else { y }
+}
+
+// Élision : une seule entrée → la sortie prend sa durée de vie, rien à écrire
+fn premier_mot(s: &str) -> &str {
+    match s.find(' ') {
+        Some(i) => &s[..i],
+        None => s,
+    }
+}
+
+// Une struct qui emprunte DOIT déclarer la durée de vie de son emprunt
+struct Extrait<'a> {
+    texte: &'a str, // l'extrait ne peut pas survivre au document pointé
+}
+
+fn main() {
+    let a = String::from("rustacean");
+    let b = String::from("cargo");
+    let gagnant = plus_long(&a, &b); // valide tant que a ET b vivent
+    println!("le plus long : {gagnant}");
+
+    let phrase = String::from("apprendre rust ensemble");
+    let mot = premier_mot(&phrase); // l'élision a fait le travail toute seule
+    println!("premier mot : {mot}");
+
+    let doc = String::from("document de travail");
+    let e = Extrait { texte: &doc[..4] }; // e emprunte doc — vérifié !
+    println!("extrait : {}", e.texte);
+
+    // 'static : le littéral vit dans le binaire, pour tout le programme
+    let titre: &'static str = "rust-man";
+    println!("titre : {titre}");
+}
+'''
+gotchas = [
+    "Croire que 'a change la durée de vie : non — l'annotation décrit une réalité, elle ne la crée ni ne la prolonge.",
+    "Mettre 'static partout pour faire taire l'erreur : ça déplace le problème, et le compilateur refusera ailleurs.",
+    "Oublier que l'élision ne couvre que 3 cas : deux entrées + retour référence = annotation obligatoire.",
+    "Penser qu'une struct peut stocker une référence « au cas où » : toute référence stockée exige sa lifetime déclarée.",
+    "Vouloir retourner une référence vers une variable locale : impossible, toujours — aucune annotation ne sauvera ça.",
+]
+exercises = [
+    "Écris fn plus_court<'a>(x: &'a str, y: &'a str) -> &'a str et teste-la sur deux Strings de main.",
+    "Écris fn dernier_mot(s: &str) -> &str SANS aucune annotation — explique pourquoi l'élision suffit.",
+    "Crée struct Livre<'a> { titre: &'a str, pages: u32 } et une fonction qui en construit un depuis une String locale à main.",
+]
+related = ["emprunts", "emprunts-mutables", "string-vs-str", "lire-erreur-rustc", "slices"]

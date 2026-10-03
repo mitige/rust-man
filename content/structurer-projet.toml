@@ -1,0 +1,108 @@
+id = "structurer-projet"
+title = "structurer-projet — un projet Rust propre"
+category = "pratique"
+tags = ["projet", "modules", "lib", "organisation", "workspace"]
+difficulty = 3
+semaine = "S05"
+synopsis = "main.rs fin (juste le wiring), la logique dans lib.rs et ses modules, les tests à côté du code."
+description = '''
+## En une phrase
+
+Un projet Rust propre a un **main.rs fin qui ne fait que du wiring** : la logique vit dans lib.rs et ses modules (un par domaine), testée à côté du code qu'elle couvre.
+
+## En pratique
+
+1. **La règle d'or** : `main.rs` crée les objets, appelle les modules, affiche le résultat. Si ta `main` contient de la logique métier, déplace-la — elle deviendra testable.
+
+2. **La structure canonique** :
+
+```
+mon_projet/
+├── Cargo.toml
+├── README.md
+└── src/
+    ├── main.rs     # wiring uniquement : ~30 lignes
+    ├── lib.rs      # pub mod taches; pub mod stats; + ré-exports
+    ├── taches.rs   # un module par domaine
+    └── stats.rs
+```
+
+3. **Un module par domaine** : `taches.rs` pour le type et ses méthodes, `stats.rs` pour les calculs. Tout est privé par défaut ; `lib.rs` expose avec `pub mod` ce qui doit l'être, pas plus.
+
+4. **Les tests à côté du code** : dans chaque fichier, un `#[cfg(test)] mod tests { use super::*; ... }` — le test unitaire vit au plus près de ce qu'il teste. Les tests d'INTÉGRATION, eux, vont dans le dossier `tests/`.
+
+5. **Nommage** : fichiers et modules en `snake_case`, types et traits en `CamelCase`, fonctions et variables en `snake_case`, constantes en `SCREAMING_SNAKE_CASE`. rustfmt et clippy te reprennent si tu dévies.
+
+6. **Le README** : trois paragraphes suffisent — ce que fait le projet, comment le lancer (`cargo run`), comment le tester (`cargo test`). Ton toi de dans six mois dit merci.
+
+7. **Pour les gros projets** : quand un crate ne suffit plus, un **cargo workspace** regroupe plusieurs crates (`app`, `core`, `cli`…) sous un seul `Cargo.lock` et un seul `target/`. À connaître, inutile d'y courir pour un TP.
+
+## À retenir
+
+- main.rs = wiring ; lib.rs = logique testable. Une main grosse est une dette.
+- Un module par domaine ; privé par défaut, `pub` au compte-goutte.
+- Tests unitaires dans le même fichier (`#[cfg(test)] mod tests`) ; tests d'intégration dans `tests/`.
+- snake_case fichiers/fonctions, CamelCase types, SCREAMING_SNAKE_CASE constantes.
+- Un README minimal : quoi, comment lancer, comment tester. Le workspace, c'est pour plus tard.
+'''
+example = '''
+// Un projet propre : main fin + un module par domaine + tests à côté du code.
+// Ici tout tient dans UN fichier ; en vrai, chaque `mod` vit dans src/<nom>.rs.
+
+mod tache {
+    // Un module par domaine ; tout est privé sauf mention pub
+    pub struct Tache { titre: String, faite: bool }
+    impl Tache {
+        pub fn new(titre: &str) -> Self { Tache { titre: titre.to_string(), faite: false } }
+        pub fn terminer(&mut self) { self.faite = true; }
+        pub fn est_faite(&self) -> bool { self.faite }
+        pub fn titre(&self) -> &str { &self.titre }
+    }
+
+    // Les tests unitaires vivent à côté du code qu'ils testent
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn nouvelle_tache_pas_faite() {
+            assert!(!Tache::new("réviser").est_faite());
+        }
+    }
+}
+
+mod stats {
+    use crate::tache::Tache;
+
+    pub fn pourcentage_faites(taches: &[Tache]) -> f64 {
+        if taches.is_empty() { return 0.0; }
+        let faites = taches.iter().filter(|t| t.est_faite()).count();
+        faites as f64 / taches.len() as f64 * 100.0
+    }
+}
+
+// main reste FIN : créer les objets, appeler les modules, afficher
+fn main() {
+    let mut taches = vec![tache::Tache::new("lire le cours"), tache::Tache::new("coder")];
+    taches[0].terminer();
+    for t in &taches {
+        let etat = if t.est_faite() { "x" } else { " " };
+        println!("[{etat}] {}", t.titre());
+    }
+    println!("avancement : {:.0} %", stats::pourcentage_faites(&taches));
+}
+'''
+gotchas = [
+    "Tout mettre dans main.rs : au-delà de ~200 lignes tu ne t'y retrouves plus, et rien n'est testable unitairement.",
+    "Mettre `pub` sur tous les champs « pour simplifier » : expose des méthodes, garde tes invariants à l'abri.",
+    "Nommer les fichiers en CamelCase : les modules/fichiers sont en snake_case ; ce sont les TYPES qui sont en CamelCase.",
+    "Créer un cargo workspace pour un TP de 300 lignes : un seul crate avec des modules suffit largement.",
+    "Mettre les tests unitaires dans tests/ : ce dossier est réservé à l'intégration ; l'unitaire vit à côté du code.",
+    "Zapper le README : trois lignes (quoi / lancer / tester) suffisent, même pour un projet d'école.",
+]
+exercises = [
+    "Découpe un TP monolithique en main.rs fin + lib.rs + deux modules ; vérifie que `cargo test` passe encore.",
+    "Ajoute un `#[cfg(test)] mod tests` avec deux tests dans chacun de tes modules.",
+    "Rédige le README (quoi / comment lancer / comment tester) de ton projet le plus récent.",
+]
+related = ["modules-use", "cargo-bases", "cargo-toml", "tests", "methodes-impl"]

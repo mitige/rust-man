@@ -1,0 +1,23 @@
+id = "q-copy-types"
+category = "ownership"
+difficulty = 2
+question = '''
+Pourquoi ce code compile-t-il, alors que la même chose avec une `String` échouerait ?
+
+```rust
+let a = 42;
+let b = a;
+println!("{a} {b}");
+```
+'''
+choices = [
+    "Parce que i32 implémente le trait Copy : l’affectation copie la valeur bit à bit au lieu de la déplacer",
+    "Parce que les entiers sont stockés sur le tas, ils peuvent être partagés sans risque",
+    "Parce que le compilateur appelle clone() automatiquement sur les petites valeurs",
+    "Parce que println! crée des copies temporaires de ses arguments avant affichage",
+]
+answer = 0
+explanation = '''
+Les types simples de taille fixe — i32, bool, char, f64, tuples de types Copy… — implémentent le trait `Copy` : l’affectation fait une copie bit à bit, et les DEUX variables restent valides. `String` gère un buffer sur le tas : si elle était Copy, deux propriétaires libéreraient le même buffer (double free). Piège à éviter : confondre Copy et clone() — Copy est implicite, gratuit et marque les types trivialement duplicables ; clone() est un appel explicite qui peut coûter cher.
+'''
+related = ["clone-copy", "types-scalaires"]

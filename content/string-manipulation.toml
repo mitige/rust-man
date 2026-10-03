@@ -1,0 +1,93 @@
+id = "string-manipulation"
+title = "string-manipulation — le quotidien des String"
+category = "collections"
+tags = ["string", "format", "split", "utf-8", "chars"]
+difficulty = 2
+semaine = "S04"
+synopsis = '''let s = format!("{} {}", a, b); s.split_whitespace() // itérateur de &str'''
+description = '''
+## En une phrase
+
+Manipuler une `String` au quotidien, c'est construire (`push_str`, `format!`), découper (`split`, `trim`), tester (`contains`) — en gardant en tête que **l'UTF-8 interdit l'indexation directe**.
+
+## En pratique
+
+1. Construire par morceaux : `push(char)` pour un caractère, `push_str(&str)` pour du texte. Les deux empruntent leurs arguments, rien n'est déplacé.
+2. `format!` : crée une String comme `println!`, **sans déplacer** ses arguments. C'est presque toujours ce que tu veux.
+3. Le `+` existe mais **déplace** son côté gauche : `let s3 = s1 + &s2;` consomme `s1` (signature : `fn add(self, rhs: &str) -> String`). Pour coller cinq morceaux, préfère `format!` ou `push_str`.
+4. Découper : `split(',')` (itérateur de &str, garde les morceaux vides), `split_whitespace()` (ignore les espaces multiples), `lines()`. Tout est paresseux : `collect::<Vec<&str>>()` si tu veux un Vec.
+5. Nettoyer : `trim()` enlève les espaces aux deux bouts et renvoie une **&str** (la String d'origine est intacte) ; `replace("a", "b")` renvoie une **nouvelle** String.
+6. Tester : `starts_with("pré")`, `ends_with("fixe")`, `contains("milieu")` → `bool`.
+7. Pourquoi `s[0]` n'existe pas : une String est un `Vec<u8>` UTF-8. L'index 0 désignerait un **octet**, qui peut être la moitié d'un caractère (`é` = 2 octets). Rust refuse plutôt que de te laisser trancher un caractère en deux. À la place :
+   - `s.chars()` → itérateur de `char` (caractères) ;
+   - `s.bytes()` → itérateur de `u8` (octets bruts) ;
+   - `s.len()` = nombre d'**octets** ; `s.chars().count()` = nombre de caractères.
+8. Reconstruire : `let s: String = iterateur_de_char.collect();` — `collect()` sait assembler une String depuis des `char` (ou des `&str`).
+
+## À retenir
+
+- `push(char)` / `push_str(&str)` font grandir ; `format!` assemble sans rien déplacer.
+- `s1 + &s2` déplace `s1` : après, `s1` est inutilisable.
+- `trim` / `split` / `replace` renvoient du neuf (ou empruntent) : l'originale est intacte.
+- Pas de `s[0]` : UTF-8 → `chars()` pour les caractères, `bytes()` pour les octets.
+- `len()` compte des octets, pas des lettres : `"é".len() == 2`.
+- `collect()` reconstruit une String depuis un itérateur de `char` ou de `&str`.
+'''
+example = '''
+fn main() {
+    // Construire : push (un char) et push_str (une slice)
+    let mut s = String::from("salut");
+    s.push(' ');
+    s.push_str("le monde");
+    println!("{}", s);
+
+    // format! : assemble sans déplacer ses arguments
+    let nom = "Ada";
+    let fiche = format!("{} l'immuable", nom);
+    println!("{} — nom toujours utilisable : {}", fiche, nom);
+
+    // + : s1 + &s2 DÉPLACE s1 (s1 n'existe plus ensuite)
+    let s1 = String::from("bon");
+    let s2 = String::from("jour");
+    let s3 = s1 + &s2;
+    // println!("{}", s1); // ne compilerait pas : s1 a été déplacée
+    println!("{}", s3);
+
+    // Nettoyer et découper (split est paresseux)
+    let brut = "  pomme,poire,, kiwi ";
+    println!("trim : '{}'", brut.trim());
+    let fruits: Vec<&str> = brut.trim().split(',').map(str::trim).collect();
+    println!("split : {:?} (note le morceau vide)", fruits);
+
+    let phrase = "rust est génial";
+    let mots: Vec<&str> = phrase.split_whitespace().collect();
+    println!("{} mots : {:?}", mots.len(), mots);
+
+    // Tester et remplacer (replace renvoie une NOUVELLE String)
+    println!("starts_with ru ? {}", phrase.starts_with("ru"));
+    println!("contains est ? {}", phrase.contains("est"));
+    println!("{}", phrase.replace("génial", "magnifique"));
+
+    // s[0] n'existe pas : un index = un octet, pas un caractère
+    let premier = phrase.chars().next().unwrap();
+    println!("'{}' : {} octets, {} chars", premier, phrase.len(), phrase.chars().count());
+
+    // collect() reconstruit une String depuis un itérateur de char
+    let inverse: String = "abc".chars().rev().collect();
+    println!("inversé : {}", inverse);
+}
+'''
+gotchas = [
+    "s[0] ne compile pas : ce serait un octet, pas un caractère — utilise s.chars().next().",
+    "let s3 = s1 + &s2; déplace s1 : après cette ligne, s1 est inutilisable.",
+    "trim() ne modifie pas la String : il renvoie une &str — pense à l'utiliser ou à faire trim().to_string().",
+    "split(',') garde les morceaux vides ('a,,b' donne trois morceaux) ; split_whitespace() les ignore.",
+    "len() compte des octets : 'é'.len() == 2, pas 1.",
+    "replace renvoie une nouvelle String : s.replace(a, b) sans assigner le résultat ne fait rien.",
+]
+exercises = [
+    "Écris snake_to_camel(entree: &str) -> String avec split('_'), map et collect.",
+    "Compte les voyelles d'une String avec chars().filter(...).count().",
+    "Inverse une String avec chars().rev().collect() et teste sur un texte accentué : pourquoi est-ce plus sûr que d'inverser les octets ?",
+]
+related = ["string-vs-str", "chaines-bases", "vec", "slices", "emprunts"]

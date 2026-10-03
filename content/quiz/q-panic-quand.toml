@@ -1,0 +1,8 @@
+id = "q-panic-quand"
+category = "erreurs"
+difficulty = 3
+question = "Dans quel cas `panic!` est-il le BON choix en Rust ?"
+choices = ["Quand un fichier demandé par l'utilisateur n'existe pas", "Quand le réseau ne répond pas dans le délai imparti", "Quand un invariant interne est violé — une situation qui prouve un bug dans ton code, impossible en fonctionnement normal", "Quand l'utilisateur entre une chaîne au lieu d'un nombre"]
+answer = 2
+explanation = '''`panic!` signale un BUG : une condition que ton programme supposait toujours vraie et qui ne l'est pas (index hors limites prouvé sûr, invariant de structure cassé, état « impossible »). Les erreurs attendues — saisie utilisateur, fichiers, réseau — méritent `Result` pour que l'appelant puisse réagir. Règle générale : si un utilisateur peut déclencher l'échec, ce n'est pas un panic. Piège : paniquer par paresse sur des erreurs récupérables, ce qui transforme une simple mauvaise saisie en crash.'''
+related = ["panic", "result", "unwrap-expect"]

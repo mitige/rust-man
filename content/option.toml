@@ -1,0 +1,111 @@
+id = "option"
+title = "option — Some ou None, jamais null"
+category = "erreurs"
+tags = ["option", "some", "none", "null", "unwrap-or", "if-let"]
+difficulty = 2
+semaine = "S03"
+synopsis = "Option<T> : soit Some(valeur), soit None — et le compilateur t’oblige à gérer les deux."
+description = '''
+## En une phrase
+
+`Option<T>` est un enum à deux variantes — `Some(T)` ou `None` — qui remplace `null` en te **forçant à gérer l’absence avant de toucher la valeur**.
+
+## En pratique
+
+En C, Python ou Java, n’importe quel pointeur ou référence peut être null, et tu le découvres à l’exécution (segfault, NullPointerException). En Rust, **null n’existe pas** : TOUTE absence passe explicitement par `Option`, et le compilateur vérifie que tu as traité le cas `None`. Tony Hoare, l’inventeur de null, l’appelle son « erreur à un milliard de dollars » — Rust l’a corrigée à la racine.
+
+1. Déclarer : le type annonce la possibilité d’absence.
+
+```rust
+let present: Option<i32> = Some(42);
+let absent: Option<i32> = None;   // l’annotation est obligatoire ici
+```
+
+2. Extraire avec `match` ou `if let` — le compilateur exige que `None` soit géré :
+
+```rust
+match present {
+    Some(v) => println!("valeur : {v}"),
+    None => println!("rien du tout"),
+}
+if let Some(v) = present {
+    println!("uniquement si présent : {v}");
+}
+```
+
+3. `unwrap_or` : un repli quand c’est `None`, sans jamais paniquer.
+
+```rust
+let n = absent.unwrap_or(0);   // 0
+```
+
+4. `map` : transformer le contenu sans sortir de l’Option (`None` traverse intact).
+
+```rust
+let double = present.map(|v| v * 2);   // Some(84)
+```
+
+5. `and_then` : chaîner une étape qui renvoie elle-même une Option — le premier `None` court-circuite toute la chaîne.
+
+```rust
+let moitie = present.and_then(|v| if v % 2 == 0 { Some(v / 2) } else { None });
+```
+
+6. `?` : propager le `None` vers l’appelant — détails dans la fiche operateur-question.
+
+```
+Some(valeur) ──match──> tu touches la valeur
+None         ──match──> tu gères l’absence   (sinon : ça ne compile pas)
+```
+
+## À retenir
+
+- Il n’y a pas de null en Rust : TOUTE absence possible est une `Option<T>`.
+- Impossible d’utiliser le contenu d’une Option sans avoir géré `None` — le compilateur t’y oblige, et c’est un cadeau.
+- `unwrap_or` pour un repli, `map` pour transformer, `and_then` pour chaîner, `if let` pour ne traiter que `Some`.
+- `None` seul n’a pas de type : annote (`let x: Option<i32> = None;`) ou laisse le contexte inférer.
+- Une fonction qui « peut ne rien trouver » renvoie `Option` : la signature documente le risque.
+'''
+example = '''
+fn premiere_voyelle(mot: &str) -> Option<char> {
+    mot.chars().find(|c| "aeiou".contains(*c))
+}
+
+fn main() {
+    let mots = ["rust", "brrr", "code"];
+
+    for mot in mots {
+        // if let : on ne traite que le cas Some
+        if let Some(v) = premiere_voyelle(mot) {
+            println!("{mot} -> première voyelle : {v}");
+        } else {
+            println!("{mot} -> aucune voyelle");
+        }
+    }
+
+    // unwrap_or : une valeur de repli, jamais de panic
+    let v = premiere_voyelle("brrr").unwrap_or('-');
+    println!("repli : {v}");
+
+    // map : transformer le contenu sans sortir de l’Option
+    let maj = premiere_voyelle("rust").map(|c| c.to_ascii_uppercase());
+    println!("en majuscule : {maj:?}");
+
+    // and_then : chaîner une étape qui peut elle-même donner None
+    let position = premiere_voyelle("rust").and_then(|v| "rust".find(v));
+    println!("position de la voyelle : {position:?}");
+}
+'''
+gotchas = [
+    "`None` tout seul n’a pas de type : écris `let x: Option<i32> = None;` ou laisse le contexte l’inférer.",
+    "`map` sur une Option<String> la consomme : utilise `as_ref()` ou `as_deref()` pour emprunter le contenu sans déplacer l’Option.",
+    "`unwrap()` sur `None` panique — lis la fiche unwrap-expect avant d’en parsemer ton code.",
+    "`and_then` n’exécute la suite que sur `Some` : le premier `None` court-circuite toute la chaîne, silencieusement.",
+    "Comparer avec `== Some(x)` compile, mais `if let Some(x) = opt` est plus idiomatique et emprunte proprement.",
+]
+exercises = [
+    "Écris `fn dernier_pair(v: &[i32]) -> Option<i32>` qui renvoie le dernier élément pair d’un slice, sans unwrap.",
+    "Parse une &str en i32 avec `.parse().ok()`, double le résultat avec `map`, puis sors-le avec `unwrap_or(0)`.",
+    "Réécris un `match opt { Some(v) => ..., None => ... }` en une seule expression avec `map_or`.",
+]
+related = ["result", "operateur-question", "unwrap-expect", "match", "enums"]

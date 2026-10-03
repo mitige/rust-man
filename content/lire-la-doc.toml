@@ -1,0 +1,84 @@
+id = "lire-la-doc"
+title = "lire-la-doc — la doc std comme un man"
+category = "demarrer"
+tags = ["documentation", "std", "rustdoc", "cargo-doc", "recherche"]
+difficulty = 1
+semaine = "S02"
+synopsis = "doc.rust-lang.org/std — S pour chercher, [src] pour voir le code"
+description = '''
+## En une phrase
+
+La documentation Rust est générée par rustdoc et se lit comme un **man** : tu cherches un type, tu lis ses méthodes, tu sautes au code source si besoin.
+
+## En pratique
+
+La doc de la bibliothèque standard : **doc.rust-lang.org/std**. Aussi disponible hors ligne :
+
+```sh
+rustup doc --std     # ouvre la doc std locale dans le navigateur
+rustup doc           # l'index : book, std, référence...
+```
+
+Lire une page de doc, par exemple `std::vec::Vec` :
+
+1. **Barre de recherche** (touche `S`) : tape un nom de type, de méthode, de module. La recherche accepte aussi des signatures, ex. `vec -> usize` trouve les fonctions qui prennent un Vec et rendent un usize.
+2. **En haut** : la déclaration du type et ses traits dérivés.
+3. **Les blocs « impl »** : chaque `impl Vec<T>` regroupe des méthodes. Un type a souvent plusieurs impl blocks — scrolle, elles sont toutes sur la même page.
+4. **« Trait Implementations »** : tout ce que le type sait faire VIA des traits (par ex. affichage avec `Display`, clonage avec `Clone`). La moitié des méthodes que tu cherches se cache là.
+5. **Le bouton `[src]`** à droite de chaque élément : montre le code source réel. Lire la source de la std est un excellent exercice.
+
+Pour TES projets et leurs dépendances :
+
+```sh
+cargo doc --open     # génère la doc du projet ET de ses deps, l'ouvre
+```
+
+C'est la même doc que docs.rs, en local, pour exactement tes versions.
+
+## À retenir
+
+- doc.rust-lang.org/std est la référence ; `rustup doc --std` marche hors ligne.
+- Touche `S` pour chercher ; la recherche accepte les signatures de types.
+- Les méthodes d'un type vivent dans ses impl blocks ET dans « Trait Implementations ».
+- `[src]` affiche la source : n'hésite pas, la std est lisible.
+- `cargo doc --open` documente ton projet et tes dépendances, à tes versions.
+'''
+example = '''
+use std::collections::HashMap;
+
+fn main() {
+    // Exercice de lecture de doc : trois méthodes croisées sur doc.rust-lang.org.
+    //
+    // 1. Vec::push      -> page std::vec::Vec, premier impl block
+    let mut scores = vec![10, 20];
+    scores.push(30);
+
+    // 2. Vec::iter + Iterator::sum -> la méthode sum vit dans le TRAIT Iterator
+    //    (section « Trait Implementations » de la page Vec, ou page std::iter::Iterator)
+    let total: i32 = scores.iter().sum();
+
+    // 3. HashMap::entry -> impl block de std::collections::HashMap
+    let mut compteurs = HashMap::new();
+    *compteurs.entry(" lectures").or_insert(0) += 1;
+
+    // 4. str::to_uppercase -> page std::primitive.str (les méthodes des &str)
+    let titre = "rust".to_uppercase();
+
+    println!("{titre} — scores: {scores:?}, total: {total}");
+    println!("compteurs: {compteurs:?}");
+    println!("Chaque méthode ci-dessus a sa page dans la doc std : va les lire.");
+}
+'''
+gotchas = [
+    "Chercher une méthode uniquement dans le premier impl block : beaucoup de méthodes (sum, clone, to_string) viennent de traits, section « Trait Implementations ».",
+    "Oublier que la doc d'une méthode indique depuis quelle version de Rust elle existe : un exemple du web peut utiliser une API trop récente pour ton toolchain.",
+    "Confondre la page de String et celle de str : la plupart des méthodes de texte sont sur str, accessibles depuis String par Deref.",
+    "Lire la doc sans lire les exemples en haut de page : chaque méthode de la std a un exemple exécutable, souvent plus parlant que la prose.",
+    "Utiliser cargo doc sans --open puis chercher le HTML : il est dans target/doc/, mais --open t'y emmène directement.",
+]
+exercises = [
+    "Trouve dans la doc std la méthode pour savoir si un Vec est vide, et celle pour trier un Vec d'entiers.",
+    "Lance rustup doc --std hors connexion et retrouve la page de Option : liste trois méthodes que tu ne connaissais pas.",
+    "Dans un projet cargo avec une dépendance, lance cargo doc --open et navigue jusqu'à la doc de la dépendance.",
+]
+related = ["rustdoc", "cargo-bases", "crates-io", "vec", "option"]

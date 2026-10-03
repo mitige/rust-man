@@ -1,0 +1,104 @@
+id = "tableaux"
+title = "tableaux — N éléments du même type, posés sur la stack"
+category = "bases"
+tags = ["tableau", "array", "stack", "indexation", "iteration"]
+difficulty = 2
+semaine = "S02"
+synopsis = "let notes: [i32; 5] = [12, 15, 9, 18, 14];  // 5 cases sur la stack, ni 4 ni 6"
+description = '''
+## En une phrase
+
+Un tableau `[T; N]` stocke **exactement N valeurs du même type, posées sur la stack** — la taille fait partie du type et ne changera jamais.
+
+## En pratique
+
+1. **Déclaration** : le type s'écrit `[T; N]` — type des éléments, puis nombre :
+
+```rust
+let notes: [i32; 5] = [12, 15, 9, 18, 14];
+```
+
+2. **Init répétée** : `[valeur; N]` remplit tout d'un coup :
+
+```rust
+let mut compteurs = [0; 10];
+```
+
+3. **`len()`** : le nombre d'éléments. La taille est déjà connue à la compilation ; `len()` la rappelle à l'exécution.
+
+4. **Indexation = bounds-check.** `notes[i]` vérifie `i < 5` à l'exécution ; dépasser provoque un `panic!` immédiat. En C, tu lirais la mémoire voisine sans prévenir ; en Rust, le programme s'arrête net. C'est plus cher, et c'est une bénédiction.
+
+```rust
+// notes[7]  // panic! « index out of bounds » — ne compile pas moins bien, explose à l'exécution
+```
+
+5. **Itération sans indices** : sur `&notes` (des références) ou via `.iter()` — pas d'indices, pas de risque :
+
+```rust
+for n in &notes { /* n: &i32 */ }
+let total: i32 = notes.iter().sum();
+```
+
+6. **Vers une slice** : `&notes` ou `&notes[1..4]` produisent une `&[i32]`, une vue sur tout ou partie du tableau — c'est le type que tes fonctions devraient accepter pour rester générales :
+
+```rust
+fn moyenne(n: &[i32]) -> f64 { /* accepte tableaux ET Vec */ }
+```
+
+## À retenir
+
+- `[T; N]` : N est gravé dans le type, données sur la stack, zéro allocation sur le tas.
+- `[0; 10]` : initialisation répétée en une expression.
+- `arr[i]` est vérifié à l'exécution : dépassement = `panic!`, jamais de lecture hors limites.
+- Itère avec `for x in &arr` ou `.iter()` : pas d'indices, pas de risque.
+- `&arr` et `&arr[a..b]` produisent des slices `&[T]`, le type d'entrée idéal des fonctions.
+- Taille variable ? Ce n'est plus un tableau, c'est un `Vec<T>`.
+'''
+example = '''
+fn main() {
+    // [T; N] : N fait partie du type, tout est posé sur la stack
+    let notes: [i32; 5] = [12, 15, 9, 18, 14];
+
+    // Init répétée : [valeur; N]
+    let mut compteurs = [0; 10];
+    compteurs[3] = 7;
+
+    // len() rappelle la taille, déjà connue à la compilation
+    println!("{} notes, {} compteurs", notes.len(), compteurs.len());
+
+    // Indexation : vérifiée à l'exécution (bounds-check)
+    // dépasser l'indice paniquerait : on reste dans les clous
+    println!("première note : {}", notes[0]);
+
+    // Itérer sur &notes : des références, pas de déplacement
+    let mut max = notes[0];
+    for &n in &notes {
+        if n > max {
+            max = n;
+        }
+    }
+    println!("meilleure note : {max}");
+
+    // .iter() : l'itérateur explicite, avec ses adaptateurs
+    let total: i32 = notes.iter().sum();
+    println!("moyenne : {:.1}", total as f64 / notes.len() as f64);
+
+    // Un tableau se « prête » en slice : &[T], vue sur les données
+    let vue: &[i32] = &notes[1..4];
+    println!("trois notes du milieu : {vue:?}");
+}
+'''
+gotchas = [
+    "`arr[i]` avec un `i` trop grand compile très bien : c'est à l'exécution que le `panic!` frappe — teste tes indices.",
+    "`[i32; 5]` et `[i32; 6]` sont deux types différents : pas de passage de l'un à l'autre sans conversion.",
+    "Un tableau n'est pas un `Vec` : impossible de le faire grandir, `push` n'existe pas dessus.",
+    "`[valeur; N]` exige un type `Copy` (ou une constante) : `[String::new(); 3]` est refusé — regarde `std::array::from_fn` pour le non-Copy.",
+    "Passer un tableau par valeur à une fonction copie ou déplace tout le bloc : préfère `&[T]`.",
+    "`&arr` dans un `for` donne des références : écris `for &x in &arr` si tu veux manipuler des copies d'entiers.",
+]
+exercises = [
+    "Crée `[0u32; 12]` pour les jours de pluie de chaque mois, remplis trois cases, et affiche le total avec `.iter().sum()`.",
+    "Écris `fn max(tab: &[i32]) -> Option<i32>` qui renvoie `None` sur slice vide, et teste-la sur un tableau.",
+    "Dans un programme jetable, provoque volontairement un dépassement d'indice, lis le message de panic en entier, puis supprime-le.",
+]
+related = ["slices", "vec", "boucles", "tuples", "types-scalaires"]

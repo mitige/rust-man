@@ -1,0 +1,86 @@
+id = "crates-io"
+title = "crates.io — l'écosystème à une commande de distance"
+category = "outils"
+tags = ["crates-io", "dependances", "ecosysteme", "cargo-add", "semver"]
+difficulty = 2
+semaine = "S06"
+synopsis = "crates.io + cargo add : tout l'écosystème Rust branché sur ton projet — à toi de bien choisir."
+description = '''
+## En une phrase
+
+crates.io est le **registre officiel** des bibliothèques Rust : `cargo add` branche n'importe lequel de ses crates sur ton projet en une commande — ton vrai travail, c'est de bien les choisir.
+
+## En pratique
+
+1. **Chercher** : sur crates.io, par mot-clé ou par catégorie. Pour chaque crate candidat, lis trois signaux :
+   - les **téléchargements** (la popularité = du code relu par beaucoup d'yeux),
+   - le **README** (qualité des exemples, état d'esprit du projet),
+   - la **maintenance** (dernier commit, issues traitées) — un crate abandonné est une dette.
+
+2. **Ajouter** : `cargo add serde` écrit la dernière version dans `Cargo.toml`. Avec des features : `cargo add clap --features derive`. Tu peux aussi éditer `[dependencies]` à la main (fiche cargo-toml).
+
+3. Les classiques à connaître par cœur :
+
+| crate | rôle |
+|---|---|
+| serde | (dé)sérialisation : JSON, TOML, YAML... |
+| clap | parsing d'arguments en ligne de commande |
+| tokio | runtime asynchrone |
+| rand | nombres aléatoires |
+| anyhow | erreurs pratiques côté application |
+| thiserror | erreurs typées côté bibliothèque |
+| regex | expressions régulières |
+| itertools | adaptateurs d'itérateurs supplémentaires |
+
+4. **Mettre à jour** : `cargo update` fait monter les versions DANS les contraintes semver de ton `Cargo.toml` et réécrit `Cargo.lock` ; `cargo update -p serde` pour un seul crate. Pour changer de contrainte (0.8 → 0.9), c'est le manifeste qu'on édite.
+
+5. **Sécurité** (mention) : `cargo audit` (à installer via `cargo install cargo-audit`) scanne ton `Cargo.lock` contre la base RustSec des vulnérabilités connues — à brancher en CI sur tout projet sérieux.
+
+6. La mécanique : cargo télécharge les sources dans `~/.cargo/registry`, les compile une fois dans `target/`, et `Cargo.lock` garantit que toi, ton binôme et la CI compilez EXACTEMENT les mêmes versions.
+
+## À retenir
+
+- crates.io = le registre officiel ; `cargo add` = la porte d'entrée.
+- Choisis un crate comme un outil : téléchargements, README, maintenance récente.
+- serde, clap, tokio, rand, anyhow, thiserror, regex, itertools : le kit de survie.
+- `cargo update` reste DANS tes contraintes semver et fige le résultat dans `Cargo.lock`.
+- `cargo audit` vérifie les vulnérabilités connues de tout ton arbre de dépendances.
+'''
+example = '''
+// Sans aucune dépendance : parser des arguments à la main avec la std.
+// Avec clap (crates.io), tu déclarerais une struct et #[derive(Parser)] :
+// cargo add clap --features derive
+use std::env;
+
+fn main() {
+    let args: Vec<String> = env::args().skip(1).collect();
+    match args.first().map(String::as_str) {
+        Some("salut") => {
+            // Avec rand : rand::thread_rng().gen_range(1..=100)
+            println!("Salut ! (clap rendrait ce sous-commande déclaratif)");
+        }
+        Some("liste") => {
+            // Avec itertools : args.iter().tuple_windows() et bien plus.
+            println!("arguments reçus : {} (itertools les découperait mieux)", args.len());
+        }
+        Some(autre) => println!("sous-commande inconnue : {autre}"),
+        None => {
+            println!("usage : demo [salut|liste]");
+            println!("puis : cargo add clap serde rand anyhow — bienvenue dans l'écosystème");
+        }
+    }
+}
+'''
+gotchas = [
+    "Ajouter un crate pour trois lignes de logique : chaque dépendance = temps de compilation + surface de confiance, avec SES dépendances transitives.",
+    "Ignorer la date du dernier commit : un crate sans maintenance peut casser avec les prochains Rust.",
+    "Utiliser anyhow dans une bibliothèque : il est prévu pour les applications — une bibliothèque expose des erreurs typées (thiserror) à ses utilisateurs.",
+    "Oublier de committer `Cargo.lock` pour une application : ton binôme et la CI peuvent alors résoudre des versions différentes.",
+    "Croire que `cargo update` change les contraintes : il reste DANS le semver de `Cargo.toml` — édite le manifeste pour changer de majeure.",
+]
+exercises = [
+    "`cargo new salut`, `cargo add clap --features derive`, et écris un vrai mini-CLI avec une option `--nom`.",
+    "Explore la page crates.io de serde : téléchargements, versions, dépendances — et retrouve son README et son dépôt.",
+    "Lance `cargo update` sur un projet qui a des dépendances et lis le diff de `Cargo.lock`.",
+]
+related = ["cargo-toml", "cargo-bases", "erreurs-custom", "modules-use"]

@@ -1,0 +1,103 @@
+id = "erreurs-frequentes"
+title = "erreurs-frequentes — le best-of des pièges de débutant"
+category = "pratique"
+tags = ["erreurs", "debutant", "rustc", "move", "compilation"]
+difficulty = 2
+semaine = "S02"
+synopsis = "E0382, E0515, E0308… : huit erreurs que TOUT débutant rencontre — symptôme, cause, fix."
+description = '''
+## En une phrase
+
+Les erreurs de débutant en Rust forment un **club très fermé** : huit fautes reviennent sans cesse, et chacune a un symptôme rustc reconnaissable, une cause simple et un fix systématique.
+
+## En pratique
+
+1. **Valeur utilisée après move** — `error[E0382]: borrow of moved value`. `let b = a;` DÉPLACE une `String` : `a` n'existe plus. Fix : emprunte (`&a`), ou clone si deux possesseurs sont vraiment nécessaires.
+
+2. **Référence vers une variable locale** — `error[E0515]: cannot return reference to local variable` (ou E0106 si la signature manque de lifetime). La variable meurt en fin de fonction : la référence pointerait dans le vide. Fix : retourne une valeur possédée (`String`, pas `&str`).
+
+3. **unwrap() partout** — pas d'erreur de compile, mais `called Option::unwrap() on a None value` à l'exécution. Fix : `?`, `match`, `unwrap_or`, ou `expect("pourquoi c'est sûr")`.
+
+4. **&str vs String confus** — `error[E0308]: mismatched types, expected String, found &str`. Deux types distincts. Fix : `.to_string()` pour posséder, ou accepte `&str` en paramètre.
+
+5. **mut oublié** — `error[E0384]: cannot assign twice to immutable variable`. L'immuabilité est le DÉFAUT. Fix : `let mut x`.
+
+6. **Modifier la collection parcourue** — `error[E0502]: cannot borrow v as mutable because it is also borrowed as immutable`. La boucle emprunte `v` en entier. Fix : construis une NOUVELLE collection.
+
+```rust
+for x in &v { v.push(*x); }       // ne compile pas : v est empruntée par la boucle
+let v2: Vec<i32> = v.iter().map(|x| x * 2).collect(); // le fix idiomatique
+```
+
+7. **Indexation manuelle** — `v[i]` compile mais panique si `i` dépasse, et clippy grogne. Fix : `for x in &v`, `v.iter().enumerate()`.
+
+8. **if sans bool** — `error[E0308]: expected bool, found integer`. Rust ne convertit JAMAIS implicitement. Fix : écris la comparaison (`if n != 0`).
+
+## À retenir
+
+- E0382 = valeur déplacée : emprunte (`&`) ou clone, mais comprends d'abord POURQUOI elle a bougé.
+- Jamais de référence vers une variable locale en retour : rends une valeur possédée.
+- `unwrap()` = pari non justifié ; si tu ne peux pas l'argumenter, utilise `?` ou `unwrap_or`.
+- `String` possède, `&str` emprunte : convertis avec `.to_string()`, accepte `&str` en entrée.
+- Une boucle `for` emprunte toute la collection : transforme en construisant une nouvelle collection.
+- `if` exige un `bool` : Rust ne fait aucune conversion implicite, écris la comparaison.
+'''
+example = '''
+// Le best-of des erreurs de débutant… ici tout est CORRIGÉ.
+// Les versions fausses (marquées « ne compile pas ») sont dans la description.
+
+fn main() {
+    // 1. Après un move : on emprunte au lieu de consommer
+    let s = String::from("hello");
+    let longueur = s.len(); // len() prend &self : s reste utilisable
+    println!("{s} ({longueur} caractères)");
+
+    // 2. On ne retourne jamais une référence vers une variable locale ;
+    //    une référence vers les DONNÉES DE L'APPELANT, elle, est permise
+    let mot = premier_mot("bonjour le monde");
+    println!("premier mot : {mot}");
+
+    // 3. Pas de unwrap() au petit bonheur : un défaut explicite
+    let n: i32 = "42".parse().unwrap_or(0);
+
+    // 4. &str en entrée, String quand on doit stocker
+    let stocke: String = mot.to_string();
+
+    // 5. mut déclaré dès qu'on modifie
+    let mut compteur = 0;
+
+    // 6. On ne modifie pas la collection parcourue : on en construit une autre
+    let notes = vec![8, 12, 15, 9];
+    let doubles: Vec<i32> = notes.iter().map(|n| n * 2).collect();
+
+    // 7. Itérateurs plutôt que l'indexation manuelle
+    for (i, d) in doubles.iter().enumerate() {
+        println!("note {i} doublée : {d}");
+        compteur += 1;
+    }
+
+    // 8. if exige un bool : on écrit la comparaison, pas un entier nu
+    if compteur > 0 {
+        println!("{compteur} notes traitées, n = {n}, stocké = {stocke}");
+    }
+}
+
+fn premier_mot(phrase: &str) -> &str {
+    // La référence rendue pointe dans `phrase` (donnée de l'appelant) : OK.
+    phrase.split_whitespace().next().unwrap_or("")
+}
+'''
+gotchas = [
+    "Croire que `.clone()` est la solution universelle aux moves : ça marche, mais un emprunt suffit souvent et coûte zéro.",
+    "Mettre `mut` partout « pour être tranquille » : tu perds l'aide du compilateur, et l'immuabilité est une fonctionnalité, pas une punition.",
+    "Écrire des paramètres en `&String` : ça compile mais c'est moins général que `&str` — clippy te le signalera (ptr_arg).",
+    "Garder l'indexation `v[i]` « parce que ça marche » : le jour où l'index dépasse, c'est un panic, pas une erreur de compile.",
+    "Traiter les erreurs de compile comme des ennemies : chacune est un bug d'exécution évité — lis-les comme de la documentation.",
+    "Corriger dix erreurs d'un coup avant de recompiler : corrige la première, recompile — les autres sont souvent des cascades.",
+]
+exercises = [
+    "Provoque volontairement chacune des huit erreurs dans un fichier jetable, lis chaque diagnostic en entier, puis corrige.",
+    "Prends un de tes anciens TP et remplace chaque `unwrap()` par `?`, `match` ou `unwrap_or` — justifie ceux que tu gardes.",
+    "Réécris une boucle à indices (`for i in 0..v.len()`) avec des itérateurs et `enumerate`, puis compare la lisibilité.",
+]
+related = ["ownership", "emprunts", "string-vs-str", "unwrap-expect", "lire-erreur-rustc"]

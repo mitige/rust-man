@@ -1,0 +1,8 @@
+id = "q-expect-message"
+category = "erreurs"
+difficulty = 1
+question = "Quelle est la différence entre `opt.expect(\"config manquante\")` et `opt.unwrap()` ?"
+choices = ["`expect` ajoute ton message au panic, ce qui rend le crash diagnostiquable ; sinon les deux paniquent pareil", "`expect` renvoie une valeur par défaut au lieu de paniquer", "`expect` fonctionne aussi sur `Result` alors qu'`unwrap` est réservé à `Option`", "`expect` demande confirmation à l'utilisateur avant de paniquer"]
+answer = 0
+explanation = '''`expect(msg)` et `unwrap()` paniquent tous les deux sur `None` ou `Err`, mais `expect` inclut ton message dans le panic : « config manquante » au lieu du seul « called Option::unwrap() on a None value ». En débogage, ce contexte change tout — tu sais QUEL accès a échoué et pourquoi tu pensais qu'il était sûr. Règle générale : préfère toujours `expect` à `unwrap`, le message documente ton hypothèse. Et les deux marchent sur `Option` comme sur `Result`.'''
+related = ["unwrap-expect", "panic", "option"]

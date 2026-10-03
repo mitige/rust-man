@@ -1,0 +1,91 @@
+id = "cargo-bases"
+title = "cargo — le couteau suisse du dev Rust"
+category = "outils"
+tags = ["cargo", "build", "compilation", "release", "projet"]
+difficulty = 1
+semaine = "S01"
+synopsis = "cargo new, build, run, check, test : toute ta vie de dev Rust tient dans ces cinq commandes."
+description = '''
+## En une phrase
+
+Cargo est le **couteau suisse** de Rust : il crée tes projets, compile, lance, teste et télécharge les dépendances — tu ne toucheras quasiment jamais `rustc` directement.
+
+## En pratique
+
+1. `cargo new mon_projet` crée la structure complète :
+
+```
+mon_projet/
+├── Cargo.toml      # le manifeste (fiche cargo-toml)
+├── Cargo.lock      # apparaît au premier build
+└── src/
+    └── main.rs     # ton code (lib.rs pour une bibliothèque)
+```
+
+2. `cargo build` compile en mode **debug** → binaire dans `target/debug/`.
+3. `cargo run` compile PUIS exécute : c'est ta commande de tous les jours. Les arguments destinés à ton programme passent après `--` : `cargo run -- arg1 arg2`.
+4. `cargo check` = compile **sans produire le binaire** : juste l'analyse des types et des emprunts. Beaucoup plus rapide — c'est elle que tu lances en boucle pendant que tu écris.
+5. `cargo test` compile avec le harnais de test et exécute les `#[test]` (fiche tests).
+6. `cargo build --release` compile avec les optimisations : plus lent à compiler, bien plus rapide à l'exécution → binaire dans `target/release/`. C'est ce build que tu mesures et que tu distribues.
+
+La boucle de développement typique :
+
+```rust
+// cargo check   → est-ce que ça compile ? (rapide, sans binaire)
+// cargo run     → est-ce que ça fait ce que je veux ?
+// cargo test    → est-ce que mes tests passent ?
+// cargo clippy  → est-ce que c'est idiomatique ? (fiche clippy)
+```
+
+Le dossier `target/` contient TOUS les artefacts : binaires, dépendances déjà compilées, caches incrémentaux. Il grossit vite (des centaines de Mo), il est dans le `.gitignore` généré par cargo, et tu peux le supprimer sans crainte : cargo le reconstruit.
+
+`Cargo.lock` fige les versions EXACTES des dépendances résolues. Pour une application, tu le committes ; pour une bibliothèque publiée, on l'ignore traditionnellement. Ne l'édite jamais à la main, cargo le régénère.
+
+Debug vs release : en debug, un dépassement d'entier **panique** (vérifications activées) ; en release, il **reboucle** silencieusement (wraparound). Et `debug_assert!` ne s'exécute qu'en debug.
+
+## À retenir
+
+- `cargo run` = build + exécution ; `cargo check` = compile seule, rapide, sans binaire.
+- `target/debug/` = rapide à compiler, vérifications activées ; `target/release/` (`--release`) = optimisé, à mesurer et distribuer.
+- `target/` se supprime sans regret (`cargo clean`) et ne se committe jamais.
+- `Cargo.lock` fige les versions exactes : committé pour les applications.
+- Tu n'appelles quasiment jamais `rustc` toi-même : cargo fait tout.
+'''
+example = '''
+// À placer dans src/main.rs d'un projet créé avec `cargo new demo`.
+// Puis : `cargo run` (debug) ou `cargo run --release` (optimisé).
+
+fn fibonacci(n: u32) -> u64 {
+    let (mut a, mut b) = (0u64, 1u64);
+    for _ in 0..n {
+        let tmp = a + b;
+        a = b;
+        b = tmp;
+    }
+    a
+}
+
+fn main() {
+    // `cargo check` vérifie ce fichier SANS produire de binaire :
+    // parfait pour la boucle « j'écris → je vérifie ».
+    let n = 20;
+    println!("fibonacci({n}) = {}", fibonacci(n));
+
+    // Le binaire atterrit dans target/debug/ (ou target/release/ avec --release).
+    println!("Binaire produit : target/debug/demo — optimisé : target/release/demo");
+}
+'''
+gotchas = [
+    "Lancer `cargo run` en boucle pendant que tu écris : `cargo check` donne les mêmes erreurs bien plus vite, sans produire de binaire.",
+    "Mesurer des performances sur un build debug n'a aucun sens : benchmark toujours avec `--release`.",
+    "Un dépassement d'entier panique en debug mais reboucle silencieusement en release : ne compte jamais sur le panic pour ta logique.",
+    "Tout ce qui suit `--` dans `cargo run -- --flag` va à TON programme, pas à cargo.",
+    "Éditer `Cargo.lock` à la main casse la résolution des versions : touche `Cargo.toml`, puis laisse cargo régénérer.",
+    "`target/` peut peser des gigaoctets à force d'accumuler : `cargo clean` fait le ménage.",
+]
+exercises = [
+    "Crée `cargo new chrono`, écris une boucle qui additionne un milliard d'entiers, et compare `time cargo run` et `time cargo run --release`.",
+    "Supprime le dossier `target/` d'un projet, relance `cargo check` puis `cargo build`, et observe ce qui réapparaît à chaque fois.",
+    "Ouvre `Cargo.lock` avant et après `cargo add rand` (fiche crates-io) et repère ce qui a changé.",
+]
+related = ["cargo-toml", "tests", "premier-programme", "structurer-projet", "clippy"]

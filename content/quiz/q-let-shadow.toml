@@ -1,0 +1,23 @@
+id = "q-let-shadow"
+category = "bases"
+difficulty = 2
+question = '''
+Que s’est-il passé après ces trois lignes ?
+
+```rust
+let x = 5;
+let x = x + 1;
+let x = "hello";
+```
+'''
+choices = [
+    "Erreur de compilation : on ne peut pas réaffecter x sans l’avoir déclaré mut",
+    "x vaut \"hello\", et les deux anciennes valeurs ont fuité en mémoire",
+    "Trois variables distinctes ont été créées : chaque `let` masque la précédente, et le type peut changer à chaque fois",
+    "x est devenue mutable dès le deuxième `let`, ce qui a permis les changements suivants",
+]
+answer = 2
+explanation = '''
+Chaque `let` crée une variable neuve qui masque (shadow) la précédente dans la portée : ce ne sont pas des réaffectations. Différence clé avec `mut` : le shadowing peut changer le type (ici i32 puis &str) et la nouvelle variable redevient immuable. Aucune fuite : les anciennes valeurs sont détruites normalement en fin de portée. Le piège classique : croire que c’est une réaffectation déguisée — non, l’ancienne variable existe toujours, elle est juste inaccessible par son nom.
+'''
+related = ["variables-mutabilite"]

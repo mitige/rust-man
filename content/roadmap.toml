@@ -1,0 +1,78 @@
+id = "roadmap"
+title = "roadmap — 8 semaines pour dompter Rust"
+category = "demarrer"
+tags = ["parcours", "semaines", "plan", "progression", "cours"]
+difficulty = 1
+semaine = "S01"
+synopsis = "S01 variables -> S04 emprunts+Result -> S08 projet final"
+description = '''
+## En une phrase
+
+Huit semaines, du premier `cargo new` au projet final, **calées sur un cours universitaire** : chaque semaine a ses fiches, ses quiz et ses exercices.
+
+## En pratique
+
+Le parcours suit l'ordre où les notions se débloquent les unes les autres :
+
+```text
+S01  prise en main + variables      S05  traits + generics + closures
+S02  contrôle + structs             S06  erreurs custom + crates
+S03  ownership + Option             S07  objets-trait + avancé
+S04  emprunts + Result + collections  S08  projet final
+```
+
+Semaine par semaine :
+
+1. **S01** — Lis `installer-rust`, `premier-programme`, `variables-mutabilite`, `types-scalaires`. Objectif : compiler sans cargo, puis avec.
+2. **S02** — Lis `lire-la-doc`, `fonctions`, `expressions-vs-instructions`, `conditions`, `boucles`, `structs`. Objectif : un petit programme avec des structs.
+3. **S03** — Lis `ownership`, `clone-copy`, `option`. C'est LA semaine charnière : prends ton temps.
+4. **S04** — Lis `emprunts`, `emprunts-mutables`, `result`, `operateur-question`, `vec`, `hashmap`. Objectif : un programme qui gère ses erreurs proprement.
+5. **S05** — Lis `traits`, `derive`, `generics`, `closures`, `iterateurs`.
+6. **S06** — Lis `erreurs-custom`, `cargo-toml`, `crates-io`, `tests`. Objectif : publier une crate locale testée.
+7. **S07** — Lis `dyn-trait`, `lifetimes`, `trait-bounds`, `iter-avance`.
+8. **S08** — Projet final avec `structurer-projet`, `idiomes-rust`, `methodologie-debug`. Combine tout : structs, erreurs, traits, tests.
+
+En parallèle : quiz chaque semaine, et `methode-apprentissage` dès maintenant pour la cadence.
+
+## À retenir
+
+- S03 (ownership) est le tournant : tout ce qui précède la prépare, tout ce qui suit s'appuie dessus.
+- Une semaine = un lot de fiches + un quiz + les exercices des fiches.
+- Prends du retard sur la roadmap plutôt que de bâcler ownership.
+- S08 ne demande rien de nouveau : elle assemble ce que S01-S07 ont posé.
+'''
+example = '''
+fn main() {
+    // Le parcours comme structure de données : (semaine, thème, fiche clé)
+    let parcours = [
+        ("S01", "prise en main + variables", "premier-programme"),
+        ("S02", "contrôle + structs", "structs"),
+        ("S03", "ownership + Option", "ownership"),
+        ("S04", "emprunts + Result + collections", "emprunts"),
+        ("S05", "traits + generics + closures", "traits"),
+        ("S06", "erreurs custom + crates", "erreurs-custom"),
+        ("S07", "objets-trait + avancé", "dyn-trait"),
+        ("S08", "projet final", "structurer-projet"),
+    ];
+
+    println!("=== Roadmap rust-man (8 semaines) ===");
+    for (sem, theme, fiche) in parcours {
+        // {:<38} aligne à gauche sur 38 colonnes
+        println!("{sem}  {theme:<38} -> rust-man {fiche}");
+    }
+    println!("\nConseil : S03 est la charnière. Ne la survole pas.");
+}
+'''
+gotchas = [
+    "Vouloir sauter directement aux traits (S05) sans maîtriser l'ownership (S03) est le chemin le plus court vers l'abandon.",
+    "La roadmap suppose ~3-4 h par semaine : si tu n'en as qu'une, étale chaque semaine sur deux.",
+    "Ne lis pas toutes les fiches d'une semaine d'un coup : une fiche, son exemple tapé à la main, puis la suivante.",
+    "Oublier les quiz hebdomadaires, c'est relire les fiches en S08 comme si c'était du nouveau.",
+    "Le projet de S08 échoue presque toujours par manque de tests : la fiche tests est en S06, pas par hasard.",
+]
+exercises = [
+    "Écris dans un fichier texte ton planning réel : quels soirs de la semaine tu bosses Rust, et combien de temps.",
+    "Liste les fiches de S01 et coche celles que tu as déjà lues ; relis-en une au hasard et refais son exemple de mémoire.",
+    "Regarde les titres de S05-S07 et note les mots que tu ne comprends pas encore : tu les reliras en arrivant à ces semaines.",
+]
+related = ["bienvenue", "methode-apprentissage", "premier-programme", "conseils-cours", "structurer-projet"]

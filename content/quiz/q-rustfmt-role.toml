@@ -1,0 +1,15 @@
+id = "q-rustfmt-role"
+category = "outils"
+difficulty = 1
+question = "À quoi sert `cargo fmt` (rustfmt) ?"
+choices = [
+    "À reformater automatiquement tout le code selon le style officiel : un seul style partout, finis les débats",
+    "À choisir le style le plus lisible parmi plusieurs styles intégrés, selon le projet",
+    "À accélérer la compilation en réorganisant l’ordre des déclarations",
+    "À signaler les erreurs de syntaxe qui empêchent le code de compiler",
+]
+answer = 0
+explanation = '''
+rustfmt applique LE style officiel de Rust à tout ton projet, automatiquement : indentation, sauts de ligne, espaces. Il ne change jamais le sens du programme, seulement sa mise en page, et il ne juge pas ton code — les remarques de fond, c’est clippy. Règle générale : active le format-on-save dans ton éditeur ou lance `cargo fmt` avant chaque commit, et le style devient un non-sujet. Piège : croire qu’il existe plusieurs « styles rustfmt » à discuter en équipe ; la valeur de l’outil est précisément qu’il n’y a plus rien à débattre.
+'''
+related = ["rustfmt", "clippy"]

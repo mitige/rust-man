@@ -1,0 +1,24 @@
+id = "q-dangling"
+category = "ownership"
+difficulty = 3
+question = '''
+Que fait le compilateur face à cette fonction ?
+
+```rust
+fn creer() -> &String {
+    let s = String::from("salut");
+    &s
+}
+```
+'''
+choices = [
+    "Erreur de compilation : s est détruite à la fin de la fonction, la référence renvoyée pendrait dans le vide",
+    "Ça compile : la String est déplacée vers le tas de l’appelant au moment du retour",
+    "Ça compile avec un avertissement, car la référence vit moins longtemps que prévu",
+    "Erreur de compilation : il faut écrire `move &s` pour transférer la référence",
+]
+answer = 0
+explanation = '''
+`s` est une variable locale : sa mémoire est libérée au `}` final, et renvoyer `&s` donnerait une référence vers des données mortes — le fameux dangling pointer du C, que le borrow checker élimine à la compilation. La solution idiomatique : renvoyer `String` par valeur, ce qui TRANSFÈRE la propriété à l’appelant. Pièges : croire que le tas sauve tout (même allouée sur le tas, la donnée appartient à s qui meurt), ou qu’un mot-clé `move` magique existe pour les références — il n’existe pas, seule la propriété se transfère.
+'''
+related = ["emprunts", "lifetimes"]

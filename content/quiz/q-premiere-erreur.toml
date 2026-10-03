@@ -1,0 +1,15 @@
+id = "q-premiere-erreur"
+category = "pratique"
+difficulty = 1
+question = "`cargo build` t’affiche 12 erreurs d’un coup. Quelle est la bonne stratégie ?"
+choices = [
+    "Corriger d’abord la dernière erreur de la liste, c’est la plus récente",
+    "Tout corriger d’un coup avant de recompiler, pour gagner du temps",
+    "Corriger la PREMIÈRE erreur puis recompiler : les suivantes sont souvent des cascades",
+    "Relire tout le fichier à la main : 12 erreurs sont forcément 12 problèmes indépendants",
+]
+answer = 2
+explanation = '''
+Une seule erreur racine — un type mal annoté, un import manquant, un nom mal orthographié — fait souvent dérailler tout ce qui suit : le compilateur propage l’inconnue et multiplie les messages. Corrige donc la première erreur, recompile, recompte : il arrive que 12 erreurs se réduisent à 2 d’un coup. Règle générale : première erreur d’abord, recompilation fréquente, jamais de marathon de corrections à l’aveugle. Piège : se laisser impressionner par le nombre — le compteur d’erreurs ne mesure pas la gravité, juste la propagation.
+'''
+related = ["lire-erreur-rustc", "erreurs-frequentes"]

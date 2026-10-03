@@ -1,0 +1,129 @@
+id = "enums"
+title = "enums — un choix parmi plusieurs, avec données embarquées"
+category = "bases"
+tags = ["enum", "variantes", "match", "option", "type-somme"]
+difficulty = 2
+semaine = "S02"
+synopsis = "enum Forme { Cercle(f64), Rectangle(f64, f64) }  // chaque variante transporte ses propres données"
+description = '''
+## En une phrase
+
+Un enum Rust est un **type somme** : une valeur est exactement l'une des variantes, et chaque variante peut transporter ses propres données.
+
+## En pratique
+
+1. **Déclaration** : chaque variante peut être sans donnée, tuple, ou struct :
+
+```rust
+enum Message {
+    Quitter,                      // rien
+    Deplacer { x: i32, y: i32 },  // champs nommés
+    Ecrire(String),               // donnée positionnelle
+}
+```
+
+En C, tu imiterais ça avec une `union` + un tag gérés à la main, sans filet ; en Rust c'est **un seul type sûr**, vérifié par le compilateur.
+
+2. **`Option<T>`, l'enum canonique de la std** — tu le croiseras partout :
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+```
+
+`Option<i32>` vaut soit `Some(42)`, soit `None`. Fini les pointeurs null qui explosent à l'exécution : l'absence est un cas du type.
+
+3. **`match` : le compagnon obligatoire.** Il est exhaustif — oublie une variante et le compilateur refuse :
+
+```rust
+match age {
+    Some(a) => println!("{a} ans"),
+    None => println!("inconnu"),
+}
+```
+
+4. **`if let` : quand un seul cas t'intéresse**, pas besoin d'un match complet :
+
+```rust
+if let Some(a) = age {
+    println!("{a}");
+}
+```
+
+5. **Des méthodes sur un enum, via `impl`** — exactement comme sur une struct :
+
+```rust
+impl Message {
+    fn est_urgent(&self) -> bool {
+        matches!(self, Message::Quitter)
+    }
+}
+```
+
+## À retenir
+
+- Un enum = un choix exclusif entre variantes, avec données embarquées par variante.
+- `Option<T>` = `Some(T)` ou `None` : l'absence de valeur devient un cas explicite du type.
+- `match` est exhaustif : le compilateur t'oblige à traiter tous les cas.
+- `if let` = un match raccourci pour un seul motif.
+- `impl MonEnum { ... }` donne des méthodes aux enums, comme aux structs.
+'''
+example = '''
+// Un enum Rust = type somme : UNE des variantes à la fois, avec ses données
+enum Message {
+    Quitter,                      // variante sans donnée
+    Deplacer { x: i32, y: i32 },  // variante struct (champs nommés)
+    Ecrire(String),               // variante tuple
+}
+
+// Des méthodes sur un enum, comme sur une struct
+impl Message {
+    fn decrire(&self) -> String {
+        match self {
+            Message::Quitter => String::from("fin du programme"),
+            Message::Deplacer { x, y } => format!("déplacement vers ({x}, {y})"),
+            Message::Ecrire(texte) => format!("message : {texte}"),
+        }
+    }
+}
+
+fn main() {
+    // Option<T> : L'enum canonique de la std — Some(valeur) ou None
+    let age: Option<i32> = Some(20);
+
+    // match : exhaustif, aucun cas ne peut être oublié
+    match age {
+        Some(a) => println!("âge connu : {a}"),
+        None => println!("âge inconnu"),
+    }
+
+    // if let : plus court quand un seul cas nous intéresse
+    if let Some(a) = age {
+        println!("dans un an : {}", a + 1);
+    }
+
+    let msgs = [
+        Message::Deplacer { x: 3, y: -1 },
+        Message::Ecrire(String::from("salut")),
+        Message::Quitter,
+    ];
+    for m in &msgs {
+        println!("{}", m.decrire());
+    }
+}
+'''
+gotchas = [
+    "Oublier un cas dans un `match` = erreur de compilation, pas un avertissement : l'exhaustivité n'est pas optionnelle.",
+    "`Option<T>` n'est pas un pointeur : `Some(x)` contient directement la valeur, il faut la déstructurer pour l'utiliser.",
+    "Deux variantes peuvent avoir des formes différentes (tuple, struct, vide) au sein du même enum — c'est voulu.",
+    "`if let` ignore silencieusement les autres cas : si une variante urgente arrive demain, le compilateur ne te préviendra pas.",
+    "Une variante struct se déstructure avec des accolades : `Message::Deplacer { x, y }`, pas des parenthèses.",
+    "`match` sur un enum emprunté (`&self`) lie par référence : écris `match self` et laisse l'ergonomie des motifs faire le reste.",
+]
+exercises = [
+    "Définis `enum Jour { Semaine(u8), Weekend }`, une méthode `fn est_repos(&self) -> bool`, et teste-la sur les deux cas.",
+    "Écris `fn double(x: Option<i32>) -> Option<i32>` avec un `match`, puis réécris-la avec `x.map(|v| v * 2)`.",
+]
+related = ["match", "option", "structs", "methodes-impl", "result"]

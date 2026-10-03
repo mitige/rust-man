@@ -1,0 +1,8 @@
+id = "q-vec-push-emprunt"
+category = "collections"
+difficulty = 3
+question = "Pourquoi ce code ne compile-t-il pas ?\n\n```rust\nlet mut v = vec![1, 2, 3];\nfor x in &v {\n    v.push(*x * 2);\n}\n```"
+choices = ["Parce que `*x * 2` déborde potentiellement en `i32`", "Parce que `push` exige un emprunt mutable `&mut v`, incompatible avec l'emprunt immuable `&v` encore actif de la boucle", "Parce qu'un `Vec` ne peut pas dépasser 3 éléments sans réallocation explicite", "Parce que `for` ne fonctionne pas sur les `Vec` mutables"]
+answer = 1
+explanation = '''`for x in &v` garde un emprunt immuable sur TOUT le vecteur pendant la boucle ; `v.push(...)` demande un emprunt mutable exclusif — les deux ne peuvent coexister. C'est le borrow checker qui t'empêche de tirer sur la branche : un `push` peut réallouer le buffer et invalider l'itérateur en cours (dangling iterator en C++). Règle générale : jamais de mutation d'une collection pendant qu'on l'itère. Solutions idiomatiques : collecter les ajouts dans un second `Vec` puis `extend`, ou itérer sur des indices avec `len()` figé.'''
+related = ["vec", "emprunts-mutables", "emprunts"]

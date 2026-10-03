@@ -1,0 +1,95 @@
+id = "installer-rust"
+title = "installer-rust — rustup, toolchains et éditions"
+category = "demarrer"
+tags = ["rustup", "installation", "toolchain", "edition", "clippy", "rustfmt"]
+difficulty = 1
+semaine = "S01"
+synopsis = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+description = '''
+## En une phrase
+
+On n'installe pas « Rust », on installe **rustup**, le gestionnaire qui installe et met à jour les toolchains Rust pour toi.
+
+## En pratique
+
+1. **Installation** (Linux / macOS) :
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Relance ton shell, puis vérifie :
+
+```sh
+rustc --version    # rustc 1.8x.0 (....)
+cargo --version
+```
+
+2. **Toolchains.** Une toolchain = un compilateur + std + outils, dans une version donnée. Par défaut tu es sur `stable`. `nightly` existe pour tester des features instables — inutile pour tes cours.
+
+```sh
+rustup toolchain list
+rustup default stable
+```
+
+3. **Éditions.** Rust fige la syntaxe par édition : 2015, 2018, 2021, 2024. Le compilateur les comprend toutes ; l'édition se choisit par projet dans `Cargo.toml` (`edition = "2021"`). Tes cours et rust-man visent **2021**.
+
+4. **Composants indispensables** :
+
+```sh
+rustup component add clippy rustfmt rust-analyzer
+```
+
+`clippy` linte ton code, `rustfmt` le formate, `rust-analyzer` parle à ton éditeur.
+
+5. **Mise à jour** : `rustup update` met à jour toutes les toolchains. Fais-le une fois par mois, pas en panique la veille d'un rendu.
+
+## À retenir
+
+- rustup gère tout : compilateur, cargo, composants, mises à jour.
+- `rustc --version` est le test fumée après toute installation.
+- stable suffit largement ; nightly n'est pas « mieux », juste instable.
+- L'édition (2015/2018/2021/2024) est un choix par projet, pas une version du compilateur.
+- Installe clippy, rustfmt et rust-analyzer dès le premier jour.
+'''
+example = '''
+// Représente une toolchain rustup et ses composants.
+struct Toolchain {
+    nom: &'static str,
+    edition_defaut: &'static str,
+    composants: Vec<&'static str>,
+}
+
+fn main() {
+    let stable = Toolchain {
+        nom: "stable",
+        edition_defaut: "2021",
+        composants: vec!["rustc", "cargo", "clippy", "rustfmt", "rust-analyzer"],
+    };
+
+    println!("Toolchain : {}", stable.nom);
+    println!("Édition par défaut des nouveaux projets : {}", stable.edition_defaut);
+    println!("Composants installés :");
+    for c in &stable.composants {
+        println!("  - {c}");
+    }
+
+    // L'équivalent shell de cette fiche :
+    println!("\n$ rustc --version   # vérifie que tout est là");
+    println!("$ rustup update     # une fois par mois");
+}
+'''
+gotchas = [
+    "Installer Rust via le gestionnaire de paquets de ta distrib te donne souvent une version vieille de plusieurs mois : préfère rustup.",
+    "Oublier de recharger le shell après l'installation donne un « rustc: command not found » alors que tout est bien installé.",
+    "Confondre édition et version : rustc 1.90 compile les éditions 2015, 2018, 2021 et 2024 indifféremment.",
+    "Passer en nightly « pour avoir les nouveautés » casse régulièrement des projets : reste sur stable pour tes cours.",
+    "Sans rust-analyzer, tu perds la complétion et les erreurs dans l'éditeur : c'est le composant qui change ta vie quotidienne.",
+    "rustup update la veille d'un examen peut changer les warnings de clippy : mets à jour quand tu as le temps de t'adapter.",
+]
+exercises = [
+    "Installe rustup (ou vérifie-le) et note la sortie exacte de rustc --version dans ton journal.",
+    "Ajoute les composants clippy et rustfmt, puis lance rustup component list pour voir tout ce qui est disponible.",
+    "Crée un projet cargo, regarde la ligne edition du Cargo.toml, puis compile ce même fichier avec rustc --edition 2021 pour comparer.",
+]
+related = ["premier-programme", "cargo-bases", "clippy", "rustfmt", "cargo-toml"]

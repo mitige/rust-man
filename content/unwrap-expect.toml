@@ -1,0 +1,99 @@
+id = "unwrap-expect"
+title = "unwrap / expect — le panic au quotidien"
+category = "erreurs"
+tags = ["unwrap", "expect", "panic", "alternatives", "clippy"]
+difficulty = 2
+semaine = "S04"
+synopsis = "unwrap() : Some/Ok → la valeur, None/Err → panic!. expect(\"...\") : pareil, avec TON message."
+description = '''
+## En une phrase
+
+`unwrap()` extrait la valeur d’un `Some`/`Ok` et **panique sur `None`/`Err`** ; `expect("...")` fait exactement pareil, avec un message à toi.
+
+## En pratique
+
+1. Ce que fait `unwrap`, en trois lignes :
+
+```rust
+Some(5).unwrap();                       // 5
+None::<i32>.unwrap();                   // panic! « called `Option::unwrap()` on a `None` value »
+"abc".parse::<i32>().expect("un entier attendu");   // panic! avec TON message
+```
+
+2. Quand c’est OK : prototypes et scripts jetables ; tests (un test qui panique = un test rouge, c’est le comportement voulu) ; invariants que TU garantis — `"42".parse::<i32>().unwrap()` ne peut pas échouer, le littéral est valide par construction.
+3. Quand c’est MAL : code de production, entrées utilisateur, fichiers, réseau — tout ce qui peut légitimement échouer. Un `unwrap` sur une saisie est un crash programmé.
+4. `expect` ne rend rien plus sûr : il panique pareil. Son message doit expliquer POURQUOI c’était censé marcher (« le config est validé au démarrage »), pas répéter « ça a échoué ».
+5. Les alternatives propres, par besoin :
+
+| besoin | outil |
+|---|---|
+| repli simple | `unwrap_or(0)` |
+| repli = valeur `Default` du type | `unwrap_or_default()` |
+| repli calculé, erreur lisible | `unwrap_or_else(|e| ...)` |
+| jeter l’erreur, garder la valeur | `ok()` (Result → Option) |
+| propager à l’appelant | `?` |
+
+6. Clippy peut bannir `unwrap` : `#![deny(clippy::unwrap_used)]` (lint de restriction) force les alternatives dans tout le crate — à essayer sur un projet mûr.
+
+## À retenir
+
+- `unwrap` / `expect` = panic habillé : réserve-les aux tests, prototypes et invariants prouvés.
+- Le message d’`expect` documente l’invariant, il ne décore pas l’échec.
+- `unwrap_or(x)` évalue `x` même sur `Some`/`Ok` : pour un calcul coûteux, `unwrap_or_else` ne paie que sur l’échec.
+- `ok()` jette l’erreur silencieusement : si la cause compte un jour, garde le `Result`.
+- En production : `?`, `match` ou `unwrap_or*` — jamais `unwrap` sur une donnée extérieure.
+'''
+example = '''
+fn main() {
+    // OK ici : invariant garanti, le littéral est un entier valide
+    let sur: i32 = "42".parse().expect("le littéral '42' est un entier valide");
+    println!("sûr : {sur}");
+
+    let entree = "abc";   // imagine : saisie utilisateur
+    // MAL : entree.parse::<i32>().unwrap() paniquerait ici.
+
+    // Propre 1 — unwrap_or : valeur de repli
+    let n = entree.parse::<i32>().unwrap_or(0);
+    println!("repli simple : {n}");
+
+    // Propre 2 — unwrap_or_default : la valeur Default du type
+    let m = entree.parse::<i32>().unwrap_or_default();
+    println!("repli default : {m}");
+
+    // Propre 3 — unwrap_or_else : repli calculé, erreur lisible
+    let p = entree.parse::<i32>().unwrap_or_else(|e| {
+        println!("entrée ignorée ({e})");
+        -1
+    });
+    println!("repli calculé : {p}");
+
+    // Propre 4 — ok() : Result -> Option, l’erreur est jetée
+    let q = entree.parse::<i32>().ok().unwrap_or(7);
+    println!("via option : {q}");
+
+    // Propre 5 — ? : propager au lieu de paniquer
+    match gerer(entree) {
+        Ok(v) => println!("géré : {v}"),
+        Err(e) => println!("propagé proprement : {e}"),
+    }
+}
+
+fn gerer(s: &str) -> Result<i32, std::num::ParseIntError> {
+    let v = s.parse::<i32>()?;   // jamais de panic : l’appelant décide
+    Ok(v * 2)
+}
+'''
+gotchas = [
+    "unwrap sur une entrée utilisateur, un fichier ou le réseau = un crash qui ne demande qu’à arriver : tout ce qui vient de l’extérieur mérite `?`.",
+    "expect ne sécurise rien : il panique pareil — son message doit expliquer POURQUOI l’invariant était garanti.",
+    "`unwrap_or(x)` évalue `x` même quand tout va bien : pour un calcul coûteux, `unwrap_or_else(|| ...)` ne paie que sur l’échec.",
+    "Dans les tests, unwrap est idiomatique : un test qui panique est un test rouge, c’est exactement le comportement voulu.",
+    "`#![deny(clippy::unwrap_used)]` bannit unwrap de tout le crate — pratique pour durcir du code de production.",
+    "`ok()` jette l’erreur sans bruit : si la cause de l’échec compte un jour, garde le Result.",
+]
+exercises = [
+    "Reprends un de tes anciens programmes : remplace chaque unwrap par `?`, `unwrap_or` ou un `expect` justifié.",
+    "Écris un test unitaire qui utilise `unwrap` volontairement, et observe le message quand il échoue.",
+    "Active `#![deny(clippy::unwrap_used)]` sur un projet cargo et corrige tout ce que clippy remonte.",
+]
+related = ["panic", "result", "option", "operateur-question", "clippy"]

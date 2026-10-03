@@ -1,0 +1,90 @@
+id = "tuples"
+title = "tuples — plusieurs valeurs, un seul paquet anonyme"
+category = "bases"
+tags = ["tuple", "destructuring", "unit", "retour-multiple"]
+difficulty = 1
+semaine = "S02"
+synopsis = "let t: (i32, &str, f64) = (42, \"salut\", 3.14);  // accès par position : t.0, t.1, t.2"
+description = '''
+## En une phrase
+
+Un tuple emballe plusieurs valeurs de types différents dans un seul paquet à taille fixe, **sans nommer les champs**.
+
+## En pratique
+
+1. **Création** : parenthèses et virgules ; chaque position a son propre type :
+
+```rust
+let t: (i32, &str, f64) = (42, "salut", 3.14);
+```
+
+2. **Accès par position** : `t.0`, `t.1`, `t.2` — l'indice fait partie de la syntaxe, ce n'est **pas** `t[0]`.
+
+3. **Destructuring** : donne un nom à chaque position d'un coup :
+
+```rust
+let (n, mot, pi) = t;
+```
+
+4. **Le retour multiple paresseux** : pour renvoyer deux valeurs d'une fonction, pas besoin d'inventer une struct :
+
+```rust
+fn divmod(a: i32, b: i32) -> (i32, i32) {
+    (a / b, a % b)
+}
+let (quotient, reste) = divmod(17, 5);
+```
+
+5. **`()`, le tuple vide, s'appelle « unit ».** C'est la valeur par défaut des fonctions sans valeur de retour et des expressions comme `println!(...)`. Quand une fonction « ne renvoie rien », elle renvoie en fait `()`.
+
+6. **Limite d'usage** : au-delà de deux ou trois positions, un tuple devient illisible (`t.2` veut dire quoi, déjà ?) — c'est le signal qu'il faut une struct avec des champs nommés.
+
+## À retenir
+
+- Tuple = paquet à taille fixe, types hétérogènes, positions numérotées.
+- Accès : `t.0` avec un point, jamais de crochets.
+- `let (a, b) = t;` déstructure en noms parlants.
+- Idéal pour retourner deux valeurs sans créer un type dédié.
+- `()` = unit, le tuple vide : le « rien » bien typé de Rust.
+- Plus de ~3 champs ou besoin de clarté ? Passe à une struct.
+'''
+example = '''
+// divmod renvoie DEUX valeurs : le tuple est le retour multiple paresseux
+fn divmod(a: i32, b: i32) -> (i32, i32) {
+    (a / b, a % b)
+}
+
+fn main() {
+    // Un tuple regroupe des types différents, taille fixe
+    let cours: (&str, u8, f64) = ("Rust 101", 42, 16.5);
+
+    // Accès par position : .0 .1 .2
+    println!("{} — {} inscrits", cours.0, cours.1);
+    println!("note moyenne : {}", cours.2);
+
+    // Destructuring : chaque position reçoit un nom
+    let (nom, inscrits, moyenne) = cours;
+    println!("{nom} : {inscrits} étudiants, {moyenne}/20");
+
+    // divmod renvoie un tuple, destructuré à l'arrivée
+    let (q, r) = divmod(17, 5);
+    println!("17 = 5 × {q} + {r}");
+
+    // () : le tuple vide, dit « unit » — la valeur des fonctions sans return
+    let rien: () = println!("cette ligne s'évalue à ()");
+    println!("taille de () : {} octet", std::mem::size_of_val(&rien));
+}
+'''
+gotchas = [
+    "`t[0]` n'existe pas : l'accès se fait avec un point, `t.0` — les crochets sont pour les tableaux.",
+    "Un tuple à un élément s'écrit `(5,)` avec une virgule : `(5)` est juste un entier parenthésé.",
+    "Les positions n'ont pas de nom : au-delà de 2-3 éléments, personne ne se souvient de ce que `.2` représente.",
+    "On ne peut pas itérer sur un tuple : chaque position a potentiellement un type différent.",
+    "`()` n'est pas `null` : c'est une vraie valeur d'un vrai type, qui ne transporte simplement aucune information.",
+]
+exercises = [
+    "Écris `fn divmod(a: i32, b: i32) -> (i32, i32)`, appelle-la avec 17 et 5, et affiche le résultat en déstructurant.",
+    "Crée un tuple `(&str, u8, f64)` pour un cours (nom, inscrits, moyenne), affiche chaque champ par position, puis redéstructure-le en variables nommées.",
+    "Devine puis vérifie avec `std::mem::size_of_val` : quelle place occupe `()` en mémoire ?",
+]
+related = ["types-scalaires", "fonctions", "structs", "tableaux"]

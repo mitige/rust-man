@@ -1,0 +1,98 @@
+id = "string-vs-str"
+title = "String vs &str — posséder ou emprunter"
+category = "ownership"
+tags = ["string", "str", "tas", "conversion", "texte"]
+difficulty = 3
+semaine = "S04"
+synopsis = "String possède son texte (tas, grandit) — &str ne fait que le regarder"
+description = '''
+## En une phrase
+
+`String` **possède** un texte sur le tas qui peut grandir ; `&str` est une **vue empruntée** sur du texte qui vit ailleurs — le duel possession contre observation.
+
+## En pratique
+
+```
+String (possède)                 &str (emprunte)
+PILE         TAS                 PILE         ...quelque part
+s  ptr ────► "bonjour"           r  ptr ────┐
+   len: 6                          len: 3   │
+   cap: 10                                  └─► "bon" (dans s, ou le binaire)
+```
+
+1. `String` = un `Vec<u8>` garanti UTF-8 : `push_str`, concaténation, réallocation — c'est une ressource, elle obéit aux règles de l'ownership (move par défaut).
+2. `&str` peut pointer **n'importe où** : dans le binaire (les littéraux `"..."` sont des `&'static str`), sur le tas d'une String, dans une sous-partie d'une autre chaîne.
+3. **String → &str : gratuit.** `&s` ou `&s[..]` — une vue, aucune copie ; la coercition de deref transforme même `&String` en `&str` automatiquement aux appels de fonctions.
+4. **&str → String : coûteux.** `s.to_string()` ou `String::from(s)` — nouvelle allocation + copie des octets : c'est le prix de la possession.
+5. Quel type où :
+   - **Champ de struct** : `String`. La struct possède ses données, aucune lifetime à gérer.
+   - **Paramètre** : `&str`. Accepte String, littéral, sous-chaîne — généreux au maximum.
+   - **Retour** : `String`. La fonction a créé le texte, elle doit le DONNER (retourner un `&str` vers un local est impossible : il pendrait).
+
+```rust
+struct Fiche {
+    titre: &str,   // ne compile pas : durée de vie manquante (fiche lifetimes)
+}
+```
+
+## À retenir
+
+- String = possédée, tas, grandissable ; &str = vue empruntée, stockée n'importe où.
+- `&s` pour prêter (gratuit) ; `to_string()` ou `String::from` pour posséder (copie).
+- Un littéral `"..."` est un `&'static str` gravé dans le binaire.
+- Struct → String, paramètre → &str, retour → String.
+- `str` tout court existe, mais ne vit que derrière un pointeur (`&str`, `Box<str>`).
+'''
+example = '''
+fn main() {
+    // String : possédée, sur le tas, elle grandit
+    let mut s = String::from("bon");
+    s.push_str("jour"); // réalloue si la capacité ne suffit plus
+    println!("String : {s}");
+
+    // &str : vues empruntées — ici sur le tas de s, et dans le binaire
+    let vue: &str = &s[0..3]; // "bon", vue sur le tas de s
+    let litteral: &'static str = "grave dans le binaire";
+    println!("vue = {vue}, littéral = {litteral}");
+
+    // String -> &str : gratuit, aucune copie
+    let s2 = String::from("maison");
+    let r: &str = &s2; // équivalent : &s2[..]
+    println!("emprunté : {r} ({} octets)", r.len());
+
+    // &str -> String : copie + nouvelle allocation
+    let possedee: String = r.to_string(); // équivalent : String::from(r)
+    println!("possédée : {possedee}");
+
+    // Le trio qui va bien : champ String, paramètre &str, retour String
+    let p = Profil::new("ada");
+    println!("{} -> {}", p.pseudo, badge(&p.pseudo));
+}
+
+struct Profil {
+    pseudo: String, // la struct POSSÈDE ses données : zéro souci de durée de vie
+}
+
+impl Profil {
+    fn new(pseudo: &str) -> Profil {
+        Profil { pseudo: pseudo.to_string() } // on copie pour posséder
+    }
+}
+
+fn badge(nom: &str) -> String {
+    format!("[{nom}]") // la fonction crée un texte neuf : elle le DONNE
+}
+'''
+gotchas = [
+    "Croire que &s[..] copie : c'est une vue gratuite ; to_string() copie, et c'est ça qui alloue.",
+    "Mettre un &str dans une struct sans lifetimes : le compilateur exige une durée de vie — débute avec String.",
+    "Convertir pour comparer : String == &str marche directement (PartialEq est implémenté entre les deux).",
+    "Oublier que les littéraux sont des &'static str : ils vivent aussi longtemps que le programme tourne.",
+    "Vouloir modifier un &str : impossible, c'est une vue en lecture — modifie la String d'origine, puis re-emprunte.",
+]
+exercises = [
+    "Écris fn en_majuscules(s: &str) -> String en une ligne avec to_uppercase().",
+    "Crée une struct Article { titre: String, contenu: String } avec un constructeur qui prend deux &str.",
+    "Affiche s.as_ptr() pour une String et pour un &str qui la pointe : vérifie qu'ils partagent le même tas.",
+]
+related = ["slices", "chaines-bases", "string-manipulation", "lifetimes", "structs"]

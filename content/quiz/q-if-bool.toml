@@ -1,0 +1,22 @@
+id = "q-if-bool"
+category = "bases"
+difficulty = 1
+question = '''
+Que se passe-t-il avec ce code ?
+
+```rust
+let n = 3;
+if n { println!("trois"); }
+```
+'''
+choices = [
+    "Il affiche \"trois\" : toute valeur non nulle est considérée vraie, comme en C",
+    "Erreur de compilation : la condition d’un `if` doit être un `bool`, il n’y a aucune conversion implicite",
+    "Il affiche \"trois\" après conversion automatique de n en booléen",
+    "Il panique à l’exécution parce que n n’est pas un booléen",
+]
+answer = 1
+explanation = '''
+Rust n’a pas de notion de « truthiness » : un `if` exige strictement un `bool`. Il faut écrire explicitement `if n != 0`. C’est une erreur de COMPILATION, pas un panic à l’exécution — Rust règle ce genre de compte avant que le programme tourne. C’est un des pièges les plus fréquents pour qui vient du C, de Python ou de JavaScript, où `if (n)` est idiomatique.
+'''
+related = ["conditions", "types-scalaires"]

@@ -1,0 +1,24 @@
+id = "q-emprunt-mut-exclusif"
+category = "ownership"
+difficulty = 2
+question = '''
+Pourquoi le compilateur refuse-t-il ce code ?
+
+```rust
+let mut s = String::from("ab");
+let r1 = &mut s;
+let r2 = &mut s;
+println!("{r1} {r2}");
+```
+'''
+choices = [
+    "Les références mutables ne peuvent pas être affichées avec println!",
+    "On ne peut avoir qu’un seul `&mut` vivant à la fois : deux emprunts mutables simultanés ouvriraient la porte aux data races",
+    "Il manque un `mut` : il faudrait écrire `let mut r2 = &mut s;`",
+    "r2 aurait dû être un emprunt immuable `&s` pour cohabiter avec r1",
+]
+answer = 1
+explanation = '''
+La règle : un seul emprunt mutable ACTIF à la fois dans une portée. Cette exclusivité, vérifiée à la compilation, est ce qui rend les data races impossibles en Rust — sans aucun coût à l’exécution. Mélanger ne marche pas non plus : un `&` immuable ne peut pas cohabiter avec un `&mut` encore vivant. Piège : croire que `let mut r2` changerait quelque chose — le `mut` de la variable qui stocke la référence et la mutabilité de l’emprunt sont deux choses sans rapport.
+'''
+related = ["emprunts-mutables", "emprunts"]

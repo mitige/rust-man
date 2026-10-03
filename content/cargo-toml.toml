@@ -1,0 +1,105 @@
+id = "cargo-toml"
+title = "Cargo.toml — la carte d'identité du projet"
+category = "outils"
+tags = ["cargo", "manifeste", "dependances", "semver", "features", "crates-io"]
+difficulty = 2
+semaine = "S03"
+synopsis = "[package], [dependencies], features, profils : Cargo.toml déclare, cargo exécute."
+description = '''
+## En une phrase
+
+`Cargo.toml` est le **manifeste** de ton crate : il déclare qui tu es (`[package]`), de quoi tu dépends (`[dependencies]`) et comment compiler (`[profile.*]`) — cargo fait tout le reste.
+
+## En pratique
+
+1. `[package]` : les métadonnées minimales.
+
+```toml
+[package]
+name = "mon_projet"   # nom du crate
+version = "0.1.0"     # semver : MAJEUR.MINEUR.CORRECTIF
+edition = "2021"      # édition du langage, PAS une version de rustc
+```
+
+L'`edition` (2015, 2018, 2021, 2024) fige certaines règles du langage pour ton crate ; elle est indépendante de la version du compilateur.
+
+2. `[dependencies]` : une ligne par crate, la version est une **contrainte semver**.
+
+```toml
+[dependencies]
+rand = "0.8"        # = ^0.8 : >=0.8.0, <0.9.0
+serde = "1.0.188"   # = ^1.0.188 : >=1.0.188, <2.0.0
+regex = "=1.10.2"   # exactement cette version, rien d'autre
+```
+
+Le préfixe `^` est implicite : « compatible avec ». Piège du `0.x` : semver considère que toute mineure peut casser avant la 1.0, donc `"0.8"` **n'accepte pas** `0.9`.
+
+3. Les **features** : des options activables d'un crate.
+
+```toml
+serde = { version = "1", features = ["derive"] }  # active les derive Serialize/Deserialize
+```
+
+4. `[dev-dependencies]` : crates réservés aux tests et exemples (harnais `cargo test`). Ils ne finissent **jamais** dans le binaire livré à tes utilisateurs.
+
+5. Les **profils** (mention) règlent la compilation elle-même :
+
+```toml
+[profile.release]
+opt-level = 3   # optimisation maximale (défaut en release)
+debug = true    # garder les symboles de debug même en release
+```
+
+`[profile.dev]` sert la vitesse de compilation au quotidien, `[profile.release]` la vitesse d'exécution.
+
+6. D'où viennent les crates ? De **crates.io**, le registre officiel : cargo télécharge les sources dans `~/.cargo/registry`, les compile une fois dans `target/`, et `Cargo.lock` fige les versions exactes résolues.
+
+## À retenir
+
+- `[package]` = identité (name, version, edition) ; `[dependencies]` = ce dont ton code a besoin.
+- `"1.2"` signifie « ^1.2 », donc `>=1.2.0, <2.0.0` — mais `"0.8"` exclut `0.9`.
+- Les features s'activent sur la ligne de la dépendance : `{ version = "...", features = [...] }`.
+- `[dev-dependencies]` = outillage de test, jamais dans le binaire final.
+- Les crates viennent de crates.io, sont figées par `Cargo.lock`, compilées dans `target/`.
+'''
+example = '''
+// Ce programme vit dans un projet dont le Cargo.toml ressemblerait à :
+//
+//     [package]
+//     name = "demo-manifeste"
+//     version = "0.1.0"
+//     edition = "2021"
+//
+//     [dependencies]
+//     rand = "0.8"              # semver implicite : ^0.8 → >=0.8.0, <0.9.0
+//
+//     [dev-dependencies]
+//     pretty_assertions = "1"   # seulement pour `cargo test`
+//
+// Cargo télécharge les crates depuis crates.io vers ~/.cargo/registry.
+
+fn main() {
+    // Cargo injecte ces variables à la compilation ; rustc seul ne les définit
+    // pas, d'où option_env! avec un repli pour garder l'exemple autonome.
+    let nom = option_env!("CARGO_PKG_NAME").unwrap_or("demo-manifeste");
+    let version = option_env!("CARGO_PKG_VERSION").unwrap_or("0.1.0");
+    println!("projet : {nom} v{version}");
+
+    // L'édition déclarée dans le manifeste s'applique à tout le crate.
+    let edition = option_env!("CARGO_EDITION").unwrap_or("2021");
+    println!("édition du crate : {edition}");
+}
+'''
+gotchas = [
+    "Croire que `\"0.8\"` acceptera `0.9` : avant la 1.0, semver considère chaque mineure comme potentiellement cassante — c'est voulu, pas un bug.",
+    "Mettre un outil de test dans `[dependencies]` : il gonfle le build de tes utilisateurs — sa place est `[dev-dependencies]`.",
+    "Éditer `Cargo.lock` à la main : touche uniquement `Cargo.toml`, puis `cargo update` si besoin.",
+    "Confondre `edition` et version de rustc : l'édition est un réglage du crate, le compilateur reste le même.",
+    "Deux dépendances qui exigent des versions incompatibles d'un même crate : cargo compile les DEUX versions côte à côte, et leurs types ne sont pas interchangeables.",
+]
+exercises = [
+    "Ajoute `rand = \"0.8\"` à la main dans un projet, lance `cargo check`, puis observe `Cargo.lock` et `~/.cargo/registry`.",
+    "Écris un `[profile.release]` avec `opt-level = \"s\"` et compare la taille du binaire (`ls -l target/release/`).",
+    "Ouvre le Cargo.toml d'un crate connu (clap sur GitHub) et repère ses features et ses dev-dependencies.",
+]
+related = ["cargo-bases", "crates-io", "tests", "modules-use"]

@@ -1,0 +1,82 @@
+id = "traits-communs"
+title = "traits-communs — la trousse à outils de la std"
+category = "types"
+tags = ["display", "tostring", "clone", "default", "ord"]
+difficulty = 2
+semaine = "S05"
+synopsis = "impl Display → to_string() gratuit ; Clone, Copy, Default, PartialEq : la trousse std"
+description = '''
+## En une phrase
+
+La bibliothèque standard définit une **trousse de traits universels** (Display, Clone, Default, PartialEq...) que presque tous tes types devraient implémenter pour se comporter comme des citoyens de première classe.
+
+## En pratique
+
+1. `Display` vs `Debug` : `{}` = Display, la version **utilisateur**, écrite à la main ; `{:?}` = Debug, la version **développeur**, dérivable.
+
+```rust
+impl fmt::Display for Celsius {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:.1} °C", self.0)
+    }
+}
+```
+
+2. `ToString` est **gratuit** : dès que `Display` existe, `.to_string()` existe automatiquement. N'implémente jamais `ToString` toi-même.
+
+3. `Clone` = copie explicite (`.clone()`), `Copy` = copie implicite bit à bit pour les petits types tout-en-registres. En C tout se copie implicitement ; en Rust la copie profonde se paie en l'écrivant, pour que le coût soit visible.
+
+4. `Default` fournit `MonType::default()` — idéal pour les configurations, et il alimente la syntaxe `..Default::default()` dans les struct literals.
+
+5. `PartialEq` (`==`, tolère l'indécidable comme NaN) vs `Eq` (contrat total, réflexivité garantie) ; `PartialOrd` (`<`, `>`, renvoie `Option<Ordering>`) vs `Ord` (ordre total, `cmp` renvoie `Ordering` directement).
+
+6. `From`/`Into` standardisent les conversions entre types — assez riches pour avoir leur fiche : voir **conversions**.
+
+## À retenir
+
+- Display → `{}`, manuel ; Debug → `{:?}`, dérivable.
+- Display implémenté = ToString offert.
+- Clone explicite, Copy implicite ; Copy exige Clone et des champs Copy.
+- Partial* tolère l'indécidable (NaN) ; Eq/Ord exigent un contrat total.
+- Default : `T::default()` et la syntaxe `..Default::default()`.
+'''
+example = '''
+use std::fmt;
+
+#[derive(Clone, Copy, PartialEq, PartialOrd, Default)]
+struct Celsius(f64);
+
+// Display : ce que {} affiche — s'écrit à la main, ne se dérive pas.
+impl fmt::Display for Celsius {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:.1} °C", self.0)
+    }
+}
+
+fn main() {
+    let t = Celsius(21.37);
+    let copie = t;                       // Copy : t reste valide
+    println!("Display : {}", t);         // notre fmt
+    println!("to_string : {}", copie.to_string()); // ToString GRATUIT via Display
+
+    let zero = Celsius::default();       // Default dérivé -> 0.0
+    println!("défaut : {}", zero);
+    println!("t > 0 °C ? {}", t > Celsius(0.0)); // PartialOrd
+    println!("t == copie ? {}", t == copie);     // PartialEq
+
+    // Pour les conversions entre types (From/Into), voir la fiche conversions.
+}
+'''
+gotchas = [
+    "Implémenter `ToString` directement au lieu de `Display` : fais l'inverse, ToString est dérivé gratuitement de Display.",
+    "Dériver `Copy` sur un type avec `String`/`Vec` : refusé, car ces champs possèdent un tas et ne se copient pas bit à bit.",
+    "Comparer des f64 avec `==` en oubliant que `NaN != NaN` : utilise `partial_cmp` en connaissance de cause.",
+    "Oublier `use std::fmt;` et chercher `fmt::Formatter` introuvable dans ton impl Display.",
+    "Croire que `Default` connaît ta logique métier : il produit 0, chaîne vide, false — un état neutre, pas forcément valide."
+]
+exercises = [
+    "Implémente `Display` pour un struct `Euro(u32)` qui affiche `12 €`, puis vérifie que `.to_string()` fonctionne sans rien écrire de plus.",
+    "Dérive `Default` sur un struct `Config` et construis une instance avec `Config { verbose: true, ..Default::default() }`.",
+    "Écris une fonction générique `fn montre<T: Display>(x: &T)` et appelle-la avec un i32, une &str et ton type Celsius."
+]
+related = ["derive", "traits", "conversions", "clone-copy", "chaines-bases"]

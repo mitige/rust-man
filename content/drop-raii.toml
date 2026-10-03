@@ -1,0 +1,105 @@
+id = "drop-raii"
+title = "Drop et RAII — la ressource suit la valeur"
+category = "ownership"
+tags = ["drop", "raii", "ressource", "ordre", "nettoyage"]
+difficulty = 3
+semaine = "S05"
+synopsis = "let f = File::create(chemin);  // le fichier se ferme TOUT SEUL à la fin du scope"
+description = '''
+## En une phrase
+
+En Rust, **acquérir une ressource c'est créer une valeur, la libérer c'est la détruire** : le trait `Drop` exécute le nettoyage automatiquement à la fin du scope.
+
+## En pratique
+
+**RAII** (Resource Acquisition Is Initialization) : la ressource — fichier, socket, verrou, allocation — est liée à la durée de vie d'une valeur. Fin de scope → nettoyage **garanti**, y compris pendant un panic (unwinding) :
+
+```rust
+{
+    let f = File::create("log.txt");  // acquisition (un Result à gérer, fiche result)
+    // ... écrire dans le fichier ...
+}   // fermé ICI, automatiquement — aucun close(), aucun oubli possible
+```
+
+Le **trait Drop** :
+
+```rust
+impl Drop for Gardien {
+    fn drop(&mut self) {
+        println!("nettoyage !"); // appelé automatiquement à la fin du scope
+    }
+}
+```
+
+Tu ne l'appelles **jamais** toi-même : `x.drop()` est refusé par le compilateur (sinon, double libération à la fin du scope).
+
+**Ordre de drop** : les variables locales sont détruites dans l'ordre **inverse de leur déclaration** (dernier arrivé, premier parti) ; les champs d'une struct sont droppés dans leur ordre de déclaration.
+
+**Libérer tôt** : `std::mem::drop(valeur)` **consomme** la valeur et la détruit sur-le-champ — typique pour rendre un `MutexGuard` avant la fin du scope :
+
+```rust
+let verrou = mutex.lock().unwrap();
+// ... section critique ...
+drop(verrou);   // le verrou est rendu ICI, pas à la fin du bloc
+```
+
+C'est le remplaçant de `free`, `delete`, `fclose` et des `try/finally` : le nettoyage vit **dans le type**, pas dans ta discipline.
+
+## À retenir
+
+- Fin de scope = drop automatique : mémoire, fichiers, verrous — tout est couvert.
+- `impl Drop` pour tes propres ressources ; jamais d'appel manuel à `.drop()`.
+- Ordre de drop des locales : INVERSE de la déclaration — prédis-le avant de lire la sortie.
+- `std::mem::drop(x)` libère TÔT en prenant possession de `x`.
+- RAII > finally : le nettoyage est garanti par le type, même en cas de panic.
+'''
+example = '''
+use std::mem::drop;
+
+struct Gardien {
+    nom: String,
+}
+
+impl Drop for Gardien {
+    fn drop(&mut self) {
+        println!(">> drop de {}", self.nom); // le nettoyage s'exécute tout seul
+    }
+}
+
+fn main() {
+    // préfixe _ : elles ne servent que par leur Drop — zéro warning
+    let _a = Gardien { nom: String::from("A (déclaré 1er)") };
+    let _b = Gardien { nom: String::from("B (déclaré 2e)") };
+    {
+        let _c = Gardien { nom: String::from("C (bloc interne)") };
+        println!("fin du bloc interne...");
+    } // C est droppé ici, AVANT B et A
+
+    // std::mem::drop(valeur) : libérer TÔT en consommant la valeur
+    let d = Gardien { nom: String::from("D (libéré tôt)") };
+    drop(d);
+    // println!("{}", d.nom); // décommente → erreur : d n'existe plus
+
+    // RAII réel : un fichier se ferme tout seul à la fin du scope
+    {
+        let f = std::fs::File::create("/tmp/raii-demo.txt").expect("création");
+        println!("fichier ouvert ({f:?}) — aucun close() à écrire");
+    } // fermé ici, garanti par Drop — même en cas de panic
+
+    println!("fin de main...");
+    // les survivants droppent dans l'ordre INVERSE de la déclaration : B, puis A
+}
+'''
+gotchas = [
+    "Appeler x.drop() toi-même : le compilateur refuse (double drop garanti sinon) — utilise std::mem::drop(x).",
+    "Croire que l'ordre de drop suit la déclaration : c'est l'INVERSE pour les variables locales.",
+    "Oublier que Drop tourne aussi pendant un panic (unwinding) : le nettoyage est quasi incontournable.",
+    "Vouloir Drop ET Copy sur le même type : interdit — un type qui copie en silence ne peut pas avoir de nettoyage.",
+    "Passer une référence à std::mem::drop : il faut DONNER la valeur — drop sur &T ne libère rien (d'où le warning du compilateur).",
+]
+exercises = [
+    "Crée une struct Compteur avec un Drop qui affiche « fin », déclare-en trois et prédis l'ordre d'affichage AVANT de lancer.",
+    "Utilise std::mem::drop sur un gros Vec au milieu de main et prouve avec des println! qu'il est libéré avant la fin.",
+    "Enrobe un std::fs::File dans ta struct FichierLog dont le Drop affiche « fermeture du fichier » à la console.",
+]
+related = ["ownership", "emprunts", "result", "panic", "structs"]

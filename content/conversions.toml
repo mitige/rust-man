@@ -1,0 +1,96 @@
+id = "conversions"
+title = "conversions — explicites ou rien"
+category = "types"
+tags = ["from", "into", "tryfrom", "parse", "as"]
+difficulty = 3
+semaine = "S06"
+synopsis = "let n = u8::try_from(300_i32);  // Err : les conversions sont explicites"
+description = '''
+## En une phrase
+
+Rust refuse les conversions implicites entre types : tout passage d'un type à l'autre est **explicite**, via `From`/`Into`, `TryFrom`/`TryInto`, `parse` ou `as`.
+
+## En pratique
+
+1. `From` / `Into` : implémente `From<A> for B` et tu obtiens `Into<B> for A` **gratuitement** (implémentation automatique de la std). On n'écrit donc que des `From`.
+
+```rust
+impl From<i32> for Degres {
+    fn from(v: i32) -> Self { Degres(v as f64) }
+}
+let d: Degres = 20.into();
+```
+
+2. `TryFrom` / `TryInto` : la version **faillible**, qui renvoie `Result`. Conversion rétrécissante, parsing risqué → c'est elle qu'il faut.
+
+```rust
+let r = u8::try_from(300_i32); // Err(...) : 300 ne tient pas dans un u8
+```
+
+3. `parse::<T>()` : convertit une chaîne en n'importe quel type implémentant le trait `FromStr`. Renvoie `Result<T, _>` — gère l'erreur, ne unwrap pas une saisie utilisateur.
+
+```rust
+let n: i32 = "42".parse()?; // ou "42".parse::<i32>()
+```
+
+4. `as` : le cast primitif direct (`i32 as u8`, `f64 as i32`). Rapide mais **silencieux** : il tronque ou enveloppe sans prévenir — `300_i32 as u8 == 44`. Réserve-le aux cas où tu sais que la valeur tient.
+
+5. `AsRef` (mention) : un emprunt converti en référence. Permet d'écrire `fn f(s: impl AsRef<str>)` qui accepte `String`, `&str` et compagnie.
+
+## À retenir
+
+- From donne Into gratuitement ; n'implémente jamais Into toi-même.
+- Faillible → TryFrom/TryInto, qui renvoient `Result`.
+- Chaîne → type : `parse::<T>()` ou le trait `FromStr`.
+- `as` = cast primitif qui tronque en silence : dernier recours, jamais pour rétrécir sans vérifier.
+- AsRef pour accepter « tout ce qui se voit comme &str ».
+'''
+example = '''
+// Définir From donne Into GRATUITEMENT (impl automatique de la std).
+struct Degres(f64);
+
+impl From<i32> for Degres {
+    fn from(v: i32) -> Self { Degres(v as f64) }
+}
+
+fn main() {
+    // From / Into
+    let d = Degres::from(20);
+    let e: Degres = 20.into(); // Into gratuit car From existe
+    println!("{} {}", d.0, e.0);
+
+    // TryFrom : conversion FAILLIBLE, renvoie Result (dans le prelude 2021)
+    let petit = u8::try_from(300_i32);
+    println!("300 -> u8 : {:?}", petit);   // Err(TryFromIntError)
+    let ok = u8::try_from(42_i32);
+    println!("42 -> u8 : {:?}", ok);       // Ok(42)
+
+    // parse::<T>() : repose sur FromStr, renvoie Result
+    let n = "123".parse::<i32>();
+    let f = "2.5".parse::<f64>();
+    let ko = "abc".parse::<i32>();
+    println!("{:?} {:?} {:?}", n, f, ko);
+
+    // as : cast primitif direct, mais TRONCATURE SILENCIEUSE
+    let x = 300_i32;
+    println!("300 as u8 = {}", x as u8); // 44 : à réserver aux cas sûrs
+
+    // AsRef : emprunt convertible en référence
+    fn longueur(s: impl AsRef<str>) -> usize { s.as_ref().len() }
+    println!("{}", longueur(String::from("bonjour")));
+    println!("{}", longueur("rust"));
+}
+'''
+gotchas = [
+    "Écrire `300_i32 as u8` et récupérer 44 sans aucun avertissement : `as` ne dit rien, `try_from` aurait renvoyé `Err`.",
+    "Implémenter `Into` à la main : écris `From`, l'Into est automatique — et une impl manuelle d'Into ne donne PAS From.",
+    "Oublier le turbofish ou l'annotation sur `parse()` : le compilateur ne peut pas deviner T tout seul.",
+    "Faire `.parse().unwrap()` sur une saisie utilisateur : un utilisateur tape « douze » et ton programme panique.",
+    "Confondre `as` (réinterprétation entre primitifs) avec une conversion de traits : `as` ne fonctionne qu'entre types primitifs."
+]
+exercises = [
+    "Implémente `From<Celsius> for Fahrenheit` et convertis avec `.into()`.",
+    "Convertis un u32 en u16 avec `try_into()` et gère proprement l'erreur avec un `match`.",
+    "Écris `fn lire_age(s: &str) -> Result<u8, String>` qui parse puis vérifie que 0 < age < 130."
+]
+related = ["traits-communs", "result", "operateur-question", "types-scalaires", "string-vs-str"]

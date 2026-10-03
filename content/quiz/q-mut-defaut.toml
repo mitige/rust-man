@@ -1,0 +1,22 @@
+id = "q-mut-defaut"
+category = "demarrer"
+difficulty = 1
+question = '''
+Que se passe-t-il quand tu compiles ceci ?
+
+```rust
+let x = 5;
+x = 6;
+```
+'''
+choices = [
+    "Ça compile avec un simple avertissement, et x vaut 6",
+    "Erreur de compilation : x est immuable, il faut écrire `let mut x = 5;` pour pouvoir la réaffecter",
+    "Ça compile : x devient 6 mais son ancienne valeur reste stockée ailleurs en mémoire",
+    "Ça compile, car réaffecter une variable est toujours permis tant qu’on ne change pas son type",
+]
+answer = 1
+explanation = '''
+En Rust, toute variable est immuable par défaut : sans `mut`, la réaffectation est une erreur de compilation, et rustc suggère lui-même `let mut x`. C’est l’inverse du C ou de Python, où tout est mutable sauf mention contraire — Rust te fait payer la mutabilité à l’écriture pour te la faire remarquer à la lecture. Attention au piège voisin : `let x = 6;` (avec un second `let`) aurait compilé, car c’est du shadowing, une NOUVELLE variable, pas une réaffectation.
+'''
+related = ["variables-mutabilite"]

@@ -1,0 +1,8 @@
+id = "q-generics-mono"
+category = "types"
+difficulty = 3
+question = "Que fait le compilateur d'une fonction générique `fn max<T: Ord>(a: T, b: T) -> T` appelée avec des `i32` ET des `f64` ?"
+choices = ["Il génère deux versions spécialisées (une pour `i32`, une pour `f64`) : c'est la monomorphisation, sans coût à l'exécution", "Il garde une seule version qui inspecte le type à l'exécution, comme Python", "Il convertit silencieusement les deux appels en `f64`", "Il refuse de compiler : un même `T` ne peut pas être instancié deux fois"]
+answer = 0
+explanation = '''La monomorphisation : à la compilation, rustc crée une copie concrète de la fonction pour chaque type utilisé (`max::<i32>`, `max::<f64>`). Résultat : du code aussi rapide que si tu l'avais écrit à la main pour chaque type — c'est l'abstraction « zéro coût ». La contrepartie est un binaire plus gros et une compilation un peu plus longue, pas du code plus lent. Piège : croire que les génériques impliquent du dispatch dynamique ou du boxing comme en Java — non, tout est résolu statiquement.'''
+related = ["generics", "dyn-trait", "trait-bounds"]

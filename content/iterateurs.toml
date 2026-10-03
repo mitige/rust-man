@@ -1,0 +1,88 @@
+id = "iterateurs"
+title = "iterateurs — paresseux jusqu'au consommateur"
+category = "types"
+tags = ["iterateur", "map", "filter", "collect", "paresseux"]
+difficulty = 3
+semaine = "S05"
+synopsis = "v.iter().filter(|&&n| n > 10).map(|&n| n * 2).collect()  // paresseux jusqu'au bout"
+description = '''
+## En une phrase
+
+Un itérateur est un objet avec une méthode `next()` — et toute la puissance de Rust vient des **adaptateurs paresseux** qu'on enchaîne avant qu'un consommateur ne déclenche le calcul.
+
+## En pratique
+
+1. Le cœur : le trait `Iterator` n'exige que `fn next(&mut self) -> Option<Self::Item>` — `Some(x)` tant qu'il reste des éléments, `None` à la fin. Tout le reste (map, filter...) est construit dessus.
+
+2. **Rien ne se passe sans consommateur.** Les adaptateurs ne font que décrire un pipeline :
+
+```rust
+let it = v.iter().map(|x| x * 2); // AUCUN calcul ici
+let r: Vec<_> = it.collect();     // tout se joue ICI
+```
+
+3. Adaptateurs courants (paresseux) : `map` transforme, `filter` sélectionne, `take(n)` tronque, `skip(n)` saute, `enumerate` numérote, `zip` fusionne.
+
+4. Consommateurs (déclenchent) : `collect` en collection, `sum`/`product`, `fold(acc, f)` = reduce, `find` = premier qui matche (`Option`), `any`/`all` = tests booléens, `count`.
+
+```rust
+let somme: i32 = (1..=10).filter(|n| n % 2 == 0).sum();
+```
+
+5. `for x in it` est du sucre : il appelle `into_iter()` puis `next()` jusqu'à `None`. Les trois variantes : `iter()` donne des `&T`, `iter_mut()` des `&mut T`, `into_iter()` des `T` possédés.
+
+6. **Zéro coût** : la chaîne est monomorphisée puis inlinée — un `.iter().filter().map().sum()` compile vers le même assembleur qu'une boucle `for` écrite à la main. En Python, chaque étape équivalente allouerait une liste intermédiaire ; en Rust, non.
+
+## À retenir
+
+- `next()` → `Option<Item>` ; épuisé = `None`.
+- Adaptateur = paresseux ; consommateur = déclencheur.
+- Sans `collect`/`sum`/`fold`/`find`..., ton pipeline ne fait RIEN.
+- `for` = sucre sur `into_iter` + `next`.
+- Performance égale à la boucle manuelle : choisis la lisibilité.
+'''
+example = '''
+fn main() {
+    let notes = vec![12, 8, 15, 9, 17, 11];
+
+    // Adaptateurs PARESSEUX : rien ne se passe sans consommateur.
+    let au_dessus: Vec<i32> = notes.iter()
+        .filter(|&&n| n >= 10) // adaptateur : garde les notes >= 10
+        .map(|&n| n + 1)       // adaptateur : bonus d'un point
+        .collect();            // consommateur : matérialise le Vec
+    println!("{:?}", au_dessus);
+
+    // Consommateurs classiques
+    let total: i32 = notes.iter().sum();
+    println!("somme = {}", total);
+    let max = notes.iter().fold(0, |acc, &n| acc.max(n));
+    println!("max = {}", max);
+    println!("une >= 15 ? {}", notes.iter().any(|&n| n >= 15));
+    println!("toutes >= 5 ? {}", notes.iter().all(|&n| n >= 5));
+    if let Some(&premiere) = notes.iter().find(|&&n| n > 14) {
+        println!("première > 14 : {}", premiere);
+    }
+
+    // take / skip : fenêtres paresseuses
+    let milieu: Vec<i32> = notes.iter().skip(1).take(3).copied().collect();
+    println!("{:?}", milieu);
+
+    // for est du sucre : appelle next() jusqu'à None
+    for n in notes.iter().take(2) {
+        println!("note : {}", n);
+    }
+}
+'''
+gotchas = [
+    "Construire un `map` sans consommateur et croire que la transformation est faite : warning `unused must_use`, zéro effet.",
+    "Réutiliser un itérateur après l'avoir consommé : `next()` fait avancer l'état, un itérateur épuisé est mort — recrées-en un.",
+    "Oublier que `iter()` donne des `&T` : souvent il faut déstructurer (`|&x|`) ou appeler `copied()`/`cloned()`.",
+    "Confondre `iter()`, `iter_mut()` et `into_iter()` : &, &mut, possession — le trio de l'ownership appliqué aux boucles.",
+    "Empiler dix adaptateurs illisibles là où trois suffisent : nomme des étapes intermédiaires avec `let`."
+]
+exercises = [
+    "Calcule en une seule chaîne la somme des carrés des nombres pairs de 1 à 20.",
+    "Réécris une boucle `for` de ton dernier TP avec `filter` + `map` + `collect`, puis compare la lisibilité des deux versions.",
+    "Utilise `fold` pour trouver le maximum d'un Vec<i32> sans appeler `max()`."
+]
+related = ["closures", "vec", "iter-avance", "boucles", "types-associes"]

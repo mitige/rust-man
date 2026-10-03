@@ -1,0 +1,15 @@
+id = "q-emprunt-multiple"
+category = "ownership"
+difficulty = 2
+question = "Combien de références immuables `&` peut-on avoir simultanément sur la même donnée ?"
+choices = [
+    "Une seule à la fois : le borrow checker interdit tout aliasing, même en lecture",
+    "Deux maximum, au-delà le compilateur signale un aliasing excessif",
+    "Une seule, sauf si la variable est déclarée mut, qui en autorise plusieurs",
+    "Autant qu’on veut : la lecture partagée est libre tant qu’aucune référence mutable n’existe en même temps",
+]
+answer = 3
+explanation = '''
+La règle d’or des emprunts : N lecteurs OU 1 rédacteur, jamais les deux. Les références immuables multiples sont totalement légales, car aucune ne peut modifier la donnée — il n’y a aucun risque de course. Le `mut` de la variable n’assouplit pas cette règle : il autorise à CRÉER des emprunts mutables, pas à multiplier les immuables. Piège : croire que le borrow checker interdit l’aliasing en général — il n’interdit que l’aliasing combiné à la mutabilité.
+'''
+related = ["emprunts"]

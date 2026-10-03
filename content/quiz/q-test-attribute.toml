@@ -1,0 +1,15 @@
+id = "q-test-attribute"
+category = "outils"
+difficulty = 1
+question = "Tu veux ajouter un test unitaire à ton projet Rust. Quelle est la bonne approche ?"
+choices = [
+    "Écrire une fonction annotée `#[test]` qui panique en cas d’échec, puis lancer `cargo test`",
+    "Créer un deuxième `fn main()` dans un fichier tests.rs et lancer `cargo run --test`",
+    "Nommer la fonction `fn test_...()` : cargo test détecte automatiquement ce préfixe",
+    "Installer un framework de test externe, Rust ne sait pas tester tout seul",
+]
+answer = 0
+explanation = '''
+Le harnais de test est intégré à Rust : une fonction marquée `#[test]` est compilée en mode test et exécutée par `cargo test`, qui lance les tests en parallèle et rapporte ceux qui paniquent. Le nom de la fonction importe peu (par convention il décrit le scénario), c’est l’attribut qui compte. Règle générale : un test échoue en paniquant — via `assert!`, `assert_eq!` ou un `panic!` — pas en renvoyant `false`. Piège : croire qu’il faut un `main` spécial ou une crate externe, alors que tout est déjà dans cargo.
+'''
+related = ["tests", "cargo-bases"]

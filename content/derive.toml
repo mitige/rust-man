@@ -1,0 +1,92 @@
+id = "derive"
+title = "derive — laisse le compilateur écrire tes impls"
+category = "types"
+tags = ["derive", "debug", "clone", "copy", "default"]
+difficulty = 2
+semaine = "S04"
+synopsis = "#[derive(Debug, Clone, PartialEq)]  // le compilateur écrit l'impl pour toi"
+description = '''
+## En une phrase
+
+`#[derive(...)]` demande au compilateur de **générer automatiquement** l'implémentation d'un trait, champ par champ, pour ton struct ou ton enum.
+
+## En pratique
+
+1. On empile les traits dérivables au-dessus du type :
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Point { x: i32, y: i32 }
+```
+
+2. Ce que chacun génère :
+   - `Debug` : affichage technique pour `{:?}` (et `{:#?}` en joli multi-lignes).
+   - `Clone` : copie explicite via `.clone()`.
+   - `Copy` : copie bit à bit implicite — exige `Clone` et que tous les champs soient `Copy`.
+   - `PartialEq` / `Eq` : `==` champ par champ ; `Eq` ajoute la garantie de réflexivité (interdit avec des flottants).
+   - `PartialOrd` / `Ord` : comparaison **lexicographique selon l'ordre des champs** déclarés.
+   - `Hash` : hachage champ par champ (clés de `HashMap`/`HashSet`).
+   - `Default` : `MonType::default()` avec chaque champ à sa valeur par défaut.
+
+3. La dérivation est récursive : elle ne marche que si **tous les champs** implémentent le trait demandé. Un seul champ sans `Debug` bloque le `Debug` du tout :
+
+```rust
+#[derive(Debug)]
+struct A { b: B }  // ne compile pas si B n'est pas Debug
+```
+
+4. `Display` (le `{}`) **ne se dérive pas** : l'affichage utilisateur se pense, il s'écrit à la main (voir traits-communs). Retiens le trio : `{}` = Display manuel, `{:?}` = Debug dérivé, `{:#?}` = Debug joli.
+
+## À retenir
+
+- derive = impl générée champ par champ, récursivement.
+- Copy exige Clone ; Eq exige PartialEq ; Ord exige PartialOrd + Eq.
+- L'ordre des champs définit l'ordre de comparaison dérivé.
+- `{}` manuel, `{:?}` dérivé, `{:#?}` dérivé et indenté.
+- Un champ non conforme bloque toute la dérivation.
+'''
+example = '''
+use std::collections::HashSet;
+
+// Chaque trait dérivé génère une impl « champ par champ ».
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct Point { x: i32, y: i32 }
+
+#[derive(Debug, Default)] // Default : chaque champ à sa valeur par défaut
+struct Config { retries: u32, verbose: bool, nom: String }
+
+fn main() {
+    let a = Point { x: 1, y: 2 };
+    let b = a; // Copy : a reste utilisable
+    println!("a = {:?}, b = {:?}", a, b);
+    println!("a == b ? {}", a == b);                    // PartialEq
+    println!("a < (2,0) ? {}", a < Point { x: 2, y: 0 }); // Ord : lexicographique
+
+    // Hash permet d'utiliser Point dans un HashSet
+    let mut set = HashSet::new();
+    set.insert(a);
+    println!("contient b ? {}", set.contains(&b));
+
+    // {:?} sur une ligne, {:#?} en pretty multi-lignes
+    let cfg = Config { retries: 3, verbose: true, nom: String::from("demo") };
+    println!("{:#?}", cfg);
+    if cfg.verbose {
+        println!("config {} : {} essais", cfg.nom, cfg.retries);
+    }
+    let def = Config::default();
+    println!("défaut : retries={}, verbose={}", def.retries, def.verbose);
+}
+'''
+gotchas = [
+    "Dériver `Copy` sur un type contenant `String` ou `Vec` : refusé, ces types ne sont pas Copy — et tant mieux, une copie implicite coûteuse serait cachée.",
+    "Se fier à l'`Ord` dérivé quand l'ordre de tri voulu n'est pas l'ordre des champs : réordonne les champs ou implémente `Ord` à la main.",
+    "Croire que `Default` devine ton état valide : il met 0, false et String vide, rien de plus.",
+    "Afficher avec `{}` un type qui n'a que `Debug` : erreur de compilation, utilise `{:?}` ou implémente Display.",
+    "Dériver `PartialEq` sur des flottants puis s'étonner que `NaN != NaN` : c'est la norme IEEE 754, et c'est pour ça qu'`Eq` est interdit sur f64."
+]
+exercises = [
+    "Crée `struct Etudiant { nom: String, note: f64 }`, dérive tout ce qui passe et explique pourquoi `Eq` et `Copy` sont refusés.",
+    "Réordonne les champs d'un struct avec `Ord` dérivé, trie un Vec avant/après et observe le changement d'ordre.",
+    "Écris à la main l'impl `Display` d'un type qui dérive déjà `Debug`, puis compare les sorties `{}`, `{:?}` et `{:#?}`."
+]
+related = ["traits", "traits-communs", "structs", "clone-copy", "hashmap"]

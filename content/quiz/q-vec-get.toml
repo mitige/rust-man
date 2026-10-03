@@ -1,0 +1,8 @@
+id = "q-vec-get"
+category = "collections"
+difficulty = 2
+question = "Quelle différence entre `v[i]` et `v.get(i)` sur un `Vec<i32>` quand `i` peut dépasser la taille ?"
+choices = ["Aucune, ce sont deux syntaxes pour la même opération", "`v[i]` renvoie `None` alors que `v.get(i)` panique", "`v.get(i)` renvoie la valeur par défaut `0`, `v[i]` panique", "`v[i]` panique sur un index hors limites ; `v.get(i)` renvoie `Option<&i32>` (`None` si absent)"]
+answer = 3
+explanation = '''L'indexation `v[i]` suppose que tu SAIS que l'index est valide : sinon, panic. `v.get(i)` rend l'échec explicite en renvoyant `Option<&T>`, forçant l'appelant à gérer le cas absent avec `match`, `if let` ou `unwrap_or`. Règle générale : `[]` quand l'index est prouvé valide (boucle `0..v.len()`), `get` quand l'index vient de l'extérieur (saisie, calcul). Piège : `v.get(i)` renvoie une RÉFÉRENCE `&T`, pas une copie — le vecteur reste emprunté tant que tu utilises le résultat.'''
+related = ["vec", "option", "panic"]

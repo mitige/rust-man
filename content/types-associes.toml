@@ -1,0 +1,108 @@
+id = "types-associes"
+title = "types-associes — un type choisi par l'implémentation"
+category = "types"
+tags = ["type-associe", "iterator", "item", "generique"]
+difficulty = 5
+semaine = "S07"
+synopsis = "trait Iterator { type Item; fn next(&mut self) -> Option<Self::Item>; }"
+description = '''
+## En une phrase
+
+Un type associé est un **type choisi par l'implémentation d'un trait** (`type Item;`), là où un paramètre générique serait choisi par l'utilisateur du trait.
+
+## En pratique
+
+1. Dans le trait : un placeholder de type, fixé par chaque `impl` :
+
+```rust
+trait Iterator {
+    type Item;                              // à définir par l'impl
+    fn next(&mut self) -> Option<Self::Item>;
+}
+```
+
+2. Côté implémentation, on le nomme une fois :
+
+```rust
+impl Iterator for Compteur {
+    type Item = i32;
+    fn next(&mut self) -> Option<i32> { /* ... */ }
+}
+```
+
+3. Différence fondamentale avec un paramètre générique :
+
+```
+trait Truc<T>          → PLUSIEURS impls possibles par type (Truc<i32>, Truc<String>)
+trait Truc { type T; } → UNE SEULE impl par type
+```
+
+`From<i32>` ET `From<&str>` coexistent pour un même type car `From` est générique. Mais un type n'a qu'un seul `Iterator::Item` : quel sens aurait un `next()` qui rend tantôt des i32, tantôt des String ?
+
+4. Choix pratique :
+   - Le type est **déterminé par** l'implémentation, logiquement unique → type associé (`Iterator::Item`, `Add::Output`).
+   - Le type est une **entrée** dont plusieurs combinaisons ont du sens → paramètre générique (`From<T>`).
+
+5. Pour contraindre le type associé dans une borne : `I: Iterator<Item = i32>`, et on le nomme `I::Item` dans les signatures.
+
+## À retenir
+
+- `type Item;` dans le trait, `type Item = X;` dans l'impl.
+- Une seule impl par type : le choix appartient à l'implémenteur.
+- Générique = plusieurs impls possibles, choix à l'usage (`From<T>`).
+- `Iterator::Item` est LE type associé que tu croises tous les jours.
+- Borne précise : `I: Iterator<Item = u8>`.
+'''
+example = '''
+// Un trait avec un TYPE ASSOCIÉ : chaque impl choisit UNE fois le type.
+trait Compteur {
+    type Valeur; // décidé par l'implémentation
+    fn suivant(&mut self) -> Option<Self::Valeur>;
+}
+
+struct PairImpair { courant: i32, max: i32 }
+
+impl Compteur for PairImpair {
+    type Valeur = i32; // une seule impl possible par type
+    fn suivant(&mut self) -> Option<i32> {
+        self.courant += 2;
+        if self.courant <= self.max { Some(self.courant) } else { None }
+    }
+}
+
+// Compare : un trait GÉNÉRIQUE peut être implémenté PLUSIEURS fois.
+struct Nom(String);
+impl From<i32> for Nom {
+    fn from(v: i32) -> Self { Nom(v.to_string()) }
+}
+impl From<&str> for Nom {
+    fn from(s: &str) -> Self { Nom(s.to_string()) }
+}
+
+fn main() {
+    let mut c = PairImpair { courant: 0, max: 7 };
+    while let Some(v) = c.suivant() {
+        println!("valeur : {}", v);
+    }
+    let a = Nom::from(42);               // From<i32>
+    let b = Nom::from("quarante-deux");  // From<&str>
+    println!("{} / {}", a.0, b.0);
+
+    // Iterator de la std : `type Item;` — voilà pourquoi iter() est souple.
+    let somme: i32 = vec![1, 2, 3].into_iter().sum(); // Item = i32 ici
+    println!("somme = {}", somme);
+}
+'''
+gotchas = [
+    "Recréer `trait Iter<T> { fn next(&mut self) -> Option<T>; }` : ça marche, mais un même type pourrait implémenter Iter<i32> ET Iter<String> — ambiguïté à chaque appel de next(), turbofish obligatoire partout.",
+    "Chercher comment donner deux `Iterator::Item` différents au même type : impossible par construction ; utilise un paramètre générique si tu en as vraiment besoin.",
+    "Oublier `Self::` et écrire juste `Item` dans une signature du trait : c'est `Self::Item` (ou `NomDuTrait::Item` selon le contexte).",
+    "Confondre type associé et constante associée (`const MAX: u32;` dans un trait) : cousins, pas jumeaux.",
+    "Écrire `impl Iterator` sans définir `type Item` : l'implémentation est incomplète, le compilateur refuse."
+]
+exercises = [
+    "Écris un trait `Empiler { type Elem; fn pousser(&mut self, e: Self::Elem); fn depiler(&mut self) -> Option<Self::Elem>; }` et implémente-le pour un struct maison.",
+    "Réécris ce même trait en version générique `Empiler<E>` et liste les différences d'usage.",
+    "Écris `fn somme<I: Iterator<Item = i32>>(it: I) -> i32` et teste-la avec un Range comme `1..=100`."
+]
+related = ["iterateurs", "traits", "generics", "trait-bounds", "conversions"]

@@ -1,0 +1,25 @@
+id = "q-fonction-move"
+category = "ownership"
+difficulty = 2
+question = '''
+Que se passe-t-il avec ce code ?
+
+```rust
+fn affiche(s: String) { println!("{s}"); }
+
+let titre = String::from("rust");
+affiche(titre);
+println!("{titre}");
+```
+'''
+choices = [
+    "Tout s’affiche : la fonction reçoit une copie implicite de titre",
+    "Le programme panique à l’exécution car titre a été libérée trop tôt",
+    "Erreur de compilation : titre a été déplacée dans `affiche`, le second println! est interdit",
+    "Ça compile, car affiche ne fait que lire s sans la modifier",
+]
+answer = 2
+explanation = '''
+Passer une `String` par valeur à une fonction, c’est lui TRANSFÉRER la propriété : après l’appel, titre n’existe plus dans l’appelant, et le compilateur le refuse à la compilation — jamais à l’exécution. Que la fonction modifie ou non son paramètre ne change rien : c’est la propriété qui compte, pas la mutation. La solution idiomatique : passer `&str` (ou `&String`) pour prêter la valeur sans la donner. Piège : croire qu’une copie implicite a eu lieu « pour être gentil » — Rust ne copie jamais un type non-Copy derrière ton dos.
+'''
+related = ["ownership", "fonctions"]

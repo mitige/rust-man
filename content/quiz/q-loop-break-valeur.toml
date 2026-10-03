@@ -1,0 +1,25 @@
+id = "q-loop-break-valeur"
+category = "bases"
+difficulty = 2
+question = '''
+Que vaut `n` à la fin ?
+
+```rust
+let mut compteur = 0;
+let n = loop {
+    compteur += 1;
+    if compteur == 10 { break compteur * 2; }
+};
+```
+'''
+choices = [
+    "Rien : `break` ne fait que sortir de la boucle, donc n n’est jamais initialisé",
+    "Erreur de compilation : on ne peut pas affecter une boucle à une variable",
+    "`()`, car `break` renvoie toujours le type unité",
+    "20 : `break` peut renvoyer une valeur, qui devient la valeur de toute l’expression `loop`",
+]
+answer = 3
+explanation = '''
+En Rust, `loop` est une expression : `break valeur;` fait de cette valeur le résultat de toute la boucle, qu’on peut donc affecter à une variable. Ici compteur vaut 10 au moment du break, donc n vaut 20. Piège : ça ne fonctionne qu’avec `loop` — `while` et `for` ont toujours le type `()`, car elles peuvent se terminer « naturellement » sans passer par un break, et le compilateur ne pourrait pas garantir une valeur.
+'''
+related = ["boucles", "expressions-vs-instructions"]

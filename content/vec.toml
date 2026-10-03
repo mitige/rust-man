@@ -1,0 +1,107 @@
+id = "vec"
+title = "vec — le tableau qui grandit"
+category = "collections"
+tags = ["vec", "push", "iteration", "heap", "option", "capacity"]
+difficulty = 2
+semaine = "S03"
+synopsis = '''let mut v = vec![1, 2]; v.push(3); v.get(10) // None, pas de panic'''
+description = '''
+## En une phrase
+
+`Vec<T>` est un **tableau dynamique** : il vit sur le heap, grandit et rétrécit à l'exécution, et c'est la collection que tu utiliseras 90 % du temps.
+
+## En pratique
+
+1. Créer : `Vec::new()` (vide, type à annoter) ou la macro `vec![1, 2, 3]`.
+2. `push(x)` ajoute à la fin, `pop()` retire le dernier élément et renvoie `Option<T>` (`None` si vide).
+3. Deux façons de lire l'index `i` :
+   - `v[i]` → **panique** si hors limites ;
+   - `v.get(i)` → `Option<&T>`, jamais de panic. Préfère `get` quand l'index vient de l'extérieur.
+4. En mémoire, c'est un pointeur, une longueur et une capacité :
+
+```
+stack                heap
+Vec { ptr ─────────► [1, 2, 3, _, _, _]
+      len: 3,
+      capacity: 6 }
+```
+
+5. `len()` = nombre d'éléments, `capacity()` = place réservée. Quand `len` atteint `capacity`, le vec **réalloue** (souvent ×2) : tous les éléments déménagent.
+6. Itérer, trois niveaux de possession :
+
+```rust
+for x in &v { }     // emprunte : x est &T, v survit
+for x in &mut v { } // emprunte mut : x est &mut T
+for x in v { }      // consomme : x est T, v n'existe plus
+```
+
+7. Le piège classique, attrapé à la compile :
+
+```rust
+for x in &v {
+    v.push(10); // ne compile pas : emprunt immutable en cours
+}
+```
+
+   En C++ ce code invalide l'itérateur et c'est un comportement indéfini. Rust transforme un bug mémoire en **erreur de compile** : c'est une chance, pas une punition.
+8. Un vec est contigu : `&v[..]` te donne une slice `&[T]` à passer aux fonctions.
+
+## À retenir
+
+- `vec![]` pour créer, `push`/`pop` pour la fin (O(1) amorti).
+- `get(i)` renvoie `Option<&T>` et ne panique jamais ; `v[i]` panique.
+- Itérer : `&v` lit, `&mut v` modifie, `v` consomme.
+- `capacity >= len` : une réallocation peut déplacer tous les éléments.
+- Modifier un vec pendant qu'on l'itère est refusé à la compile : le borrow checker te sauve d'un vrai bug.
+'''
+example = '''
+fn main() {
+    // Création avec la macro vec!
+    let mut notes = vec![12, 15, 9];
+    notes.push(17); // ajoute à la fin
+    println!("len = {}, capacity = {}", notes.len(), notes.capacity());
+
+    // pop renvoie Option<T> : None si le vec est vide
+    if let Some(derniere) = notes.pop() {
+        println!("pop -> {}", derniere);
+    }
+
+    // get renvoie Option<&T> : jamais de panic
+    match notes.get(10) {
+        Some(n) => println!("note 10 : {}", n),
+        None => println!("pas de note à l'index 10"),
+    }
+    // notes[10] paniquerait : get est le choix sûr
+
+    // Itérer en lecture : &notes
+    for n in &notes {
+        print!("{} ", n);
+    }
+    println!();
+
+    // Itérer en modifiant : &mut notes
+    for n in &mut notes {
+        *n += 1; // bonus pour tout le monde
+    }
+    println!("après bonus : {:?}", notes);
+
+    // Consommer le vec : into_iter prend possession
+    let total: i32 = notes.into_iter().sum();
+    println!("total : {}", total);
+    // notes n'existe plus ici : déplacé
+}
+'''
+gotchas = [
+    "v[i] panique sur un index hors limites ; utilise get(i) quand l'index n'est pas garanti.",
+    "push pendant une itération sur &v ne compile pas : la réallocation invaliderait ta référence.",
+    "pop() sur un vec vide renvoie None : c'est un Option, déballe-le proprement.",
+    "Un Vec ne se copie pas tout seul : let v2 = v1; déplace v1 qui devient inutilisable.",
+    "v.len() renvoie un usize : len() - 1 sur un vec vide underflowe et panique en debug.",
+    "remove(0) est O(n) car tout décale ; swap_remove(0) est O(1) mais change l'ordre.",
+]
+exercises = [
+    "Écris une fonction moyenne(notes: &[i32]) -> f64 qui itère sur la slice et utilise iter().sum().",
+    "Reproduis l'erreur de compile push-pendant-itération, lis le message de rustc, puis corrige en collectant d'abord les ajouts dans un second vec.",
+    "Crée un Vec<String>, trie-le avec sort(), puis affiche chaque élément avec son index grâce à enumerate().",
+]
+related = ["tableaux", "ownership", "emprunts", "option", "slices"]

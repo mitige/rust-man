@@ -1,0 +1,94 @@
+id = "hashmap"
+title = "hashmap — des clés vers des valeurs"
+category = "collections"
+tags = ["hashmap", "dictionnaire", "insert", "get", "hash"]
+difficulty = 3
+semaine = "S04"
+synopsis = '''scores.insert("alice".to_string(), 42); scores.get("alice") // Some(&42)'''
+description = '''
+## En une phrase
+
+`HashMap<K, V>` est un **dictionnaire** : une table de hachage qui stocke des paires clé → valeur et retrouve une valeur en O(1) moyen à partir de sa clé.
+
+## En pratique
+
+1. Import obligatoire : `use std::collections::HashMap;` — elle n'est pas dans le prélude, et il n'existe pas de macro `hashmap![...]` dans la std.
+2. Créer vide avec `HashMap::new()`, remplir avec `insert(cle, valeur)` : la map prend **possession** de la clé et de la valeur.
+3. `get(&cle)` → `Option<&V>` : jamais de panic, jamais d'insertion silencieuse (contrairement au `map[key]` de C++). `remove(&cle)` → `Option<V>` : supprime et rend la valeur.
+4. **insert remplace** : si la clé existe déjà, la valeur est écrasée et `insert` renvoie `Some(ancienne)` — détection de doublon gratuite.
+5. Les clés doivent être `Eq + Hash`. OK : entiers, String, &str, tuples, tes structs avec `#[derive(PartialEq, Eq, Hash)]`. NON : `f64` (à cause de NaN, f64 n'est pas `Eq`).
+6. String vs &str comme clé :
+   - `HashMap<String, V>` **possède** ses clés : la map est autonome.
+   - `HashMap<&str, V>` **emprunte** ses clés : les &str doivent vivre au moins aussi longtemps que la map (lifetimes).
+   - Bonus : grâce au trait `Borrow`, tu peux chercher dans une `HashMap<String, V>` avec un simple `&str` : `map.get("alice")`.
+7. Itérer : `for (k, v) in &map { }` donne `(&K, &V)`. L'ordre est **non garanti** (pseudo-aléatoire). Tu veux un ordre ? → fiche hashset-btreemap.
+
+```rust
+for (nom, score) in &scores {
+    println!("{} -> {}", nom, score);
+}
+```
+
+8. Pour « modifier si présent, insérer sinon », ne fais pas get + insert : l'**entry API** le fait en une recherche (fiche entry-api).
+
+## À retenir
+
+- `new` / `insert` / `get` / `remove` ; `get` et `remove` renvoient des `Option`.
+- `insert` sur une clé existante remplace et rend l'ancienne valeur.
+- Clé obligatoire : `Eq + Hash` (pas de f64 ; derive sur tes structs).
+- `HashMap<String, _>` possède ses clés, mais `get` accepte un `&str`.
+- L'itération est en ordre non garanti : BTreeMap si l'ordre compte.
+- Compter ou modifier-ou-insérer → entry API.
+'''
+example = '''
+use std::collections::HashMap;
+
+fn main() {
+    let mut scores: HashMap<String, u32> = HashMap::new();
+
+    // insert prend possession de la clé et de la valeur
+    scores.insert(String::from("alice"), 42);
+    scores.insert(String::from("bob"), 17);
+
+    // insert remplace et renvoie l'ancienne valeur
+    let ancien = scores.insert(String::from("alice"), 50);
+    println!("alice avait {:?}", ancien); // Some(42)
+
+    // get -> Option<&V> ; on cherche avec un &str grâce à Borrow
+    match scores.get("alice") {
+        Some(s) => println!("alice : {}", s),
+        None => println!("alice absente"),
+    }
+
+    // remove -> Option<V>
+    if let Some(s) = scores.remove("bob") {
+        println!("bob supprimé (score {})", s);
+    }
+
+    // contains_key pour tester sans récupérer la valeur
+    println!("alice existe ? {}", scores.contains_key("alice"));
+
+    // Itération : (&String, &u32), ordre NON garanti
+    for (nom, score) in &scores {
+        println!("{} -> {}", nom, score);
+    }
+
+    // Aperçu de l'entry API (fiche entry-api) : insérer ou incrémenter
+    *scores.entry(String::from("carol")).or_insert(0) += 5;
+    println!("carol : {:?}", scores.get("carol"));
+}
+'''
+gotchas = [
+    "HashMap n'est pas dans le prélude : sans le use, rustc te le rappelle gentiment.",
+    "get ne crée PAS d'entrée quand la clé est absente (contrairement à C++) : il renvoie None.",
+    "Les f64 ne peuvent pas être des clés : NaN empêche f64 d'implémenter Eq.",
+    "L'ordre d'itération est instable : ne base jamais l'affichage d'un test dessus sans trier.",
+    "Une HashMap<&str, V> emprunte ses clés : si les &str meurent avant la map, ça ne compile pas.",
+    "Garder une référence get() pendant un insert() est refusé : un seul accès mutable à la fois.",
+]
+exercises = [
+    "Compte les occurrences de chaque caractère d'une String dans une HashMap<char, usize>.",
+    "Stocke des notes par étudiant (HashMap<String, Vec<i32>>) et affiche la moyenne de chacun.",
+    "Utilise la valeur de retour d'insert pour détecter et afficher les doublons d'une liste de mots.",
+]
+related = ["option", "string-vs-str", "entry-api", "hashset-btreemap", "emprunts"]

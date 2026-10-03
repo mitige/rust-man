@@ -1,0 +1,15 @@
+id = "q-rustc-help"
+category = "pratique"
+difficulty = 1
+question = "Dans un message d’erreur de rustc, que contient le bloc qui commence par `help:` ?"
+choices = [
+    "Une suggestion concrète de correction, souvent directement applicable à ton code",
+    "Un lien vers la page du manuel officiel correspondant à l’erreur",
+    "La liste des autres erreurs du même type dans ton projet",
+    "Un simple résumé de l’erreur, sans information supplémentaire",
+]
+answer = 0
+explanation = '''
+rustc est un des rares compilateurs à proposer le fix : « help: consider borrowing here: `&x` » te donne souvent la correction exacte, parfois même applicable automatiquement avec `cargo fix`. Lis donc le message en entier — code d’erreur, extrait annoté avec les `^^^`, puis le bloc help — au lieu de t’arrêter à la ligne rouge. Règle générale : la suggestion fait compiler, mais vérifie qu’elle correspond à ton intention, car rustc ne connaît pas ton objectif. Piège : ajouter `&` ou `.clone()` bêtement partout où help le suggère, sans comprendre le pourquoi.
+'''
+related = ["lire-erreur-rustc", "borrow-checker-paix"]

@@ -1,0 +1,101 @@
+id = "rustfmt"
+title = "rustfmt — le style n'est plus un débat"
+category = "outils"
+tags = ["rustfmt", "formatage", "style", "ci"]
+difficulty = 1
+semaine = "S02"
+synopsis = "cargo fmt formate tout le projet selon LE style officiel — en Rust, le débat de style n'existe pas."
+description = '''
+## En une phrase
+
+rustfmt est le **formateur officiel** : il réécrit ton code selon un style unique partagé par tout l'écosystème — tu ne choisis pas le style, tu gagnes du temps de cerveau.
+
+## En pratique
+
+1. `cargo fmt` formate tout le projet en place ; `rustfmt src/main.rs` un seul fichier. Si la commande manque : `rustup component add rustfmt`.
+
+2. En CI : `cargo fmt --check` (ou `rustfmt --check`) ne modifie rien et **échoue** si un fichier n'est pas formaté → la fusion est bloquée jusqu'au formatage. Le style devient un non-sujet en revue de code.
+
+3. Pourquoi le débat n'existe pas : Go a ouvert la voie avec gofmt, Rust a suivi. Un style unique = diffs propres, revues focalisées sur la logique, code lisible partout pareil. La guerre tabs-vs-espaces est arbitrée : 4 espaces, point final.
+
+4. Ce qu'il règle pour toi : indentation (4 espaces), espaces autour des opérateurs, position des accolades, découpage des lignes longues, virgules finales dans les listes multi-lignes. Ce qu'il ne fait PAS : trier tes `use` (les options de tri sont nightly) ni rendre ton code idiomatique (ça, c'est clippy).
+
+```rust
+// Avant (collé à la va-vite) :
+fn moyenne( notes :&[f64])->f64{notes.iter().sum::<f64>()/notes.len() as f64}
+
+// Après cargo fmt :
+fn moyenne(notes: &[f64]) -> f64 {
+    notes.iter().sum::<f64>() / notes.len() as f64
+}
+```
+
+5. Configuration (mention) : un fichier `rustfmt.toml` à la racine.
+
+```toml
+max_width = 100      # largeur de ligne maximale (défaut : 100)
+hard_tabs = false    # défaut : false, donc 4 espaces
+```
+
+Beaucoup d'options restent nightly-only : les défauts SONT le standard de l'écosystème, n'y touche que si ton équipe l'exige.
+
+6. Intégration éditeur (mention) : active le « format on save » — rust-analyzer le propose partout (VS Code, neovim), Helix le fait nativement. Le réflexe final : tu sauvegardes, c'est formaté, tu n'y penses plus jamais.
+
+## À retenir
+
+- `cargo fmt` formate tout le projet ; `cargo fmt --check` vérifie sans toucher (mode CI).
+- Le style officiel est unique : 4 espaces, 100 colonnes par défaut, virgules finales en multi-lignes.
+- Le débat de style n'existe pas en Rust — c'est une fonctionnalité, pas une contrainte.
+- `rustfmt.toml` existe pour régler, mais les défauts sont la norme.
+- « Format on save » dans l'éditeur = tu ne penses plus jamais au style.
+'''
+example = '''
+// Ce fichier est déjà formaté exactement comme rustfmt le ferait :
+// 4 espaces, une idée par ligne, virgule finale en multi-lignes.
+// Vérifie-le : rustfmt --check rustfmt.rs (aucune sortie = parfait).
+
+struct Note {
+    matiere: String,
+    valeur: f64,
+}
+
+fn moyenne(notes: &[Note]) -> f64 {
+    let total: f64 = notes.iter().map(|n| n.valeur).sum();
+    total / notes.len() as f64
+}
+
+fn main() {
+    let notes = vec![
+        Note {
+            matiere: "maths".into(),
+            valeur: 14.5,
+        },
+        Note {
+            matiere: "info".into(),
+            valeur: 16.0,
+        },
+        Note {
+            matiere: "physique".into(),
+            valeur: 12.5,
+        },
+    ];
+    for note in &notes {
+        println!("{} : {}", note.matiere, note.valeur);
+    }
+    println!("moyenne générale : {:.2}", moyenne(&notes));
+    println!("Ce fichier passerait `cargo fmt --check` sans un warning.");
+}
+'''
+gotchas = [
+    "Committer du code non formaté quand la CI fait `cargo fmt --check` : pipeline rouge pour trois espaces de trop.",
+    "Croire que rustfmt trie tes `use` : il les formate mais ne les réordonne pas (les options de tri sont nightly).",
+    "Bidouiller `rustfmt.toml` sur un projet perso : tu te coupes du style que tout l'écosystème sait lire.",
+    "Attendre rustfmt pour rendre ton code idiomatique : il règle la forme, pas le fond — le fond, c'est clippy.",
+    "Attendre la fin du TP pour formater : formate à chaque sauvegarde, ou au minimum avant chaque commit.",
+]
+exercises = [
+    "Prends un ancien TP, lance `cargo fmt` puis `git diff`, et compte les lignes changées sans qu'aucun comportement n'ait bougé.",
+    "Écris un script (ou un job CI) qui lance `cargo fmt --check` et fais-le échouer volontairement sur un fichier mal formaté.",
+    "Configure le format on save dans ton éditeur et vérifie-le sur un fichier volontairement cassé.",
+]
+related = ["clippy", "cargo-bases", "idiomes-rust"]

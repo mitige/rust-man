@@ -1,0 +1,88 @@
+id = "panic"
+title = "panic! — quand ça ne devait JAMAIS arriver"
+category = "erreurs"
+tags = ["panic", "unwinding", "abort", "backtrace", "irrecuperable"]
+difficulty = 2
+semaine = "S05"
+synopsis = "panic!(\"...\") // erreur irrécupérable : la pile se déroule, puis le processus meurt."
+description = '''
+## En une phrase
+
+`panic!` arrête le programme face à une erreur **irrécupérable** — un bug, un invariant violé, un état qui ne devait jamais exister.
+
+## En pratique
+
+1. La règle d’or : `Result` pour les échecs ATTENDUS (fichier absent, saisie invalide), `panic!` pour ce qui ne devrait JAMAIS arriver (bug, invariant cassé).
+
+```rust
+assert!(age >= 0, "invariant : un âge est positif, reçu {age}");   // panic si faux
+```
+
+2. Par défaut, `panic!` DÉROULE la pile (unwinding) : les destructeurs (`Drop`) tournent, la mémoire est libérée proprement, puis le processus meurt. L’alternative est `panic = "abort"` dans Cargo.toml : mort immédiate, binaire plus petit — mais plus de destructeurs ni de `catch_unwind`.
+3. `RUST_BACKTRACE=1 cargo run` (ou `=full`) affiche la pile d’appels qui mène au panic : ton premier réflexe de débogage, avant même de relire le code.
+4. `std::panic::catch_unwind` intercepte un panic : c’est ce que fait le harnais de tests pour qu’un test qui panique ne tue pas les autres. Ce n’est PAS un mécanisme de gestion d’erreurs — Rust n’a pas de try/catch façon Java.
+5. La famille : `unreachable!()` (branche logiquement impossible), `todo!()` / `unimplemented!()` (pas encore écrit), `assert!` / `debug_assert!` (invariants), et `unwrap` / `expect` (des panic! déguisés — fiche dédiée).
+6. Un panic ne tue que son thread : les autres continuent. Pratique pour isoler, dangereux pour ignorer.
+
+```
+Result  → l’échec fait partie du contrat (fichier, réseau, saisie)
+panic!  → l’échec est un bug : continuer n’a aucun sens
+```
+
+## À retenir
+
+- `panic!` = « cet état est un bug, je ne sais pas continuer » — jamais pour une erreur métier.
+- Unwinding par défaut (destructeurs exécutés) ; `panic = "abort"` pour des binaires plus petits et sans rattrapage.
+- `RUST_BACKTRACE=1` pour voir la pile d’appels complète d’un crash.
+- `catch_unwind` sert à isoler du code (tests, FFI), pas à gérer des erreurs.
+- Entrées utilisateur → `Result`. Invariants prouvés par toi → `assert!` / `panic!`.
+'''
+example = '''
+use std::panic;
+
+fn age_valide(age: i32) -> u8 {
+    // Invariant : un âge négatif est un BUG, pas une entrée à gérer
+    assert!(age >= 0, "un âge négatif est impossible (reçu {age})");
+    age as u8
+}
+
+fn main() {
+    // catch_unwind : le harnais de tests isole chaque test comme ça
+    let resultat = panic::catch_unwind(|| age_valide(-3));
+    match resultat {
+        Ok(a) => println!("âge : {a}"),
+        Err(_) => println!("panic intercepté : invariant violé"),
+    }
+
+    // Entrée utilisateur = échec ATTENDU : Result, pas panic
+    let saisie = "douze";
+    match saisie.parse::<u8>() {
+        Ok(n) => println!("parsé : {n}"),
+        Err(e) => println!("entrée invalide ({e}) — on redemande"),
+    }
+
+    // unreachable! : branche que la logique rend impossible
+    let mot = Some("rust");
+    let texte = match mot {
+        Some(m) => m,
+        None => unreachable!("mot est Some par construction"),
+    };
+    println!("unreachable évité : {texte}");
+
+    println!("le programme continue après le panic intercepté");
+}
+'''
+gotchas = [
+    "panic! n’est pas un système d’exceptions : pas de try/catch pour le flux normal — les erreurs attendues passent par Result.",
+    "Avec panic = \"abort\" dans Cargo.toml, plus rien ne se déroule : destructeurs ignorés, catch_unwind impuissant.",
+    "Sans `RUST_BACKTRACE=1`, un panic ne montre que sa ligne de déclenchement : la backtrace est ton premier outil de diagnostic.",
+    "Un index hors limites (`v[99]`) panique : préfère `v.get(99)`, qui renvoie une Option, quand l’index est incertain.",
+    "catch_unwind sert à isoler du code (tests, frontières FFI), jamais à gérer une erreur métier.",
+    "Un panic ne tue que son thread : les autres continuent, ce qui peut masquer le problème.",
+]
+exercises = [
+    "Provoque un panic avec un index hors limites sur un vec, relance avec `RUST_BACKTRACE=1` et lis la pile d’appels.",
+    "Remplace un `panic!` de validation d’entrée par un `Result` : qu’est-ce qui change pour l’appelant ?",
+    "Ajoute un `assert!` d’invariant dans une fonction, puis un test qui le déclenche volontairement.",
+]
+related = ["result", "unwrap-expect", "option", "tests", "debugging"]

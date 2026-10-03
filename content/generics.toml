@@ -1,0 +1,95 @@
+id = "generics"
+title = "generics — un code, tous les types"
+category = "types"
+tags = ["generique", "monomorphisation", "turbofish", "parametre-type"]
+difficulty = 3
+semaine = "S05"
+synopsis = "fn max<T: PartialOrd>(a: T, b: T) -> T — un code, tous les types"
+description = '''
+## En une phrase
+
+Les génériques permettent d'écrire du code **paramétré par un type**, que le compilateur spécialise ensuite gratuitement pour chaque type concret utilisé.
+
+## En pratique
+
+1. Fonction générique : le type devient un paramètre `T`, avec des bornes de traits pour dire ce qu'on exige de lui :
+
+```rust
+fn max<T: PartialOrd>(a: T, b: T) -> T {
+    if a >= b { a } else { b }
+}
+```
+
+Sans la borne `PartialOrd`, le `>=` serait refusé : le compilateur ne sait pas que `T` est comparable.
+
+2. Structs et enums génériques :
+
+```rust
+struct Point<T> { x: T, y: T }
+enum Option<T> { Some(T), None }  // rappel : c'est la vraie définition std
+```
+
+`Point<i32>` et `Point<f64>` sont deux types **distincts**, non interchangeables.
+
+3. **Monomorphisation** : à la compilation, rustc génère une copie spécialisée de `max` pour chaque type concret utilisé (`max::<i32>`, `max::<f64>`...). Zéro surcoût à l'exécution : aussi rapide que si tu avais écrit une fonction par type. En Java, les génériques sont effacés et boxés au runtime ; en Rust, ils sont matérialisés à la compilation.
+
+4. Turbofish `::<T>` : quand l'inférence ne suffit pas, tu nommes le type explicitement :
+
+```rust
+let n = "3".parse::<i32>();      // le turbofish choisit T
+let p = Point::<f64>::new(1.0, 2.0);
+```
+
+5. Plusieurs paramètres possibles : `struct Paire<T, U> { a: T, b: U }`, avec des bornes différentes par paramètre.
+
+## À retenir
+
+- `<T>` = paramètre de type ; `T: Trait` = ce qu'on exige de T.
+- Fonctions, structs, enums, impl : tout peut être générique.
+- Monomorphisation = spécialisation à la compilation, coût zéro au runtime.
+- Turbofish `::<T>` lève les ambiguïtés d'inférence.
+- Le prix : messages d'erreur parfois velus, binaire un peu plus gros.
+'''
+example = '''
+// Fonction générique : T est un paramètre de TYPE, borné par PartialOrd.
+fn max<T: PartialOrd>(a: T, b: T) -> T {
+    if a >= b { a } else { b }
+}
+
+// Struct générique : le même T pour les deux champs.
+#[derive(Debug)]
+struct Point<T> { x: T, y: T }
+
+impl<T> Point<T> {
+    fn new(x: T, y: T) -> Self { Point { x, y } }
+}
+
+fn main() {
+    // Monomorphisation : rustc génère max::<i32>, max::<f64>...
+    // Zéro coût à l'exécution, chaque version est spécialisée.
+    println!("max(3, 7) = {}", max(3, 7));         // T = i32, inféré
+    println!("max(2.5, 1.2) = {}", max(2.5, 1.2)); // T = f64, inféré
+
+    let pi = Point::new(1, 2);            // Point<i32> inféré
+    let pf = Point::<f64>::new(1.0, 2.0); // turbofish ::<f64> pour forcer
+    println!("{:?} / {:?}", pi, pf);
+    println!("pi.x = {}, pf.y = {}", pi.x, pf.y);
+
+    // Rappel : Option<T> et Result<T, E> sont des enums génériques de la std
+    let quelque: Option<i32> = Some(42);
+    println!("{:?}", quelque);
+}
+'''
+gotchas = [
+    "Écrire `fn max<T>(a: T, b: T)` sans borne et tenter `a >= b` : le compilateur ignore que T est comparable — ajoute `T: PartialOrd`.",
+    "Croire que `Point<i32>` et `Point<f64>` sont interchangeables : ce sont deux types distincts après monomorphisation.",
+    "Abuser du turbofish partout : une annotation de variable (`let x: i32 = ...`) est souvent plus lisible.",
+    "Penser « templates C++ » : les bornes Rust sont vérifiées à la DÉFINITION de la fonction, pas à l'instanciation — les erreurs sont bien plus propres.",
+    "Craindre un coût runtime : il n'y en a pas, le code spécialisé est aussi rapide que du code monomorphe écrit à la main."
+]
+exercises = [
+    "Écris `fn min<T: PartialOrd>(a: T, b: T) -> T` et teste-la avec des i32, des f64 et des char.",
+    "Crée `struct Couple<T, U>(T, U)` avec une méthode `premier(&self) -> &T` et instancie un `Couple<i32, String>`.",
+    "Ouvre la doc std de `Result<T, E>` et retrouve ses deux paramètres génériques et leurs rôles."
+]
+related = ["traits", "trait-bounds", "enums", "structs", "option"]

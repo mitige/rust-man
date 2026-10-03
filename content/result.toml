@@ -1,0 +1,106 @@
+id = "result"
+title = "result — Ok ou Err, les erreurs récupérables"
+category = "erreurs"
+tags = ["result", "ok", "err", "erreurs", "recuperables", "match"]
+difficulty = 2
+semaine = "S04"
+synopsis = "Result<T, E> : soit Ok(valeur), soit Err(erreur) — pour tout ce qui peut échouer normalement."
+description = '''
+## En une phrase
+
+`Result<T, E>` est un enum à deux variantes — `Ok(T)` ou `Err(E)` — pour toutes les erreurs **récupérables**, celles qu’un programme normal doit gérer sans paniquer.
+
+## En pratique
+
+1. Une fonction qui peut échouer renvoie `Result`. Jamais de sentinelle : en C tu renverrais `-1` ou `NULL`, en Rust `-1` ne veut rien dire — `Err(e)` porte la raison de l’échec.
+
+```rust
+fn diviser(a: f64, b: f64) -> Result<f64, String> {
+    if b == 0.0 { Err(String::from("division par zéro")) } else { Ok(a / b) }
+}
+```
+
+2. `match` dessus : le compilateur exige les deux cas, `Ok` ET `Err`.
+
+```rust
+match diviser(10.0, 0.0) {
+    Ok(q) => println!("quotient : {q}"),
+    Err(e) => println!("échec : {e}"),
+}
+```
+
+3. `unwrap_or_else` : un repli calculé à partir de l’erreur (paresseux, ne tourne que sur `Err`).
+
+```rust
+let q = diviser(1.0, 0.0).unwrap_or_else(|e| { println!("{e}"); 0.0 });
+```
+
+4. `map` transforme le `Ok`, `map_err` transforme le `Err` — l’autre variante traverse intacte.
+
+```rust
+let double = diviser(8.0, 2.0).map(|q| q * 2.0);          // Ok(8.0)
+let msg = diviser(1.0, 0.0).map_err(|e| format!("ko : {e}"));
+```
+
+5. La std utilise `Result` partout : `"42".parse::<i32>()`, `fs::read_to_string`, `File::open`… Dès qu’un échec est envisageable, la signature le dit.
+6. `Option` = absence de valeur ; `Result` = échec avec une raison. `ok_or("pourquoi")` convertit l’une en l’autre.
+7. `Result` est `#[must_use]` : l’ignorer déclenche un avertissement du compilateur. Tu ne peux pas « oublier » un échec.
+
+## À retenir
+
+- `Result` = `Ok(valeur)` | `Err(erreur)`, pour tout échec ATTENDU et récupérable.
+- Convention absolue : une fonction qui peut échouer renvoie `Result`, jamais `-1`, `null` ou une chaîne vide.
+- `match` exige les deux cas ; `unwrap_or_else`, `map`, `map_err` couvrent les cas simples.
+- Le type d’erreur est explicite : `Result<i32, std::io::Error>`, pas `Result<i32>` tout court.
+- Toute la std parle `Result` : lis les signatures, elles annoncent ce qui peut mal tourner.
+'''
+example = '''
+fn diviser(a: f64, b: f64) -> Result<f64, String> {
+    if b == 0.0 {
+        Err(String::from("division par zéro"))
+    } else {
+        Ok(a / b)
+    }
+}
+
+fn main() {
+    // match : le moyen le plus direct, les deux cas exigés
+    match diviser(10.0, 3.0) {
+        Ok(q) => println!("10 / 3 = {q:.2}"),
+        Err(e) => println!("erreur : {e}"),
+    }
+
+    // unwrap_or_else : repli calculé à partir de l’erreur
+    let q = diviser(1.0, 0.0).unwrap_or_else(|e| {
+        println!("on récupère : {e}");
+        f64::NAN
+    });
+    println!("repli : {q}");
+
+    // map : transformer le Ok sans toucher au Err
+    let double = diviser(8.0, 2.0).map(|q| q * 2.0);
+    println!("doublé : {double:?}");
+
+    // map_err : transformer le Err sans toucher au Ok
+    let lu = "42".parse::<i32>().map_err(|e| format!("parse ko : {e}"));
+    println!("parsé : {lu:?}");
+
+    // La std renvoie Result : jamais de sentinelle -1
+    let n = "abc".parse::<i32>();
+    println!("échec propre : {}", n.is_err());
+}
+'''
+gotchas = [
+    "Un `Result` ignoré déclenche un avertissement `#[must_use]` : le compilateur refuse que tu laisses passer un échec.",
+    "`unwrap_or(x)` évalue `x` même sur `Ok` : si le repli coûte cher, utilise `unwrap_or_else`.",
+    "Renvoyer `-1`, `0` ou une chaîne vide pour signaler un échec, c’est réinventer `Err` en pire : personne ne sait que c’est une sentinelle.",
+    "`map` ne touche que `Ok`, `map_err` que `Err` : l’autre variante traverse sans être modifiée.",
+    "`ok()` convertit en `Option` en jetant l’erreur : pratique, mais tu perds la cause de l’échec.",
+    "Le type d’erreur doit être explicite : `Result<i32>` seul ne compile pas, il faut `Result<i32, E>`.",
+]
+exercises = [
+    "Écris `fn racine(x: f64) -> Result<f64, String>` qui refuse les x négatifs avec un message clair.",
+    "Parse « 128px » en u32 après avoir retiré le suffixe avec `strip_suffix`, en renvoyant un Result propre à chaque étape.",
+    "Transforme un `match` sur Result en combinaison `map` + `unwrap_or_else`.",
+]
+related = ["option", "operateur-question", "panic", "erreurs-custom", "match"]

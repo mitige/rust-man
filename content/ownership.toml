@@ -1,0 +1,101 @@
+id = "ownership"
+title = "ownership — qui possède quoi"
+category = "ownership"
+tags = ["move", "possession", "drop", "copy", "scope"]
+difficulty = 3
+semaine = "S03"
+synopsis = "let b = a;  // a est DÉPLACÉE dans b — a n'existe plus"
+description = '''
+## En une phrase
+
+En Rust, chaque valeur a **un seul propriétaire**, et quand ce propriétaire sort de son scope, la valeur est détruite — automatiquement, sans ramasse-miettes.
+
+## En pratique
+
+Les trois règles à connaître par cœur :
+
+1. Chaque valeur a un **propriétaire** (une variable).
+2. Il n'y a qu'**UN seul** propriétaire à la fois.
+3. Quand le propriétaire **sort du scope**, la valeur est libérée (`drop`).
+
+Le **move par défaut** : affecter ou passer une valeur la DÉPLACE.
+
+```rust
+let a = String::from("salut");
+let b = a;          // a est DÉPLACÉE dans b
+println!("{a}");    // ne compile pas : a n'existe plus
+```
+
+Pourquoi ? Une `String`, c'est un petit triplet (pointeur, longueur, capacité) sur la pile qui dirige vers les octets sur le tas :
+
+```
+PILE                  TAS
+a  ptr ──────────►   "salut"
+   len: 5
+   cap: 5
+```
+
+Après `let b = a;`, Rust copie le triplet dans `b` et **invalide `a`** : jamais deux variables ne libéreront le même tas (double free impossible, par construction).
+
+Les types **Copy** (i32, f64, bool, char, tuples de Copy...) tiennent entièrement sur la pile : leur copie est triviale et sans danger, Rust la fait en silence au lieu de déplacer. `let y = x;` avec `x: i32` laisse donc `x` valide.
+
+Un **appel de fonction déplace aussi** : `f(s)` avec `s: String` donne `s` à `f`, qui la libère à son retour. Pour garder `s`, emprunte (`&s`, fiche `emprunts`) ou fais-toi rendre la valeur en retour.
+
+## À retenir
+
+- 1 valeur = 1 propriétaire ; fin de scope = libération automatique.
+- `let b = a;` sur une String/Vec = **move**, pas copie : `a` meurt.
+- Les types Copy copient en silence car tout tient sur la pile.
+- Passer une valeur à une fonction = la lui donner.
+- Zéro `free`, zéro GC : le compilateur place les `drop` pour toi.
+'''
+example = '''
+fn main() {
+    // Règles 1+2 : une valeur, UN seul propriétaire
+    let a = String::from("salut");
+    let b = a; // MOVE : ptr, len, cap passent à b — a n'existe plus
+    // println!("{a}"); // décommente → erreur : value borrowed here after move
+    println!("b = {b}");
+
+    // Les types Copy COPIENT au lieu de déplacer
+    let x = 42;
+    let y = x; // copie : x reste valide (i32 vit entièrement sur la pile)
+    println!("x = {x}, y = {y}");
+
+    // Règle 3 : fin de scope = drop automatique
+    {
+        let s = String::from("temporaire");
+        println!("{s} vit dans le bloc");
+    } // s est droppée ici : la mémoire du tas est libérée
+
+    // Passer à une fonction = DONNER la possession
+    let msg = String::from("je change de mains");
+    prend_possession(msg);
+    // msg n'est plus utilisable ici
+
+    // ... sauf si la fonction la rend
+    let r = donne_et_rend(String::from("aller-retour"));
+    println!("récupérée : {r}");
+}
+
+fn prend_possession(s: String) {
+    println!("possédée par la fonction : {s}");
+} // s droppée à la fin de la fonction
+
+fn donne_et_rend(s: String) -> String {
+    s // la possession revient à l'appelant
+}
+'''
+gotchas = [
+    "Après `let b = a;`, croire que `a` vaut encore quelque chose — non, le compilateur te l'interdit pour de bon.",
+    "Oublier qu'un appel de fonction avec une String donne la possession — si tu en as encore besoin, emprunte ou clone.",
+    "Penser que Copy existe pour String/Vec — non, seuls les types simples (i32, bool, char, tuples de Copy...) le sont.",
+    "Chercher free() ou delete : Rust libère tout seul à la fin du scope, c'est le principe du drop.",
+    "Confondre copie superficielle et move : le move transfère le pointeur ET invalide l'ancien nom.",
+]
+exercises = [
+    "Écris un programme qui déplace une String trois fois de suite (a vers b, b vers c) et affiche c.",
+    "Crée une fonction qui prend un tuple (f64, f64) et montre que le tuple reste utilisable après l'appel — explique pourquoi.",
+    "Provoque volontairement l'erreur « use of moved value » et lis le message du compilateur en entier.",
+]
+related = ["emprunts", "clone-copy", "drop-raii", "variables-mutabilite"]

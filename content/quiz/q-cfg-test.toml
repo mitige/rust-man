@@ -1,0 +1,15 @@
+id = "q-cfg-test"
+category = "outils"
+difficulty = 2
+question = "Pourquoi place-t-on les tests unitaires dans un `mod tests` marqué `#[cfg(test)]` au bas du fichier ?"
+choices = [
+    "Parce que `cargo test` refuse de compiler des tests situés hors d’un module",
+    "Pour que les tests s’exécutent plus vite grâce à un mode de compilation spécial",
+    "Pour rendre le module de tests public et réutilisable par d’autres crates",
+    "Pour que ce module ne soit compilé qu’en mode test et jamais inclus dans le binaire normal",
+]
+answer = 3
+explanation = '''
+`#[cfg(test)]` est de la compilation conditionnelle : le module n’existe que quand tu compiles sous `cargo test`. Tes tests (et tes dev-dependencies) ne gonflent donc jamais le binaire livré, tout en restant juste à côté du code testé, avec accès à ses fonctions privées. Règle générale : tests unitaires dans le même fichier sous `#[cfg(test)]`, tests d’intégration dans le dossier `tests/` à la racine. Piège : ne pas confondre `#[cfg(test)]`, qui conditionne tout un module, et `#[test]`, qui marque chaque fonction de test.
+'''
+related = ["tests", "modules-use"]

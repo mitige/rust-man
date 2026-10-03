@@ -1,0 +1,100 @@
+id = "expressions-vs-instructions"
+title = "expressions — presque tout vaut quelque chose"
+category = "bases"
+tags = ["expression", "instruction", "bloc", "point-virgule", "unit"]
+difficulty = 2
+semaine = "S02"
+synopsis = "let x = if c { 1 } else { 2 };  // if est une expression : il PRODUIT une valeur"
+description = '''
+## En une phrase
+
+Rust distingue les **instructions** (terminées par `;`, elles valent `()`) des **expressions** (elles produisent une valeur) — et presque tout est une expression.
+
+## En pratique
+
+1. Instruction : `let x = 5;`, `f(x);` — fait quelque chose, vaut (). Le `;` dit « j'ai fini ».
+2. Expression : `5 + 3`, `f(x)`, un bloc `{ ... }`, un `if`, un `match`, un `loop` — s'évalue vers une valeur.
+3. Un bloc est une expression : sa valeur est sa DERNIÈRE expression, sans `;`.
+
+```rust
+let y = {
+    let a = 3;
+    a * 2 // le bloc vaut 6
+};
+```
+
+4. Conséquence directe : `let x = if c { 1 } else { 2 };` compile — impossible en C, où if est une instruction et ne vaut rien.
+5. Le piège du point-virgule : un `;` de trop à la fin d'une fonction et elle renvoie () :
+
+```rust
+fn six() -> i32 {
+    3 + 3; // ne compile pas : i32 attendu, () trouvé
+}
+```
+
+6. `let` n'est PAS une expression : `let x = (let y = 5);` ne compile pas, contrairement au C où l'affectation a une valeur.
+7. if, match, loop, blocs : des expressions, donc utilisables partout où une valeur est attendue — dans un let, un argument, un retour de fonction.
+
+## À retenir
+
+- ; = instruction = valeur ()
+- sans ; = expression = valeur
+- un bloc { } vaut sa dernière expression
+- if / match / loop sont des expressions : stockables, passables, renvoyables
+- le ; final d'une fonction décide de son type de retour
+- let est une instruction : jamais de let dans un let
+'''
+example = '''
+fn double(n: i32) -> i32 {
+    n * 2 // pas de ; : c'est la valeur de retour
+}
+
+fn main() {
+    // un bloc { } EST une expression : il vaut sa dernière ligne
+    let surface = {
+        let largeur = 4;
+        let hauteur = 5;
+        largeur * hauteur // renvoyée par le bloc, sans ;
+    };
+    println!("surface : {surface}");
+
+    // if est une expression : on stocke son résultat
+    let note = 14;
+    let mention = if note >= 16 {
+        "très bien"
+    } else if note >= 10 {
+        "passable"
+    } else {
+        "ajourné"
+    };
+    println!("note {note} → {mention}");
+
+    // loop aussi produit une valeur, via break
+    let mut compte = 0;
+    let premier_pair_apres_10 = loop {
+        compte += 1;
+        if compte > 10 && compte % 2 == 0 {
+            break compte; // break donne sa valeur au loop
+        }
+    };
+    println!("premier pair après 10 : {premier_pair_apres_10}");
+
+    // une instruction se termine par ; et vaut ()
+    let retour = println!("double de 21 : {}", double(21));
+    println!("println! a renvoyé : {retour:?}");
+}
+'''
+gotchas = [
+    "3 + 3; en dernière ligne de fonction : le ; transforme l'expression en instruction, la fonction renvoie ().",
+    "let x = (let y = 5); ne compile pas : let est une instruction, il ne vaut rien.",
+    "Un if-expression sans else ne peut produire que () : le bras manquant vaut () et les types divergent.",
+    "Les bras d'un if ou d'un match utilisés comme expression doivent tous avoir le même type.",
+    "Entre deux expressions, le ; n'est pas optionnel : c'est lui qui les sépare en instructions.",
+    "break peut renvoyer une valeur à un loop, mais pas à un while ni à un for.",
+]
+exercises = [
+    "Écris abs(n: i32) -> i32 comme un unique if-expression, sans return ni variable intermédiaire.",
+    "Calcule un prix TTC dans un bloc-expression de trois lignes et affiche le résultat du bloc.",
+    "Ajoute un ; à l'expression de retour d'une de tes fonctions, lis l'erreur « expected ..., found () », puis corrige.",
+]
+related = ["fonctions", "conditions", "boucles", "match", "lire-erreur-rustc"]

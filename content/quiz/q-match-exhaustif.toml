@@ -1,0 +1,23 @@
+id = "q-match-exhaustif"
+category = "bases"
+difficulty = 2
+question = '''
+Pourquoi le compilateur refuse-t-il ce code ?
+
+```rust
+match opt {          // opt: Option<i32>
+    Some(v) => println!("{v}"),
+}
+```
+'''
+choices = [
+    "On ne peut pas matcher sur Option : il faut d’abord appeler unwrap() pour extraire la valeur",
+    "Le `match` ne fonctionne que sur les enums définis par l’utilisateur, pas sur ceux de la std",
+    "Il manque le mot-clé `case` devant chaque motif du match",
+    "Le match n’est pas exhaustif : le cas `None` n’est pas traité",
+]
+answer = 3
+explanation = '''
+Un `match` doit couvrir TOUS les cas possibles du type matché : ici `None` manque, et rustc le signale avec la liste des motifs non couverts. Deux solutions : ajouter un bras `None => ...`, ou un bras fourre-tout `_ => ...`. C’est une des plus grandes forces de Rust : impossible d’oublier un cas, le compilateur te tient la main. Piège : croire que `_` est une simple convention de style — il est souvent OBLIGATOIRE pour rendre le match exhaustif.
+'''
+related = ["match", "enums"]

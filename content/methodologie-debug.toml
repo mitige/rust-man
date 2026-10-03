@@ -1,0 +1,96 @@
+id = "methodologie-debug"
+title = "methodologie-debug — la méthode systématique"
+category = "pratique"
+tags = ["debug", "methode", "reproduction", "tests", "hypothese"]
+difficulty = 2
+semaine = "S03"
+synopsis = "Lire vraiment, reproduire en minimal, une hypothèse à la fois : le debug est une méthode, pas un don."
+description = '''
+## En une phrase
+
+Déboguer, ce n'est pas relire son code en espérant que le bug se confesse : c'est une **méthode en cinq étapes** qui transforme « ça marche pas » en hypothèse testable.
+
+## En pratique
+
+1. **Lis l'erreur. Vraiment.** Toute l'erreur : le code, la ligne, le `help`. La moitié des « bugs » de débutant sont des diagnostics rustc mal lus (fiche lire-erreur-rustc).
+
+2. **Reproduis en minimal** : le plus petit programme, la plus petite entrée, qui déclenche le problème. Si ton exemple minimal ne plante plus, rajoute les éléments un par un jusqu'au crash : le dernier ajouté est le coupable.
+
+3. **Une hypothèse à la fois** : « la moyenne est fausse PARCE QUE la division est entière ». Formule-la, teste-la, et si elle est fausse, reviens à l'état initial. Changer trois choses d'un coup t'apprend zéro — tu ne sauras jamais laquelle a compté.
+
+4. **Isole avec dbg! et les tests** : place `dbg!` aux frontières (entrées et sorties des fonctions suspectes) pour voir où les valeurs dévient. Quand le bug est cerné, écris un test qui le reproduit : il devient le gardien qui empêche sa réincarnation.
+
+5. **Rubber duck** : explique le code ligne par ligne à ton canard en plastique (ou à un camarade). Formuler « cette ligne fait X » à voix haute révèle l'écart entre ce que tu crois avoir écrit et ce que tu as écrit.
+
+6. **Avant de demander de l'aide**, la liste de contrôle des trois questions :
+   - Qu'est-ce que j'ATTENDAIS ? (le comportement précis attendu)
+   - Qu'est-ce que j'OBSERVE ? (message exact, valeur exacte)
+   - Qu'est-ce qui a CHANGÉ ? (dernière modif, dernière entrée différente)
+
+   Trois réponses écrites = une question à laquelle on peut répondre en une minute.
+
+## À retenir
+
+- Le diagnostic complet est la première piste : lis-le en entier avant de toucher au code.
+- Minimal ET reproductible : sans reproduction fiable, tu débogues un fantôme.
+- Une hypothèse, un test, un verdict — jamais trois changements à la fois.
+- `dbg!` aux frontières pour localiser, un test pour figer le bug à jamais.
+- Attendu / observé / changé : réponds aux trois questions AVANT de demander de l'aide.
+'''
+example = '''
+// La méthode en action : le bug initial (voir la description) était une
+// division ENTIÈRE qui écrasait la moyenne. Voici la version corrigée.
+
+fn moyenne(notes: &[i32]) -> f64 {
+    if notes.is_empty() {
+        return 0.0; // cas limite trouvé en répondant à « qu'est-ce que j'observe ? »
+    }
+    let somme: i32 = notes.iter().sum();
+    dbg!(somme); // dbg! : affiche [fichier:ligne] somme = … sur stderr, et REND la valeur
+    somme as f64 / notes.len() as f64 // conversion AVANT la division : l'hypothèse validée
+}
+
+fn main() {
+    // 1. Reproduire en minimal : le plus petit cas qui montre le problème
+    let notes = vec![10, 12, 14];
+
+    // 2. Une hypothèse à la fois, un dbg! par étape intermédiaire
+    let m = moyenne(&notes);
+    dbg!(m);
+    println!("moyenne = {m:.2}");
+
+    // 3. Vérifier le cas limite (slice vide) qui divisait par zéro avant
+    let vide: Vec<i32> = vec![];
+    println!("moyenne du vide = {}", moyenne(&vide));
+}
+
+// 4. Des tests figent le comportement : le bug ne reviendra pas silencieusement.
+//    (Se lancent avec `cargo test` ou `rustc --test`.)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn moyenne_simple() {
+        assert_eq!(moyenne(&[10, 12, 14]), 12.0);
+    }
+
+    #[test]
+    fn moyenne_vide() {
+        assert_eq!(moyenne(&[]), 0.0);
+    }
+}
+'''
+gotchas = [
+    "Lire seulement la dernière ligne de l'erreur : l'information utile est dans les notes et le help, au milieu.",
+    "Semer des println! au hasard : place-les aux FRONTIÈRES (entrées/sorties de fonctions), sinon tu te noies dans le bruit.",
+    "Corriger sans avoir reproduit : tu ne sauras jamais si le bug est parti ou juste caché sous le tapis.",
+    "Changer le code ET l'entrée en même temps : deux variables à la fois, zéro conclusion possible.",
+    "Demander de l'aide avec « ça marche pas » : donne attendu/observé/changé, sinon personne ne peut rien pour toi.",
+]
+exercises = [
+    "Reprends un vieux bug résolu « au hasard » : refais-le avec la méthode (reproduction minimale, une hypothèse) et chronomètre la différence.",
+    "Pour un bug actuel, écris les réponses aux trois questions (attendu/observé/changé) AVANT de chercher quoi que ce soit.",
+    "Ajoute un test qui reproduit un bug fraîchement corrigé, et vérifie qu'il redevient rouge si tu réintroduis la faute.",
+]
+related = ["lire-erreur-rustc", "erreurs-frequentes", "debugging", "tests"]

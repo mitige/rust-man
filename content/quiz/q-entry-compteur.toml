@@ -1,0 +1,8 @@
+id = "q-entry-compteur"
+category = "collections"
+difficulty = 2
+question = "Pour compter les occurrences de chaque mot, quelle écriture est l'idiome Rust ?\n\n```rust\nlet mut compte = HashMap::new();\nfor mot in texte.split_whitespace() { /* ??? */ }\n```"
+choices = ["`if compte.contains_key(mot) { compte[mot] += 1; } else { compte.insert(mot, 1); }` — la seule façon sûre", "`compte.get_mut(mot).unwrap() += 1;` après avoir pré-rempli la map avec tous les mots à 0", "`compte.entry(mot).and_modify(|c| *c += 1).or_insert(1);` — ou sa forme courte `*compte.entry(mot).or_insert(0) += 1;`", "`compte[mot] += 1;` directement, la map crée l'entrée à 0 si elle est absente"]
+answer = 2
+explanation = '''L'API `entry` consulte la clé UNE SEULE fois et te donne soit l'entrée existante (`and_modify`), soit un défaut à insérer (`or_insert`). La forme `*compte.entry(mot).or_insert(0) += 1;` est le grand classique : `or_insert(0)` renvoie un `&mut i32`, que tu déréférences et incrémentes. Règle générale : évite le double lookup `contains_key` + `insert` — deux hachages, plus verbeux, et une course logique. Piège : `compte[mot] += 1` PANIQUE si la clé est absente, l'indexation ne crée jamais d'entrée en Rust.'''
+related = ["entry-api", "hashmap", "iterateurs"]

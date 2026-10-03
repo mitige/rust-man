@@ -1,0 +1,36 @@
+[package]
+name = "rust-man"
+version = "1.0.0"
+edition = "2021"
+description = "Documentation Rust interactive dans le terminal, pour apprendre Rust à côté des cours"
+license = "MIT"
+
+[[bin]]
+name = "rust-man"
+path = "src/main.rs"
+
+[[bin]]
+name = "rust-nano"
+path = "src/bin/rust-nano.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+ratatui = "0.29"
+crossterm = "0.28"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+syntect = { version = "5", default-features = false, features = ["parsing", "default-syntaxes", "default-themes", "regex-onig"] }
+fuzzy-matcher = "0.3"
+unicode-width = "0.2"
+ureq = { version = "3", features = ["json"] }
+
+[build-dependencies]
+serde = { version = "1", features = ["derive"] }
+toml = "0.9"
+
+[profile.release]
+opt-level = 2
+lto = true
+codegen-units = 1
+strip = true

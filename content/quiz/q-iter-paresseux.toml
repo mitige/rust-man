@@ -1,0 +1,8 @@
+id = "q-iter-paresseux"
+category = "types"
+difficulty = 2
+question = "Que fait ce code ?\n\n```rust\nlet v = vec![1, 2, 3];\nv.iter().map(|x| x * 2);\n```"
+choices = ["Il double les éléments de `v` en place", "Il crée un nouveau `Vec` avec les valeurs doublées", "Il ne compile pas car `map` exige une closure mutable", "Rien : les itérateurs sont paresseux, sans consommateur comme `collect()` aucun calcul n'est lancé"]
+answer = 3
+explanation = '''`map` ne calcule rien : il renvoie un NOUVEL itérateur qui sait comment transformer les éléments, mais n'avance que si quelqu'un le consomme (`collect`, `sum`, `for`…). C'est pour ça que rustc affiche un avertissement « unused iterator that must be used ». Règle générale : adaptateurs paresseux (`map`, `filter`, `take`…) puis UN consommateur terminal. Pièges associés : croire que `map` modifie le `Vec` d'origine (non, il lit seulement) et oublier le `collect()` final.'''
+related = ["iterateurs", "iter-avance", "closures"]

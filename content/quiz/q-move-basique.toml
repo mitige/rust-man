@@ -1,0 +1,15 @@
+id = "q-move-basique"
+category = "ownership"
+difficulty = 1
+question = "Après `let b = a;` où `a` est une `String`, que peut-on faire ?"
+choices = [
+    "Utiliser a et b : les deux variables pointent vers la même chaîne",
+    "Utiliser b seulement : a a été déplacée (move) dans b et n’est plus valide",
+    "Utiliser a seulement : b n’est qu’une référence temporaire vers a",
+    "Ni l’un ni l’autre tant qu’on n’a pas appelé clone()",
+]
+answer = 1
+explanation = '''
+Une `String` n’implémente pas le trait `Copy` : l’affectation DÉPLACE la propriété de a vers b, et a devient invalide — le compilateur refuse tout usage ultérieur. C’est le cœur de l’ownership : une seule propriétaire à la fois, donc une seule variable chargée de libérer la mémoire, donc jamais de double free. Le piège vient du C++ ou de Java : croire à une copie implicite ou à un aliasing sans conséquence. Si tu veux vraiment deux chaînes, c’est `let b = a.clone();` — explicite et assumé.
+'''
+related = ["ownership", "clone-copy"]

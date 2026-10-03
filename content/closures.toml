@@ -1,0 +1,96 @@
+id = "closures"
+title = "closures — des fonctions qui capturent leur environnement"
+category = "types"
+tags = ["closure", "capture", "move", "fn", "fnmut", "fnonce"]
+difficulty = 4
+semaine = "S05"
+synopsis = "let f = |x| x + 1;  // fonction anonyme qui capture son environnement"
+description = '''
+## En une phrase
+
+Une closure est une **fonction anonyme qui capture les variables de son environnement** — par emprunt, emprunt mutable ou possession, selon ce que son corps exige.
+
+## En pratique
+
+1. Syntaxe : `|x| x + 1` — types inférés, `|| { ... }` pour un corps multi-lignes. Contrairement à Python ou JS, l'inférence se fait au premier usage.
+
+2. Trois modes de capture, choisis par le compilateur d'après l'usage :
+
+```rust
+let nom = String::from("Rust");
+let lit   = || println!("{}", nom);    // &      : emprunt
+let mut m = || nom.push_str("!");      // &mut   : emprunt mutable
+let prend = || drop(nom);              // possession
+```
+
+3. `move` force la possession des captures — indispensable pour renvoyer une closure ou l'envoyer dans un thread :
+
+```rust
+let c = move || println!("{}", nom); // nom est DÉPLACÉ dedans
+```
+
+4. Les traits `Fn` / `FnMut` / `FnOnce` : une closure implémente le trait le plus fort compatible avec ses captures. `Fn` (ne modifie rien) est le plus restrictif à fournir, `FnOnce` (peut consommer ses captures, appelable une fois) le plus permissif à recevoir. Toute `Fn` est aussi `FnMut` et `FnOnce`.
+
+5. Closure en paramètre : générique borné (ou `impl Fn(...)`) :
+
+```rust
+fn applique<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 { f(x) }
+```
+
+6. Closure vs fonction : une `fn` ne capture jamais rien ; une closure si, et chaque closure a un type **unique et anonyme** — d'où les génériques pour les recevoir. Bonus : une closure SANS capture se convertit en pointeur de `fn`.
+
+## À retenir
+
+- `|args| expr` : types inférés, environnement capturé automatiquement.
+- Capture = `&`, `&mut` ou possession, déduite du corps.
+- `move` = possession garantie, au prix de perdre la variable dehors.
+- Fn ⊂ FnMut ⊂ FnOnce ; borne la plus souple à exiger : `FnOnce`.
+- Paramètre de closure : `F: Fn(A) -> B`, jamais de nom de type concret.
+'''
+example = '''
+// Recevoir une closure : générique avec borne Fn.
+fn applique<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {
+    f(x)
+}
+
+fn main() {
+    let taxe = 1.2_f64;
+    // Capture par EMPRUNT : la closure lit taxe (&).
+    let avec_taxe = |prix: f64| prix * taxe;
+    println!("{}", avec_taxe(10.0));
+    println!("taxe encore là : {}", taxe); // lecture partagée : OK
+
+    let mut compteur = 0;
+    {
+        // Capture par EMPRUNT MUTABLE : closure FnMut.
+        let mut tick = || {
+            compteur += 1;
+            compteur
+        };
+        println!("{} {}", tick(), tick());
+    } // l'emprunt mutable s'arrête ici
+    println!("compteur = {}", compteur);
+
+    // move : la closure PREND POSSESSION de ce qu'elle capture.
+    let nom = String::from("rust-man");
+    let salut = move || println!("coucou {}", nom);
+    salut();
+    // println!("{}", nom); // ne compilerait pas : nom a été déplacé
+
+    // Closure passée en argument (Fn : elle ne fait que lire).
+    println!("{}", applique(|n| n * n, 9));
+}
+'''
+gotchas = [
+    "Déplacer une variable dans une closure `move` puis tenter de l'utiliser après : elle n'existe plus à l'extérieur.",
+    "Garder une closure qui emprunte en `&mut` vivante pendant qu'on relit la variable : l'emprunt mutable bloque tout — borne sa portée avec `{}`.",
+    "Chercher le nom du type d'une closure pour l'écrire : il est anonyme, d'où `impl Fn` ou un générique (ou `Box<dyn Fn>`).",
+    "Exiger `Fn` comme borne alors que la closure fournie mute ses captures : il faut `FnMut`.",
+    "Annoter les types d'une closure trop tôt : laisse l'inférence travailler, annote seulement si rustc se plaint."
+]
+exercises = [
+    "Écris une closure qui compte ses propres appels via une variable capturée, et identifie le trait (Fn, FnMut ou FnOnce) qu'elle implémente.",
+    "Écris `fn deux_fois<F: FnMut(i32) -> i32>(mut f: F, x: i32) -> i32` qui applique f deux fois de suite.",
+    "Crée une closure `move` qui prend possession d'un String, appelle-la, et explique pourquoi le String est ensuite inutilisable dehors."
+]
+related = ["iterateurs", "fonctions", "emprunts", "emprunts-mutables", "trait-bounds"]

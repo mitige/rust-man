@@ -1,0 +1,104 @@
+id = "entry-api"
+title = "entry-api — modifier ou insérer en un passage"
+category = "collections"
+tags = ["entry", "hashmap", "or_insert", "compteur", "and_modify"]
+difficulty = 3
+semaine = "S06"
+synopsis = '''*map.entry(mot).or_insert(0) += 1; // une seule recherche, zéro Option à déballer'''
+description = '''
+## En une phrase
+
+L'**Entry API** répond à « modifie cette valeur si la clé existe, sinon insère un défaut » en **une seule recherche** dans la HashMap — et fait taire les conflits d'emprunt du get + insert.
+
+## En pratique
+
+1. Le problème : sans entry, « récupère ou crée, puis modifie » fait **deux recherches** (get puis insert), et le borrow checker refuse que tu gardes la référence du get pendant l'insert.
+2. `map.entry(cle)` renvoie un enum `Entry` : `Occupied` (la clé est là) ou `Vacant` (elle est absente). La map est empruntée une seule fois, le temps de l'opération.
+3. `or_insert(defaut)` → `&mut V` : la valeur existante, ou le défaut inséré. Le **pattern compteur de mots complet** :
+
+```rust
+let mut compteur = HashMap::new();
+for mot in texte.split_whitespace() {
+    *compteur.entry(mot).or_insert(0) += 1;
+}
+```
+
+   Trois lignes, une recherche par mot, zéro `Option` à déballer.
+4. `or_insert_with(|| ...)` : pareil, mais le défaut est calculé **paresseusement** — la closure ne tourne que si la clé est absente. Pour les défauts coûteux (`Vec::new`, `String::new`) c'est l'idiome.
+5. `and_modify(|v| ...)` : chaîne une transformation **si la clé existe**, avant le `or_insert` du cas contraire :
+
+```rust
+map.entry(k).and_modify(|v| *v += 1).or_insert(1);
+```
+
+6. `entry` prend la clé **par valeur** : elle sera insérée si absente. Pas besoin de clone « au cas où » dans le chemin heureux — mais si tu réutilises la clé après, clone-la avant.
+7. Equivalent manuel (à éviter) : deux hachages de la même clé, un unwrap_or, et un insert — plus long à écrire, plus lent, plus fragile.
+
+## À retenir
+
+- `entry(cle)` → `Entry::Occupied` / `Vacant` : une seule recherche, un seul emprunt.
+- `or_insert(défaut)` → `&mut V`, inséré seulement si la clé est absente.
+- `or_insert_with(closure)` : défaut paresseux, calculé uniquement si nécessaire.
+- `and_modify(f).or_insert(d)` : « si là, transforme ; sinon, insère ».
+- Le compteur de mots tient en une ligne : `*map.entry(mot).or_insert(0) += 1;`.
+- Fini le get + insert en deux temps, ses doubles recherches et ses erreurs d'emprunt.
+'''
+example = '''
+use std::collections::HashMap;
+
+fn main() {
+    // LE pattern compteur de mots : entry + or_insert
+    let texte = "le rust et le fer : le fer rouille , rust non";
+    let mut compteur = HashMap::new();
+    for mot in texte.split_whitespace() {
+        *compteur.entry(mot).or_insert(0) += 1;
+    }
+    println!("'le' apparaît {:?} fois", compteur.get("le"));
+
+    // or_insert_with : défaut paresseux (calculé seulement si absent)
+    let mut par_initiale: HashMap<char, Vec<String>> = HashMap::new();
+    for mot in ["pomme", "poire", "kiwi"] {
+        let initiale = mot.chars().next().unwrap();
+        par_initiale.entry(initiale)
+            .or_insert_with(Vec::new)
+            .push(mot.to_string());
+    }
+    println!("par initiale : {:?}", par_initiale);
+
+    // and_modify : transformer si la clé existe, sinon insérer
+    let mut stock = HashMap::new();
+    for livraison in ["stylo", "cahier", "stylo"] {
+        stock.entry(livraison)
+            .and_modify(|q| *q += 10) // déjà là : on réapprovisionne
+            .or_insert(100);          // absent : stock initial
+    }
+    println!("stock : {:?}", stock);
+
+    // L'équivalent sans entry : deux recherches, plus verbeux
+    let cle = "stylo";
+    let q = stock.get(cle).copied().unwrap_or(0);
+    stock.insert(cle, q + 1);
+    println!("stylo + 1 : {:?}", stock.get("stylo"));
+
+    // Bonus : trier le compteur pour un affichage stable
+    let mut paires: Vec<_> = compteur.iter().collect();
+    paires.sort_by(|a, b| b.1.cmp(a.1)); // par fréquence décroissante
+    for (mot, n) in paires.iter().take(3) {
+        println!("{} : {}", mot, n);
+    }
+}
+'''
+gotchas = [
+    "entry() prend la clé par valeur : si tu en as encore besoin après, clone-la AVANT l'appel.",
+    "or_insert(compute()) évalue compute() même si la clé existe : pour du paresseux, or_insert_with.",
+    "Le &mut V renvoyé emprunte toute la map : impossible d'y toucher ailleurs tant qu'il vit.",
+    "get + insert séparés hachent la clé deux fois : entry est à la fois plus rapide et plus simple.",
+    "Un Entry ne se stocke pas pour plus tard : il garde l'emprunt mutable sur la map.",
+    "and_modify ne tourne que si la clé existe ; or_insert ne tourne que si elle est absente : les deux se chaînent.",
+]
+exercises = [
+    "Réécris un compteur écrit avec get/insert en une seule ligne avec entry().or_insert().",
+    "Groupe des mots par longueur : HashMap<usize, Vec<String>> avec entry().or_insert_with(Vec::new).",
+    "Gère un stock avec and_modify + or_insert : +10 si le produit existe, 100 sinon, puis affiche le produit le plus stocké.",
+]
+related = ["hashmap", "option", "string-manipulation", "emprunts", "iter-avance"]

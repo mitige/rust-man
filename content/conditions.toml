@@ -1,0 +1,95 @@
+id = "conditions"
+title = "if — un booléen, rien d'autre"
+category = "bases"
+tags = ["if", "else", "bool", "truthy", "expression"]
+difficulty = 1
+semaine = "S01"
+synopsis = "if n { }  // ne compile pas : la condition doit être un bool, pas un nombre"
+description = '''
+## En une phrase
+
+En Rust, la condition d'un `if` **doit être un `bool`** — aucun nombre « truthy » comme en C ou en JS — et un `if` complet peut servir d'expression.
+
+## En pratique
+
+1. Forme classique : if / else if / else, accolades TOUJOURS obligatoires, et pas de parenthèses autour de la condition.
+
+```rust
+if temperature > 37.5 {
+    println!("fièvre");
+}
+```
+
+2. La condition est un bool, point. `if n` avec n: i32 ne compile pas : écris `if n != 0`. Bonus : le bug classique du C `if (x = 1)` est impossible, l'affectation n'est pas une expression en Rust.
+3. if est une EXPRESSION : tu peux stocker son résultat dans une variable.
+
+```rust
+let mention = if note >= 10 { "admis" } else { "ajourné" };
+```
+
+4. Utilisé comme expression, TOUS les bras doivent avoir le même type, et le else devient obligatoire : sinon le bras manquant vaudrait () et les types divergeraient.
+5. Sans else, un if vaut () : parfait pour un effet de bord (afficher, modifier), inutilisable comme valeur.
+6. Au-delà de deux ou trois cas, ou pour tester des valeurs précises, passe à `match` : plus lisible, et il vérifie que tu n'oublies rien.
+
+## À retenir
+
+- condition = bool obligatoire : compare explicitement (n != 0)
+- pas de parenthèses autour de la condition
+- accolades toujours requises, même pour une seule ligne
+- if est une expression : let x = if ... { } else { };
+- if-expression : même type dans chaque bras, else requis
+- beaucoup de cas à tester ? match est ton ami
+'''
+example = '''
+fn mention(note: u32) -> &'static str {
+    // if est une expression : chaque bras renvoie la valeur
+    if note >= 16 {
+        "très bien"
+    } else if note >= 14 {
+        "bien"
+    } else if note >= 10 {
+        "passable"
+    } else {
+        "ajourné"
+    }
+}
+
+fn main() {
+    let temperature = 38.5;
+
+    // la condition est TOUJOURS un booléen
+    if temperature > 37.5 {
+        println!("fièvre : {temperature} °C");
+    } else {
+        println!("température normale");
+    }
+
+    // pas de « truthy » : on compare explicitement
+    let essais = 3;
+    if essais != 0 {
+        println!("il reste {essais} essais");
+    }
+
+    // if utilisé comme expression, stocké dans une variable
+    let parite = if essais % 2 == 0 { "pair" } else { "impair" };
+    println!("{essais} est {parite}");
+
+    for note in [17, 13, 9] {
+        println!("note {note}/20 → {}", mention(note));
+    }
+}
+'''
+gotchas = [
+    "if n { } avec n entier : « expected bool, found integer » — écris if n != 0.",
+    "if (x > 0) compile mais déclenche un avertissement de parenthèses inutiles : enlève-les.",
+    "let x = if c { 1 }; sans else ne compile pas : le bras manquant vaudrait (), pas i32.",
+    "if c { 1 } else { \"un\" } : bras de types différents, erreur de compilation assurée.",
+    "L'affectation dans la condition n'existe pas : if x = 5 est une erreur de syntaxe, pas un bug silencieux comme en C.",
+    "Oublier les accolades autour d'un bras d'une seule ligne : erreur de syntaxe, elles sont obligatoires.",
+]
+exercises = [
+    "Écris tarif(age: u32) -> u32 : 0 € avant 6 ans, 5 € avant 18 ans, 10 € sinon — sous forme d'if-expression.",
+    "Code un FizzBuzz de 1 à 20 (multiple de 3 → Fizz, de 5 → Buzz, des deux → FizzBuzz).",
+    "Écris if 1 { println!(\"vrai\"); }, lis l'erreur du compilateur, puis corrige proprement.",
+]
+related = ["expressions-vs-instructions", "match", "boucles", "types-scalaires", "fonctions"]

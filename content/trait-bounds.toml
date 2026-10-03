@@ -1,0 +1,112 @@
+id = "trait-bounds"
+title = "trait-bounds — ce que tes génériques doivent savoir faire"
+category = "types"
+tags = ["borne", "where", "impl-trait", "generique"]
+difficulty = 4
+semaine = "S05"
+synopsis = "fn f<T>(x: &T) where T: Display + Clone  // ce que T doit savoir faire"
+description = '''
+## En une phrase
+
+Les bornes de traits déclarent **ce qu'un type générique doit savoir faire** — et la clause `where` garde tout ça lisible quand les exigences s'accumulent.
+
+## En pratique
+
+1. Borne simple : `fn affiche<T: Display>(x: &T)` — n'importe quel type, tant qu'il sait s'afficher.
+
+2. Conjonction avec `+` : `T: Display + Clone` = « affichable ET clonable ».
+
+3. `where` pour respirer — strictement équivalent, mais lisible dès que la signature dépasse une ligne :
+
+```rust
+fn traite<T, U>(t: &T, u: &U)
+where
+    T: Display + Clone,
+    U: Display + Debug,
+{ /* ... */ }
+```
+
+4. `impl Trait` en argument : du sucre pour une borne anonyme.
+
+```rust
+fn affiche(x: &impl Display) { println!("{}", x); }
+```
+
+Limite : chaque `impl Trait` est un paramètre **indépendant**. `fn f(a: impl Trait, b: impl Trait)` accepte deux types différents ; pour exiger le même type, nomme-le : `fn f<T: Trait>(a: T, b: T)`.
+
+5. Méthodes conditionnelles : une `impl` bornée n'existe que pour les types conformes.
+
+```rust
+impl<T: Display> Wrapper<T> {
+    fn montrer(&self) { /* ... */ } // absente si T n'est pas Display
+}
+```
+
+C'est ainsi que la std fait « apparaître » certaines méthodes selon le type contenu (ex: les méthodes de `Vec<T>` qui exigent `T: PartialEq`).
+
+## À retenir
+
+- `T: Display` = borne ; `T: A + B` = conjonction de bornes.
+- `where` = même puissance, meilleure lisibilité.
+- `impl Trait` en argument = sucre, un type différent par occurrence.
+- Pour imposer « même type partout », nomme le paramètre `<T: Trait>`.
+- `impl<T: Trait> Type<T>` = méthodes disponibles seulement si la borne tient.
+'''
+example = '''
+use std::fmt::Display;
+
+// Borne simple : T doit implémenter Display.
+fn affiche<T: Display>(x: &T) {
+    println!("{}", x);
+}
+
+// Conjonction de bornes avec +
+fn affiche_clone<T: Display + Clone>(x: &T) -> T {
+    println!("copie de {}", x);
+    x.clone()
+}
+
+// Clause where : même puissance, bien plus lisible.
+fn compare<T>(a: &T, b: &T) -> bool
+where
+    T: Display + PartialEq,
+{
+    println!("comparaison de {} et {}", a, b);
+    a == b
+}
+
+// impl Trait en argument : sucre pour une borne, UN type par occurrence.
+fn affiche2(x: &impl Display) {
+    println!("{}", x);
+}
+
+// Méthodes CONDITIONNELLES : n'existent que si T: Display.
+struct Wrapper<T>(T);
+
+impl<T: Display> Wrapper<T> {
+    fn montrer(&self) {
+        println!("wrapper({})", self.0);
+    }
+}
+
+fn main() {
+    affiche(&42);
+    let s = affiche_clone(&String::from("hello"));
+    println!("égaux ? {}", compare(&s, &String::from("hello")));
+    affiche2(&3.14);
+    Wrapper(String::from("dedans")).montrer();
+}
+'''
+gotchas = [
+    "Croire que `fn f(a: impl Trait, b: impl Trait)` force a et b au même type : non, chaque `impl Trait` est un paramètre indépendant.",
+    "Mettre les bornes sur le struct (`struct S<T: Display>`) au lieu des impl : ça complique tout — borne les fonctions et les `impl`, pas la donnée.",
+    "Chercher pourquoi une méthode « n'existe pas » : son bloc `impl` est borné et ton T ne satisfait pas la borne.",
+    "Additionner les bornes sans y penser : chaque borne restreint l'ensemble des types qui peuvent appeler ta fonction.",
+    "Oublier que `impl Trait` en position de RETOUR cache un type unique et concret : impossible d'y renvoyer tantôt un A tantôt un B (voir dyn-trait)."
+]
+exercises = [
+    "Réécris `fn debug_clone<T: Debug + Clone>(x: T) -> T` avec une clause `where` et un `use std::fmt::Debug;`.",
+    "Écris `fn meme_type<T: Display>(a: T, b: T)` et constate la différence d'appel avec une version à deux `impl Trait`.",
+    "Ajoute à un `Wrapper<T>` une méthode qui n'existe que si `T: Display + PartialEq`, et vérifie qu'elle disparaît pour un type non conforme."
+]
+related = ["generics", "traits", "traits-communs", "types-associes", "dyn-trait"]

@@ -1,0 +1,8 @@
+id = "q-dyn-quand"
+category = "types"
+difficulty = 3
+question = "Dans quel cas `Vec<Box<dyn Dessinable>>` est-il le bon outil, plutôt qu'un générique `Vec<T: Dessinable>` ?"
+choices = ["Quand le vecteur doit mélanger des types différents (Cercle, Carre…) partageant le même trait", "Quand on veut les meilleures performances à l'exécution", "Quand le trait n'a pas de méthodes, pour éviter le monomorphisme", "Jamais : les génériques font toujours ce que fait `dyn Trait`"]
+answer = 0
+explanation = '''Un générique `T: Dessinable` impose UN SEUL type concret par instanciation : un `Vec<T>` ne contient que des `Cercle` ou que des `Carre`. Pour une collection HÉTÉROGÈNE, il faut un trait object `Box<dyn Dessinable>` : les appels de méthode sont alors résolus à l'exécution via une vtable (dispatch dynamique), avec un léger coût. Règle générale : génériques = un type concret choisi à la compilation, `dyn` = plusieurs types possibles choisis à l'exécution. Piège : tous les traits ne sont pas « dyn-compatible » (object safety) — une méthode qui renvoie `Self` bloque `dyn`.'''
+related = ["dyn-trait", "traits", "generics"]

@@ -1,0 +1,15 @@
+id = "q-println-macro"
+category = "demarrer"
+difficulty = 2
+question = "Pourquoi écrit-on `println!` avec un point d’exclamation ?"
+choices = [
+    "C’est une simple convention de nommage pour les fonctions qui affichent du texte",
+    "Le `!` indique que la fonction peut paniquer, comme un avertissement",
+    "Le `!` marque une fonction variadique importée de la bibliothèque standard",
+    "Parce que `println!` est une macro et non une fonction : le `!` distingue les macros à l’appel",
+]
+answer = 3
+explanation = '''
+En Rust, le `!` à l’appel signale une macro : `println!`, `vec!`, `format!`… Une macro est expansée à la compilation en code ordinaire, ce qui lui permet d’accepter un nombre variable d’arguments — impossible pour une fonction Rust classique, dont la signature est fixe. Le piège fréquent : croire que `!` signale un danger ou une panique possible, alors que c’est purement syntaxique. Conséquence pratique : les erreurs dans une macro pointent parfois vers le code expansé, d’où des messages de rustc un peu verbeux.
+'''
+related = ["premier-programme", "expressions-vs-instructions"]

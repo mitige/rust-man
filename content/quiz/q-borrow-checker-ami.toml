@@ -1,0 +1,15 @@
+id = "q-borrow-checker-ami"
+category = "pratique"
+difficulty = 2
+question = "Le borrow checker refuse ton code alors que « ça marcherait en C ». Quelle est la bonne réaction ?"
+choices = [
+    "Passer le bloc en `unsafe` dès que possible pour retrouver la liberté du C",
+    "Ajouter des `.clone()` à tous les endroits signalés jusqu’à ce que ça compile",
+    "Désactiver temporairement le borrow checker le temps de finir la fonctionnalité",
+    "Chercher le vrai bug qu’il signale : référence pendante, use-after-free, data race potentielle",
+]
+answer = 3
+explanation = '''
+Le borrow checker rejette statiquement des catégories entières de bugs qui explosent à l’exécution en C : pointeur qui pendouille, mémoire libérée deux fois, invalidation d’itérateur, accès concurrent non protégé. S’il compile, ces bugs-là ne peuvent pas exister — c’est une preuve, pas une intuition. Règle générale : quand il râle, repense la structure de possession (qui possède, qui emprunte, combien de temps) au lieu de maquiller le symptôme. Piège : arroser de `.clone()` ou d’`unsafe` fait taire le message, pas le problème — et `unsafe` ne désactive d’ailleurs pas le borrow checker, il permet juste de déréférencer des pointeurs bruts.
+'''
+related = ["borrow-checker-paix", "emprunts", "ownership"]

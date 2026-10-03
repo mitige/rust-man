@@ -1,0 +1,8 @@
+id = "q-unwrap-panique"
+category = "erreurs"
+difficulty = 1
+question = "Que se passe-t-il à l'exécution si tu appelles `.unwrap()` sur un `Option` qui vaut `None` ?"
+choices = ["Le programme panique immédiatement avec un message d'erreur", "`unwrap()` renvoie la valeur par défaut du type (0, chaîne vide…)", "`unwrap()` renvoie `None` et l'exécution continue", "Le compilateur refuse de compiler ce code"]
+answer = 0
+explanation = '''`unwrap()` extrait la valeur de `Some(v)` mais appelle `panic!` si la valeur est `None` : le thread courant s'arrête en déroulant la pile. Le compilateur ne peut pas savoir si l'`Option` sera `None` à l'exécution, donc le code compile sans souci — l'erreur n'apparaît qu'au run. Règle générale : `unwrap()` est réservé aux cas où tu es CERTAIN qu'il y a une valeur (ou aux prototypes). Piège : l'utiliser par habitude partout, transformant des erreurs récupérables en crashs.'''
+related = ["unwrap-expect", "option", "panic"]

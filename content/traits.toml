@@ -1,0 +1,109 @@
+id = "traits"
+title = "traits — des contrats à signer, pas de l'héritage"
+category = "types"
+tags = ["trait", "impl", "contrat", "orphelin", "interface"]
+difficulty = 3
+semaine = "S04"
+synopsis = "impl Descriptif for Livre { fn nom(&self) -> &str { &self.titre } }"
+description = '''
+## En une phrase
+
+Un trait est un **contrat** : une liste de signatures de méthodes qu'un type s'engage à fournir — l'équivalent Rust des interfaces Java/Go, mais sans aucun héritage de données.
+
+## En pratique
+
+1. On déclare le contrat avec `trait` et des signatures :
+
+```rust
+trait Descriptif {
+    fn nom(&self) -> &str;          // requis : pas de corps
+    fn decrire(&self) -> String {   // méthode PAR DÉFAUT
+        format!("... {}", self.nom())
+    }
+}
+```
+
+2. On le signe type par type avec `impl Trait for Type` :
+
+```rust
+impl Descriptif for Livre {
+    fn nom(&self) -> &str { &self.titre }
+    // decrire : on garde le défaut, ou on le redéfinit ici
+}
+```
+
+3. Une méthode par défaut peut appeler les méthodes requises (`self.nom()`) : le contrat se compose tout seul.
+
+4. Différence clé avec le C++/Java : **pas d'héritage de structure**. Un trait ne donne aucun champ, seulement du comportement. En Rust on compose des types plats et on colle des traits dessus, au lieu d'empiler des classes.
+
+5. Règle de l'orphelin : tu ne peux écrire une `impl` que si le trait OU le type est défini dans ta crate :
+
+```
+impl MonTrait for Vec<i32>   // OK : ton trait
+impl Display for MaStruct    // OK : ton type
+impl Display for Vec<i32>    // ne compile pas : ni l'un ni l'autre n'est à toi
+```
+
+Cette règle protège tout l'écosystème : deux crates ne peuvent pas implémenter le même trait sur le même type en conflit.
+
+## À retenir
+
+- trait = contrat de méthodes ; `impl Trait for Type` = on signe.
+- Méthode par défaut : corps fourni, redéfinissable dans chaque impl.
+- Aucun héritage de champs : composition de structs + traits.
+- Orphelin : trait local OU type local, sinon le compilateur refuse.
+- Les traits deviennent des bornes sur les génériques (voir trait-bounds).
+'''
+example = '''
+// Un trait = un contrat : des signatures de méthodes.
+trait Descriptif {
+    fn nom(&self) -> &str; // requis, pas de corps
+    fn decrire(&self) -> String {
+        // méthode par défaut : peut utiliser les méthodes requises
+        format!("quelque chose nommé « {} »", self.nom())
+    }
+}
+
+struct Livre { titre: String, pages: u32 }
+struct Film { titre: String, duree: u32 }
+
+impl Descriptif for Livre {
+    fn nom(&self) -> &str { &self.titre }
+    // on REDÉFINIT la méthode par défaut
+    fn decrire(&self) -> String {
+        format!("livre « {} » ({} pages)", self.titre, self.pages)
+    }
+}
+
+impl Descriptif for Film {
+    fn nom(&self) -> &str { &self.titre } // on garde decrire par défaut
+}
+
+// Règle de l'orphelin : NOTRE trait sur un type de la std, c'est permis.
+impl Descriptif for i32 {
+    fn nom(&self) -> &str { "un entier" }
+}
+
+fn main() {
+    let l = Livre { titre: String::from("L'Étranger"), pages: 159 };
+    let f = Film { titre: String::from("Brazil"), duree: 142 };
+    println!("{}", l.decrire()); // version redéfinie
+    println!("{}", f.decrire()); // version par défaut
+    println!("durée du film : {} min", f.duree); // accès direct au champ
+    let n: i32 = 42;
+    println!("{}", n.decrire()); // notre trait sur i32
+}
+'''
+gotchas = [
+    "Oublier que `&self` est le receveur classique : un trait ne voit d'un type que ce que ses signatures exposent, jamais les champs.",
+    "Croire qu'un trait peut imposer des champs : non, seulement des méthodes (et des types associés ou constantes).",
+    "Tenter `impl Display for String` : ni le trait ni le type n'est à toi, la règle de l'orphelin refuse.",
+    "Confondre méthode par défaut et méthode optionnelle : la signature est TOUJOURS garantie, seul le corps est pré-écrit.",
+    "Implémenter un trait dans un module puis l'appeler ailleurs sans `use` : le trait doit être en scope pour que ses méthodes soient visibles."
+]
+exercises = [
+    "Écris un trait `Aire { fn aire(&self) -> f64; }` et implémente-le pour `Cercle` et `Rectangle`.",
+    "Ajoute à `Aire` une méthode par défaut `est_grand(&self) -> bool` qui renvoie `self.aire() > 100.0`, puis redéfinis-la pour un seul des deux types.",
+    "Essaie d'implémenter `Display` pour `Vec<i32>`, lis l'erreur du compilateur et reformule la règle de l'orphelin avec tes mots."
+]
+related = ["derive", "traits-communs", "trait-bounds", "methodes-impl", "dyn-trait"]

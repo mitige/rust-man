@@ -1,0 +1,100 @@
+id = "emprunts-mutables"
+title = "emprunts mutables — un seul écrivain"
+category = "ownership"
+tags = ["mutabilite", "exclusivite", "nll", "data-race", "emprunt"]
+difficulty = 3
+semaine = "S03"
+synopsis = "let m = &mut s;  // m est le SEUL accès à s tant qu'il vit"
+description = '''
+## En une phrase
+
+`&mut T` donne un accès en écriture **exclusif** : un seul écrivain à la fois, et aucun lecteur pendant qu'il travaille.
+
+## En pratique
+
+La règle d'or de Rust : **plusieurs lecteurs OU un écrivain** — jamais les deux en même temps.
+
+```rust
+let mut s = String::from("abc");
+let m = &mut s;
+m.push('!');        // OK : m est le seul accès en vie
+```
+
+Les deux interdits, vérifiés à la compilation :
+
+```rust
+let r1 = &mut s;
+let r2 = &mut s;        // ne compile pas : un seul &mut à la fois
+println!("{r1} {r2}");
+```
+
+```rust
+let l = &s;
+let m = &mut s;         // ne compile pas : l est encore vivant
+println!("{l} {m}");
+```
+
+Pourquoi tant de sévérité ? Parce que « lire pendant qu'on écrit » est LA source des **data races**. En l'interdisant à la compilation, Rust les rend impossibles — y compris en mono-thread : pousser dans un Vec pendant qu'une référence pointe dedans est refusé, ton élément ne peut pas être réalloué sous ton nez.
+
+**NLL (Non-Lexical Lifetimes)** : un emprunt meurt à sa **dernière utilisation**, pas à la fin du bloc. Ce code passe :
+
+```rust
+let m = &mut s;
+m.push('!');            // dernière utilisation de m : il meurt ici
+let l = &s;             // OK : m est déjà mort
+println!("{l}");
+```
+
+Et pendant qu'un `&mut s` vit, la variable `s` elle-même est gelée : tout accès doit passer par `m`.
+
+## À retenir
+
+- Un seul `&mut` vivant à la fois sur une même valeur.
+- Aucun `&` ne cohabite avec un `&mut` vivant.
+- Lecteurs multiples XOR écrivain unique : c'est toute la règle.
+- NLL : l'emprunt meurt à sa dernière utilisation — réordonne avant de paniquer.
+- Data races et invalidations d'itérateurs : éliminées à la compilation.
+'''
+example = '''
+fn main() {
+    let mut s = String::from("rust");
+
+    // UN seul &mut : il écrit, puis meurt à sa DERNIÈRE utilisation (NLL)
+    let m = &mut s;
+    m.push_str("aceau");
+    println!("via m : {m}"); // dernière utilisation de m → l'emprunt meurt ici
+
+    // m est mort : place aux lecteurs, autant qu'on veut
+    let l1 = &s;
+    let l2 = &s;
+    println!("lecteurs : {l1} / {l2}");
+
+    // Puis de nouveau UN écrivain, tout seul
+    let m2 = &mut s;
+    m2.make_ascii_uppercase();
+    println!("m2 : {m2}");
+
+    // Passer un &mut : la fonction écrit sans prendre possession
+    let mut compte = 0;
+    ajouter(&mut compte, 5);
+    ajouter(&mut compte, 37);
+    println!("compte = {compte}");
+}
+
+fn ajouter(total: &mut i32, n: i32) {
+    *total += n; // déréférencement obligatoire pour écrire
+}
+'''
+gotchas = [
+    "Oublier que la variable elle-même est gelée pendant un &mut : afficher `s` pendant que `m = &mut s` vit → erreur.",
+    "Croire que la fin du bloc tue l'emprunt : avec NLL, c'est la dernière UTILISATION qui compte, pas les accolades.",
+    "Pousser dans un Vec pendant qu'on itère dessus : le compilateur refuse, un &mut ne cohabite pas avec le & de l'itérateur.",
+    "Penser que la règle ne sert qu'en multithread : elle protège aussi itérateurs et références en mono-thread.",
+    "Vouloir emprunter deux fois &mut toute une struct : passe plutôt par des champs distincts, le compilateur les suit séparément.",
+]
+exercises = [
+    "Écris fn doubler(v: &mut Vec<i32>) qui double chaque élément en place, sans retourner quoi que ce soit.",
+    "Provoque l'erreur « cannot borrow as mutable more than once », puis corrige-la en réordonnant les utilisations (merci NLL).",
+    "Écris fn echanger(a: &mut i32, b: &mut i32) et utilise-la sur deux variables de main.",
+]
+related = ["emprunts", "ownership", "borrow-checker-paix", "lifetimes"]

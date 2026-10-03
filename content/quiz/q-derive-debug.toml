@@ -1,0 +1,8 @@
+id = "q-derive-debug"
+category = "types"
+difficulty = 1
+question = "Pourquoi `println!(\"{:?}\", ma_struct);` ne compile-t-il pas sur une struct sans `#[derive(Debug)]` ?"
+choices = ["Parce que `{:?}` est réservé aux types numériques", "Parce que le format `{:?}` exige le trait `Debug`, qui n'est pas implémenté par défaut : le `derive` le génère", "Parce qu'il faut d'abord convertir la struct en `String` avec `to_string()`", "Parce que `println!` ne peut afficher que des types de la bibliothèque standard"]
+answer = 1
+explanation = '''Le spécificateur `{:?}` appelle le trait `std::fmt::Debug`. Contrairement à Java ou Python, Rust ne fournit aucune représentation par défaut d'un type : c'est à toi de l'implémenter — et `#[derive(Debug)]` génère automatiquement cette implémentation champ par champ. Règle générale : `Debug` pour le développeur (tout type, via `{:?}`), `Display` pour l'utilisateur final (format `{}`, jamais dérivable automatiquement). Piège : confondre les deux et chercher `#[derive(Display)]`, qui n'existe pas dans la std.'''
+related = ["derive", "traits-communs", "traits"]

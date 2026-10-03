@@ -1,0 +1,92 @@
+id = "match"
+title = "match — exhaustif ou rien"
+category = "bases"
+tags = ["match", "pattern", "exhaustivite", "joker", "binding"]
+difficulty = 2
+semaine = "S02"
+synopsis = "match n { 1..=5 => \"petit\", _ => \"grand\" }  // le joker _ couvre tout le reste"
+description = '''
+## En une phrase
+
+`match` teste une valeur contre une série de **patterns**, et le compilateur t'OBLIGE à couvrir tous les cas : un if/else amélioré qui ne te laisse rien oublier.
+
+## En pratique
+
+1. Forme : `match valeur { pattern => résultat, ... }` — et c'est une expression : chaque bras produit une valeur.
+2. Les patterns savent faire : littéraux (1, "stop", true), intervalles inclusifs (1..=5), alternatives (1 | 2 | 3), joker (_), et liaisons (n @ 1..=5 lie la valeur testée au nom n).
+3. EXHAUSTIVITÉ : tous les cas possibles doivent être couverts, sinon ça ne compile pas. Sur un entier, impossible de tout énumérer → le joker _ termine le travail.
+
+```rust
+match note {
+    20 => "parfait",
+    10..=19 => "admis",
+    _ => "à revoir", // sans ce bras : erreur de compile
+}
+```
+
+4. L'ordre compte : le premier pattern qui correspond gagne — place le joker en dernier.
+5. Les bras se séparent par des virgules ; un bloc { } permet plusieurs instructions dans un bras (la virgule devient optionnelle).
+6. Utilisé comme expression, tous les bras produisent le même type : `let s = match x { ... };`.
+7. Pourquoi pas if/else ? Parce que match VÉRIFIE que tu n'as oublié aucun cas. Avec les enums (bientôt), ça devient un super-pouvoir : ajoute une variante, le compilateur liste tous les match à mettre à jour.
+
+## À retenir
+
+- match est une expression : il produit une valeur
+- patterns : littéraux, 1..=5, | pour « ou », _ pour « le reste »
+- exhaustivité obligatoire : tous les cas, sinon refus de compiler
+- _ se place en dernier : premier pattern qui correspond gagne
+- n @ plage lie la valeur testée à un nom utilisable dans le bras
+- match + enum = le duo gagnant de Rust
+'''
+example = '''
+fn categorie(score: u32) -> &'static str {
+    // match est une expression : chaque bras produit la valeur
+    match score {
+        0 => "aucun point",
+        1..=5 => "débutant",          // intervalle inclusif
+        6 | 7 | 8 => "intermédiaire", // | = « ou »
+        9 | 10 => "expert",
+        _ => "hors échelle",          // _ = tous les autres cas
+    }
+}
+
+fn main() {
+    for s in [0, 3, 7, 10, 42] {
+        println!("score {s:2} → {}", categorie(s));
+    }
+
+    // match sur un tuple : plusieurs valeurs testées à la fois
+    let piece = (true, 2);
+    let description = match piece {
+        (true, n @ 1..=6) => {
+            // @ lie la valeur testée à un nom utilisable ici
+            println!("dé lancé : {n}");
+            "un dé"
+        }
+        (true, _) => "dé truqué",
+        (false, _) => "pas un dé",
+    };
+    println!("{description}");
+
+    // sans joker, le match doit couvrir TOUS les cas
+    let allume = true;
+    match allume {
+        true => println!("ON"),
+        false => println!("OFF"), // oublie ce bras → erreur de compile
+    }
+}
+'''
+gotchas = [
+    "« non-exhaustive patterns » : il manque un cas — souvent juste le joker _ oublié en dernière position.",
+    "Les bras d'un match-expression doivent tous renvoyer le même type.",
+    "Un joker _ placé trop tôt rend les bras suivants inaccessibles : avertissement unreachable pattern.",
+    "1..=5 est INCLUSIF dans un pattern — ne pas confondre avec 1..5 des boucles, qui exclut la borne haute.",
+    "La virgule est obligatoire après un bras simple ; après un bloc { }, elle est facultative.",
+    "Un nom seul (n => ...) lie TOUTE la valeur : c'est un joker nommé, pas une comparaison avec une variable n existante.",
+]
+exercises = [
+    "Écris un match qui classe une note /20 : 0..=9 → insuffisant, 10..=13 → passable, 14..=15 → bien, 16..=20 → excellent, _ → note invalide.",
+    "Refais FizzBuzz avec un match sur le tuple (n % 3, n % 5) : (0, 0) => FizzBuzz, (0, _) => Fizz, etc.",
+    "Supprime le bras _ d'un match sur un i32 et lis l'erreur : que te suggère le compilateur ?",
+]
+related = ["conditions", "enums", "expressions-vs-instructions", "option", "match-avance"]

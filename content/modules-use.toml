@@ -1,0 +1,126 @@
+id = "modules-use"
+title = "modules — des espaces de noms, privés par défaut"
+category = "bases"
+tags = ["mod", "use", "pub", "crate", "chemins"]
+difficulty = 3
+semaine = "S04"
+synopsis = "mod rayon { pub fn afficher() {} }  // privé par défaut : pub ouvre la porte"
+description = '''
+## En une phrase
+
+Les modules découpent ta crate en espaces de noms **privés par défaut** : rien ne sort d'un module sans `pub`, rien n'entre sans chemin ou `use`.
+
+## En pratique
+
+1. **`mod` crée un module.** En ligne :
+
+```rust
+mod rayon {
+    pub fn afficher() { /* ... */ }
+}
+```
+
+Ou dans un fichier : `mod rayon;` dans `main.rs`/`lib.rs` fait lire `rayon.rs` **ou** `rayon/mod.rs` (choisis un style, ne mélange pas les deux).
+
+2. **Privé par défaut** : une fonction, une struct, un module sans `pub` n'est visible que dans son module et ses descendants. C'est l'inverse du C où tout est global — et c'est la base de l'encapsulation en Rust.
+
+```
+crate (main.rs)
+├── mod rayon {          // module privé
+│     fn interne() {}    // invisible hors de rayon
+│     pub fn api() {}    // la porte
+└── fn main() {
+        rayon::api();    // OK : pub
+        // rayon::interne();  // ERREUR : privé
+    }
+```
+
+3. **Chemins** : absolus depuis la racine avec `crate::`, relatifs avec `self::` (ici) et `super::` (le parent). Un nom nu est relatif au scope courant.
+
+```rust
+crate::rayon::api();    // absolu
+super::outils::aide();  // depuis un sous-module : remonter d'un cran
+```
+
+4. **`use` ramène un nom dans le scope**, `as` le renomme en cas de collision :
+
+```rust
+use crate::rayon::api;
+use std::collections::HashMap as Map;
+```
+
+5. **`pub use` ré-exporte** : un module peut remonter un nom profond pour offrir une façade courte :
+
+```rust
+pub use crate::rayon::api;  // les usagers écriront accueil::api()
+```
+
+6. **Règle d'or** : quand un chemin devient long et répété, mets un `use` en haut du fichier ; quand une API devient profonde, mets un `pub use` à la racine.
+
+## À retenir
+
+- `mod` = espace de noms ; `mod foo;` lit `foo.rs` ou `foo/mod.rs`.
+- Tout est **privé par défaut** : `pub` ouvre, et nulle part ailleurs.
+- `crate::` absolu, `self::` ici, `super::` parent, nom nu = relatif.
+- `use` importe dans le scope, `as` renomme.
+- `pub use` ré-exporte : façade courte sur une hiérarchie profonde.
+- `pub struct` ne rend pas ses champs publics : chaque champ a sa propre visibilité.
+'''
+example = '''
+// Dans un vrai projet, `mod rayon;` lirait rayon.rs ou rayon/mod.rs.
+// Ici, tout est en ligne dans un seul fichier pour l'exemple.
+
+mod rayon {
+    // Privé par défaut : invisible hors de `rayon`
+    const CODE_INTERNE: &str = "R-7";
+
+    // pub : la porte s'ouvre vers l'extérieur
+    pub fn afficher_code() {
+        println!("code interne : {CODE_INTERNE}");
+    }
+
+    pub mod bandes_dessinees {
+        pub fn compter() -> u32 {
+            120
+        }
+    }
+}
+
+mod accueil {
+    // pub use : ré-exporte un nom profond pour offrir un chemin court
+    pub use crate::rayon::bandes_dessinees::compter as compter_bd;
+
+    pub fn annoncer() {
+        // Chemin absolu depuis la racine de la crate
+        crate::rayon::afficher_code();
+        // super:: = le parent (ici, la racine) ; self:: = le module courant
+        super::rayon::afficher_code();
+        let n = self::compter_bd();
+        println!("l'accueil compte {n} BD");
+    }
+}
+
+// use : ramène un nom dans le scope courant, `as` le renomme
+use rayon::bandes_dessinees::compter as bd;
+
+fn main() {
+    accueil::annoncer();
+    accueil::compter_bd(); // ré-exportée : accessible par ce chemin court
+    println!("total BD via use : {}", bd());
+    rayon::afficher_code();
+}
+'''
+gotchas = [
+    "`pub struct Point { x: i32 }` : le type est public mais le champ `x` reste privé — il faut `pub x` pour l'exposer.",
+    "Créer à la fois `rayon.rs` et `rayon/mod.rs` pour le même `mod rayon;` : le compilateur refuse l'ambiguïté, choisis l'un des deux.",
+    "`use` ne crée rien : il raccourcit un chemin existant ; si l'item est privé pour toi, le `use` échouera aussi.",
+    "`super::` depuis `main.rs` ou `lib.rs` n'a pas de sens : la racine de la crate n'a pas de parent.",
+    "Deux `use` qui importent le même nom sans `as` = conflit de nommage ; renomme l'un des deux.",
+    "Un module privé au sommet reste utilisable par toute la crate : la visibilité se juge toujours par rapport au module qui regarde.",
+]
+exercises = [
+    "Découpe un programme en `mod calculs { pub fn moyenne(n: &[i32]) -> f64 { ... } }` en ligne, puis déplace `calculs` dans `calculs.rs` sans toucher au `main`.",
+    "Crée `mod zoo { pub mod felins { pub fn miauler() {} } }` et appelle `miauler` par chemin absolu, puis via un `use ... as`.",
+    "Ajoute un `pub use` à la racine pour que `zoo::felins::miauler` soit joignable directement en `crate::miauler()`.",
+]
+related = ["structurer-projet", "cargo-bases", "methodes-impl", "structs", "idiomes-rust"]

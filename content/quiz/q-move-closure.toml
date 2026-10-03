@@ -1,0 +1,8 @@
+id = "q-move-closure"
+category = "types"
+difficulty = 3
+question = "Pourquoi écrit-on souvent `thread::spawn(move || { ... })` avec le mot-clé `move` ?"
+choices = ["Parce que le nouveau thread peut survivre à la fonction appelante : la closure doit posséder ses captures, pas les emprunter", "Parce que `move` rend la closure plus rapide à l'exécution", "Parce que `move` copie les captures au lieu de les déplacer", "C'est une simple habitude de style, `move` n'est jamais obligatoire"]
+answer = 0
+explanation = '''`move` force la closure à prendre POSSESSION de chaque variable capturée au lieu de l'emprunter. C'est indispensable pour `thread::spawn` : le thread peut vivre plus longtemps que la pile de l'appelant, donc une référence vers une variable locale deviendrait pendante — le compilateur l'interdit (`'static` requis). Règle générale : `move` dès que la closure s'échappe du scope courant (threads, callbacks stockées longtemps). Piège : après un `move`, la variable d'origine n'est plus utilisable dans le scope parent — c'est voulu.'''
+related = ["closures", "ownership", "emprunts"]

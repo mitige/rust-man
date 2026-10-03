@@ -1,0 +1,8 @@
+id = "q-result-quand"
+category = "erreurs"
+difficulty = 2
+question = "Ta fonction doit lire un fichier dont le nom est donné par l'utilisateur. Quel type de retour est le plus idiomatique ?"
+choices = ["`String`, et `panic!` si le fichier n'existe pas", "`Option<String>`, car le fichier existe ou non", "`String`, et en cas d'échec on renvoie une chaîne vide", "`Result<String, io::Error>`, car c'est une erreur attendue et récupérable"]
+answer = 3
+explanation = '''Un fichier manquant n'est pas un bug : c'est une situation normale que l'appelant doit pouvoir gérer (réessayer, demander un autre nom, valeur par défaut). `Result<T, E>` est fait exactement pour ça, et `io::Error` transporte le détail de l'échec. `Option` conviendrait si l'erreur n'avait aucune cause à expliquer, mais ici « pourquoi ça a échoué » est une information utile. Piège : utiliser `Option` par simplicité et perdre le message d'erreur, ou paniquer sur une erreur que l'utilisateur peut corriger.'''
+related = ["result", "option", "operateur-question"]

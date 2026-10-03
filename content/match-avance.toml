@@ -1,0 +1,109 @@
+id = "match-avance"
+title = "match-avance — gardes, destructuring et let-else"
+category = "pratique"
+tags = ["match", "pattern", "destructuring", "gardes", "let-else", "matches"]
+difficulty = 3
+semaine = "S03"
+synopsis = "if let, let-else, while let, gardes, @, matches! : le pattern matching va bien au-delà du switch."
+description = '''
+## En une phrase
+
+`match` n'est pas un switch amélioré mais un **déconstructeur exhaustif** : il démonte tes données (structs, enums, tuples), teste avec des gardes, nomme avec `@` — et refuse de compiler tant qu'un cas manque.
+
+## En pratique
+
+1. **L'ordre des bras compte** : les bras sont testés de haut en bas, le premier qui matche gagne. Cas spécifiques EN HAUT, cas généraux EN BAS :
+
+```rust
+match n {
+    0 => "zéro",
+    1..=9 => "un chiffre", // jamais atteint pour 0 : déjà capturé au-dessus
+    _ => "le reste",
+}
+```
+
+2. **Destructuring profond** : démonte structs, enums imbriqués et tuples directement dans le pattern, et ignore ce qui ne t'intéresse pas avec `_` ou `..` :
+
+```rust
+Message::Deplacer { x, y } => ...
+Some((cle, _)) => ...
+Config { port, .. } => ...
+```
+
+3. **Gardes** : `pattern if condition =>` ajoute un test arbitraire après le pattern. Piège : une garde qui échoue fait passer au bras SUIVANT, et le compilateur ne peut plus prouver l'exhaustivité — il te faudra un bras `_`.
+
+4. **Binding @** : `y @ 1..=10` teste un intervalle ET nomme la valeur. Sans `@`, un pattern d'intervalle ne te donne rien à manipuler.
+
+5. **Les condensés** : `if let Some(x) = opt` quand un seul cas compte ; `let Some(x) = opt else { return; }` pour sortir tôt (le `else` doit diverger : `return`, `panic!`, `continue`…) ; `while let Some(x) = pile.pop()` pour boucler tant que ça matche ; `matches!(x, Pat)` pour un simple booléen.
+
+6. **Match sur une référence** : dans `match &msg { ... }`, les bindings deviennent automatiquement des références (`x: &i32`) grâce aux match ergonomics — inutile d'écrire `&` dans les patterns. Et pour une `String`, matche `s.as_str()` contre des littéraux `"oui" | "o"`.
+
+## À retenir
+
+- Bras spécifiques en haut, `_` en bas : le premier bras qui matche gagne.
+- Une garde teste ce que le pattern ne peut pas exprimer — mais elle casse la preuve d'exhaustivité.
+- `binding @ pattern` = tester ET nommer ; indispensable avec les intervalles.
+- `if let`, `let-else`, `while let`, `matches!` : quatre condensés pour un seul pattern.
+- Sur une référence, les bindings sont des références : laisse les match ergonomics faire.
+'''
+example = '''
+// match au-delà des bases : gardes, @, destructuring, let-else, matches!.
+enum Message {
+    Quitter,
+    Deplacer { x: i32, y: i32 },
+    Texte(String),
+}
+fn decrire(m: &Message) -> String {
+    match m { // match sur une référence : les bindings sont des références
+        Message::Quitter => "fin".to_string(),
+        Message::Deplacer { x, y } if x == y => format!("diagonale ({x}, {y})"), // garde
+        Message::Deplacer { x, y } => format!("déplacement ({x}, {y})"), // APRÈS la diagonale
+        Message::Texte(s) => format!("texte : {s}"),
+    }
+}
+
+// let-else : sortir tôt ; le bloc else DOIT diverger (return, panic!, …)
+fn premier(v: &[i32]) -> i32 {
+    let Some(&p) = v.first() else { return -1 };
+    p
+}
+
+fn main() {
+    let msgs = vec![Message::Deplacer { x: 3, y: 3 },
+                    Message::Texte("salut".to_string()), Message::Quitter];
+    for m in &msgs {
+        println!("{}", decrire(m));
+    }
+    // if let : quand un seul cas t'intéresse
+    if let Message::Quitter = &msgs[2] {
+        println!("le dernier message quitte");
+    }
+    // matches! : un pattern utilisé comme simple booléen
+    let nb = msgs.iter().filter(|m| matches!(m, Message::Quitter)).count();
+    println!("{nb} message(s) de fin");
+    // while let : dépiler tant que le pattern matche
+    let mut pile = vec![1, 2, 3];
+    while let Some(haut) = pile.pop() { print!("{haut} "); }
+    println!();
+    // binding @ : nommer une valeur ET tester un intervalle
+    match (0, 7) {
+        (0, y @ 1..=10) => println!("axe Y à y = {y}"),
+        (x, y) => println!("point ({x}, {y})"),
+    }
+    println!("premier de [5, 6] = {}", premier(&[5, 6]));
+}
+'''
+gotchas = [
+    "Mettre un bras général avant un cas particulier : le particulier devient du code mort (warning unreachable_patterns).",
+    "Oublier le bras `_` après une garde : `Some(x) if x > 0` ne prouve rien au compilateur, l'exhaustivité retombe sur toi.",
+    "Écrire `1..=10` et vouloir utiliser la valeur : un intervalle ne nomme rien, il faut un binding `y @ 1..=10`.",
+    "Matcher une `String` avec des patterns String : matche `s.as_str()` contre des littéraux `&str`.",
+    "Enchaîner trois `if let ... else if let ...` : passé deux cas, un vrai `match` est plus lisible et vérifie l'exhaustivité.",
+    "Oublier que le bloc `else` d'un let-else doit diverger : `return`, `break`, `continue` ou `panic!`, jamais une valeur.",
+]
+exercises = [
+    "Réécris une chaîne de if/else portant sur un enum en un `match` avec une garde et un binding `@`.",
+    "Aplatis une fonction qui imbrique trois `if let` sur des Option en utilisant `let-else` pour sortir tôt.",
+    "Extrais les couples (nom, âge) d'un `Vec<(String, Option<i32>)>` avec `filter_map`, puis affiche-les avec un match.",
+]
+related = ["match", "enums", "option", "tuples", "structs"]

@@ -1,0 +1,94 @@
+id = "clippy"
+title = "clippy — le professeur d'idiomes intégré"
+category = "outils"
+tags = ["clippy", "lint", "idiomes", "ci", "warnings"]
+difficulty = 2
+semaine = "S03"
+synopsis = "cargo clippy relit ton code avec des centaines de règles : chaque warning est une leçon d'idiomes."
+description = '''
+## En une phrase
+
+Clippy est le **linter officiel** de Rust : il attrape les non-idiomes, les redondances, les pertes de perf et les bugs probables — lis chaque warning comme un mini-cours de Rust.
+
+## En pratique
+
+1. `cargo clippy` compile ton projet en y greffant des centaines de lints (règles), classés par catégorie : `correctness` (bugs quasi certains, erreurs par défaut), `style`, `complexity`, `perf`, et `pedantic` (opt-in, pour les puristes).
+
+2. Ce qu'il attrape, par exemple :
+
+```rust
+// needless_range_loop : l'index est inutile
+for i in 0..v.len() {
+    println!("{}", v[i]);
+}
+// → clippy propose l'idiome :
+for x in &v {
+    println!("{x}");
+}
+```
+
+Il détecte aussi `redundant_clone`, `collapsible_if`, `manual_map`, `useless_format`... des centaines de patterns.
+
+3. Chaque warning explique le **pourquoi** et propose souvent le code de remplacement ; `cargo clippy --fix` applique même automatiquement les suggestions sûres. C'est un professeur d'idiomes : après deux semaines à le suivre, tu écris directement le code qu'il aurait suggéré.
+
+4. En CI : `cargo clippy -- -D warnings` transforme TOUS les warnings en erreurs (`-D` = deny) → la build échoue au moindre relâchement. C'est le standard de l'écosystème.
+
+5. Désactiver un lint ponctuellement, quand tu SAIS ce que tu fais :
+
+```rust
+#[allow(clippy::too_many_arguments)] // justifié ici : configuration d'une fenêtre
+fn creer_fenetre(titre: &str, x: i32, y: i32, w: i32, h: i32) { /* ... */ }
+```
+
+Colle l'attribut au plus près du code concerné (une fonction, un bloc), jamais en haut du crate par paresse.
+
+6. clippy ≠ rustfmt : rustfmt règle la FORME (espaces, retours à la ligne), clippy règle le FOND (idiomes, perfs, bugs). Les deux se combinent : `cargo fmt`, puis `cargo clippy`.
+
+## À retenir
+
+- `cargo clippy` : des centaines de lints classés en correctness, style, complexity, perf, pedantic.
+- Un warning clippy = une leçon : lis l'explication, applique la suggestion, retiens l'idiome.
+- `cargo clippy -- -D warnings` en CI : zéro warning toléré.
+- `#[allow(clippy::lint)]` pour les cas justifiés — au plus local, avec un commentaire.
+- `cargo clippy --fix` applique les suggestions sûres automatiquement.
+'''
+example = '''
+// Un programme déjà « clippy-propre ». Lis les commentaires : chacun
+// correspond à un lint réel que clippy aurait levé sur la version naïve.
+
+// Avant : boucle d'index manuelle → clippy::needless_range_loop
+// Après : itérateurs, le chemin idiomatique.
+fn somme_carres(nombres: &[i32]) -> i32 {
+    nombres.iter().map(|n| n * n).sum()
+}
+
+// Avant : boucle + booléen trouvé + break → clippy::manual_find
+// Après : find, qui dit exactement l'intention.
+fn premier_pair(nombres: &[i32]) -> Option<i32> {
+    nombres.iter().copied().find(|n| n % 2 == 0)
+}
+
+fn main() {
+    let v = vec![1, 3, 5, 8, 10];
+    println!("somme des carrés : {}", somme_carres(&v));
+    match premier_pair(&v) {
+        Some(n) => println!("premier nombre pair : {n}"),
+        None => println!("aucun nombre pair"),
+    }
+    // Le réflexe à prendre : `cargo clippy -- -D warnings` avant chaque commit.
+    println!("Relis ce fichier avec cargo clippy : il doit rester muet.");
+}
+'''
+gotchas = [
+    "Ignorer les warnings par habitude : la catégorie `correctness` signale de vrais bugs en gestation.",
+    "Mettre `#![allow(clippy::all)]` en haut du crate « pour avoir la paix » : tu viens d'éteindre ton professeur.",
+    "Oublier que la CI doit couvrir tout le workspace : passe `--all-targets` pour lint aussi tests et exemples.",
+    "Confondre clippy et rustfmt : l'un juge le fond, l'autre la forme — il te faut les deux.",
+    "Appliquer `--fix` les yeux fermés : certaines suggestions changent la sémantique subtilement, relis le diff avant de committer.",
+]
+exercises = [
+    "Lance `cargo clippy` sur un ancien TP et corrige les cinq premiers warnings en lisant chaque explication jusqu'au bout.",
+    "Écris volontairement `for i in 0..v.len() { println!(\"{}\", v[i]); }`, regarde clippy réagir, puis applique `cargo clippy --fix`.",
+    "Active `#![warn(clippy::pedantic)]` sur un petit projet et choisis UN lint à `#[allow]` en le justifiant en commentaire.",
+]
+related = ["rustfmt", "idiomes-rust", "iterateurs", "cargo-bases"]

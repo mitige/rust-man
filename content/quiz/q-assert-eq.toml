@@ -1,0 +1,15 @@
+id = "q-assert-eq"
+category = "pratique"
+difficulty = 1
+question = "Dans un test, pourquoi préférer `assert_eq!(got, want)` à `assert!(got == want)` ?"
+choices = [
+    "Parce que `assert!` ne sait pas évaluer une comparaison entre deux valeurs",
+    "Parce que l’opérateur `==` est interdit dans les fonctions marquées `#[test]`",
+    "Parce que `assert_eq!` compile plus vite grâce à une macro spécialisée",
+    "Parce qu’en cas d’échec, `assert_eq!` affiche la valeur gauche ET la valeur droite, ce qui fait gagner un temps fou au debug",
+]
+answer = 3
+explanation = '''
+Les deux macros paniquent en cas d’échec, mais `assert_eq!` imprime les deux opérandes (« assertion `left == right` failed, left: 3, right: 4 ») alors que `assert!(got == want)` ne dit que « assertion failed » — à toi de deviner les valeurs. Règle générale : `assert_eq!` et `assert_ne!` par défaut, `assert!` réservé aux conditions complexes avec un message personnalisé en second argument. Piège : `assert_eq!` exige que le type comparé implémente `PartialEq` ET `Debug` — sur tes propres structs, pense au `#[derive(Debug, PartialEq)]`.
+'''
+related = ["tests", "derive", "debugging"]

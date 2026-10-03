@@ -1,0 +1,15 @@
+id = "q-apres-move"
+category = "pratique"
+difficulty = 2
+question = 'Que se passe-t-il avec ce code : `let a = String::from("yo"); let b = a; println!("{a}");` ?'
+choices = [
+    "Il compile : `String` est copiée automatiquement, comme le serait un `i32`",
+    "Erreur de compilation : `a` a été déplacée dans `b`, on ne peut plus l’utiliser",
+    "Il compile : `a` et `b` partagent désormais le même texte en mémoire",
+    "Erreur à l’exécution : le programme panique au moment du `println!`",
+]
+answer = 1
+explanation = '''
+`let b = a;` DÉPLACE la possession de la `String` : `a` devient invalide, et le compilateur le voit — c’est l’erreur E0382 « borrow of moved value », la plus fréquente chez les débutants. `String` gère un buffer sur le tas et n’est pas `Copy`, contrairement aux entiers qui se copient pour trois fois rien. Règle générale : pour garder les deux, emprunte (`&a`) si une lecture suffit, ou clone explicitement (`a.clone()`) si tu veux vraiment deux possesseurs. Piège : croire que c’est une erreur d’exécution — non, tout se joue à la compilation, avant même que le programme tourne.
+'''
+related = ["ownership", "clone-copy", "erreurs-frequentes"]

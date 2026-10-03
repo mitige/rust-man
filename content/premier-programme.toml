@@ -1,0 +1,90 @@
+id = "premier-programme"
+title = "premier-programme — rustc à la main, puis cargo"
+category = "demarrer"
+tags = ["hello-world", "rustc", "cargo", "println", "macro", "main"]
+difficulty = 1
+semaine = "S01"
+synopsis = "rustc main.rs && ./main   # ou : cargo run"
+description = '''
+## En une phrase
+
+Un programme Rust tient dans un fichier avec `fn main()` : tu peux le compiler **directement avec rustc**, ou laisser **cargo** orchestrer dès que ça grandit.
+
+## En pratique
+
+La structure minimale d'un fichier `main.rs` :
+
+```rust
+fn main() {
+    println!("Hello, world !");
+}
+```
+
+Le `!` dans `println!` n'est pas de la ponctuation décorative : il signale une **macro**, pas une fonction. Une macro reçoit le code tel quel et génère du code à la compilation — c'est pour ça que `println!` accepte un nombre variable d'arguments, ce qu'une fonction Rust ordinaire ne peut pas faire.
+
+1. **Compiler à la main** (parfait pour tester un exemple de fiche) :
+
+```sh
+rustc main.rs        # produit un exécutable ./main
+./main
+rustc --edition 2021 -O main.rs   # édition 2021, optimisations
+```
+
+2. **Avec cargo** (dès qu'il y a plus d'un fichier ou une dépendance) :
+
+```sh
+cargo new mon_projet   # crée Cargo.toml + src/main.rs
+cd mon_projet
+cargo run              # compile ET exécute
+cargo build --release  # binaire optimisé dans target/release/
+```
+
+Quand utiliser quoi :
+
+- **rustc direct** : un seul fichier, zéro dépendance, tester une idée en 10 secondes.
+- **cargo** : tout le reste — dépendances, tests, plusieurs modules, partage du projet.
+
+`cargo new` crée aussi un dépôt git : pense à committer tôt.
+
+## À retenir
+
+- `fn main()` est le point d'entrée ; un programme sans main ne compile pas.
+- `println!` avec un `!` est une macro : elle génère du code à la compilation.
+- rustc direct pour les expériences, cargo pour les vrais projets.
+- `cargo run` = compiler + exécuter en une commande.
+- L'édition se règle avec `--edition 2021` (rustc) ou `edition = "2021"` (Cargo.toml).
+'''
+example = '''
+// Un premier programme un peu plus riche que « Hello ».
+fn main() {
+    let nom = "rust-man";
+    let annee = 2025;
+
+    // println! est une MACRO : d'où le « ! » et les {} dans la chaîne.
+    println!("Hello, world !");
+    println!("Bienvenue dans {nom}, édition {annee}.");
+
+    // Formatage positionnel et largeur de champ
+    println!("{0} s'apprend en {1} semaines, semaine {2:02} en cours.", "Rust", 8, 1);
+
+    // On peut aussi calculer dans les accolades... non : on calcule AVANT.
+    let semaines_restantes = 8 - 1;
+    println!("Plus que {semaines_restantes} semaines après celle-ci.");
+
+    // eprintln! écrit sur stderr, pratique pour les messages de debug
+    eprintln!("(ceci part sur stderr, essaie : ./main 2>/dev/null)");
+}
+'''
+gotchas = [
+    "Oublier le `!` (écrire println(...) au lieu de println!(...)) est l'erreur classique du premier jour : le compilateur te dira que println n'existe pas.",
+    "Mettre du code en dehors de toute fonction : en Rust, seul du code DANS une fonction s'exécute, et main est le point de départ.",
+    "Compiler avec rustc un projet cargo multi-fichiers : rustc ne lit pas Cargo.toml et ne trouvera ni tes modules ni tes dépendances.",
+    "Chercher le binaire de cargo à la racine : cargo build le met dans target/debug/, pas à côté de main.rs.",
+    "Écrire println!(\"{x + 1}\") ne compile pas : les accolades du formatage n'acceptent pas d'expressions, calcule avant d'afficher.",
+]
+exercises = [
+    "Écris hello world dans main.rs, compile-le avec rustc --edition 2021 main.rs, lance-le, puis refais la même chose via cargo new + cargo run.",
+    "Modifie le programme pour afficher ton prénom et ton année de naissance avec le formatage {nom}.",
+    "Lance ./main 2>/dev/null et explique pourquoi la dernière ligne disparaît.",
+]
+related = ["installer-rust", "cargo-bases", "variables-mutabilite", "bienvenue"]

@@ -1,0 +1,98 @@
+id = "borrow-checker-paix"
+title = "borrow-checker-paix — faire la paix avec le borrow checker"
+category = "pratique"
+tags = ["borrow-checker", "emprunts", "clone", "iterateurs", "nll"]
+difficulty = 3
+semaine = "S04"
+synopsis = "Le borrow checker n'est pas ton adversaire : chaque refus est un bug réel évité — et quatre patterns l'apaisent."
+description = '''
+## En une phrase
+
+Le borrow checker est un **relecteur paranoïaque mais honnête** : chacun de ses refus correspond à un bug réel (use-after-free, data race, modification pendant lecture) que C ou Python t'auraient laissé découvrir en production.
+
+## En pratique
+
+1. **Change de posture** : un refus n'est pas un caprice, c'est une preuve de danger. Ta mission n'est pas de « battre » le checker, mais de rendre la sûreté de ton code évidente pour lui — et donc pour toi.
+
+2. Les trois erreurs que tu croiseras, décryptées en français :
+
+- `E0502 cannot borrow as mutable because it is also borrowed as immutable` : quelqu'un LIT encore, tu veux ÉCRIRE. Fix : termine la lecture avant d'écrire (réduis le scope).
+- `E0382 borrow/use of moved value` : la valeur a changé de propriétaire. Fix : emprunte, ou clone si deux possesseurs sont vraiment nécessaires.
+- `E0597 borrowed value does not live long enough` : la référence survivrait à sa cible. Fix : allonge la vie de la DONNÉE (pas celle de la référence), ou rends une valeur possédée.
+
+3. **Pattern « scope réduit »** : grâce à NLL (non-lexical lifetimes), un emprunt meurt à sa dernière UTILISATION, pas à l'accolade. Termine la lecture avant la mutation :
+
+```rust
+let r = &mut total;
+*r += 1;
+// r n'est plus utilisé après cette ligne : l'emprunt est fini,
+// tu peux relire total librement.
+```
+
+4. **Pattern « clone assumé »** : pour un petit `String` ou un `Vec` court, `.clone()` lève le conflit pour un coût négligeable. Cloner n'est pas honteux ; cloner dans une boucle chaude, si.
+
+5. **Pattern « itérateurs »** : les conflits « modifier en parcourant » disparaissent en restructurant — `map`/`filter`/`collect` construisent une nouvelle collection au lieu de muter pendant la lecture.
+
+6. **Pattern « possession en entrée, possession en sortie »** : `fn trier(mut v: Vec<i32>) -> Vec<i32>` — la fonction prend tout, rend tout ; aucun emprunt ne traverse la frontière, personne ne se dispute la donnée.
+
+## À retenir
+
+- Chaque refus du borrow checker = un bug que d'autres langages te cachent jusqu'à l'exécution.
+- E0502 : lecture en cours + écriture voulue → termine la lecture d'abord.
+- E0382 : valeur déplacée → emprunte ou clone.
+- E0597 : la référence vit plus longtemps que la donnée → déplace la donnée, ou rends du possédé.
+- Les quatre patterns d'apaisement : scope réduit, clone assumé, itérateurs, possession en entrée/sortie.
+'''
+example = '''
+// Les quatre patterns d'apaisement du borrow checker, en action.
+
+// Pattern 4 : prendre la possession en entrée, la rendre en sortie
+fn trier_et_prefixer(mut v: Vec<String>, prefixe: &str) -> Vec<String> {
+    for s in &mut v {
+        s.insert_str(0, prefixe);
+    }
+    v.sort();
+    v // on rend la possession à l'appelant
+}
+
+fn main() {
+    let mut total = 0;
+
+    // Pattern 1 : réduire le scope de l'emprunt (NLL fait le reste)
+    {
+        let r = &mut total; // l'emprunt mutable commence...
+        *r += 10;
+    } // ...et se termine ici : on peut re-emprunter
+    let lecture = &total;
+    println!("total = {lecture}");
+
+    // Pattern 2 : cloner quand c'est simple et pas chaud
+    let originale = String::from("données");
+    let copie = originale.clone(); // les deux vivent, zéro conflit
+    println!("{originale} / {copie}");
+
+    // Pattern 3 : restructurer avec des itérateurs
+    let prix = vec![10, 20, 30];
+    let avec_tva: Vec<i32> = prix.iter().map(|p| p * 12 / 10).collect();
+    let somme: i32 = avec_tva.iter().sum();
+    println!("somme TTC = {somme}");
+
+    // Pattern 4 en action : le Vec part dans la fonction et revient transformé
+    let mots = vec!["pomme".to_string(), "kiwi".to_string()];
+    let tries = trier_et_prefixer(mots, "fruit:");
+    println!("{tries:?}"); // mots n'existe plus ici : tout est dans tries
+}
+'''
+gotchas = [
+    "Répondre à CHAQUE refus par un `.clone()` : ça compile, mais tu perds l'apprentissage — et parfois les performances.",
+    "Vouloir stocker une référence dans une struct sans lifetimes : restructure pour stocker du possédé, ou lis la fiche lifetimes d'abord.",
+    "Croire que NLL est « cassé » quand il refuse : il raisonne sur les dernières utilisations, pas sur les lignes — cherche où l'emprunt est utilisé en dernier.",
+    "Atteindre `Rc<RefCell<T>>` au premier conflit : outil valide, mais il déplace le contrôle à l'exécution — épuise d'abord les quatre patterns.",
+    "Oublier que `for x in &mut v` emprunte TOUT le Vec : extrais d'abord ce dont tu as besoin, ou passe par des indices de split bien délimités (split_at_mut).",
+]
+exercises = [
+    "Prends un E0502 de tes TP : corrige-le d'abord par réduction de scope, puis par itérateurs, et compare la lisibilité des deux versions.",
+    "Écris `fn normaliser(mut v: Vec<String>) -> Vec<String>` (trim + minuscules) qui prend et rend la possession, sans aucun emprunt dans la signature.",
+    "Dans un programme qui compile grâce à trois clones, remplace-en deux par des emprunts bien scopés et vérifie que tout tient.",
+]
+related = ["ownership", "emprunts", "emprunts-mutables", "clone-copy", "lifetimes"]

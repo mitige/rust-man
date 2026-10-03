@@ -1,0 +1,22 @@
+id = "q-slice-vue"
+category = "ownership"
+difficulty = 2
+question = '''
+Qu’est-ce que `salut` exactement ?
+
+```rust
+let s = String::from("bonjour");
+let salut = &s[0..3];
+```
+'''
+choices = [
+    "Une nouvelle String contenant \"bon\", allouée sur le tas",
+    "Un pointeur vers une copie des 3 premiers octets de s",
+    "Un couple d’indices début/fin stocké à l’intérieur de s elle-même",
+    "Une vue (`&str`) sur les octets de s : elle emprunte la donnée sans la posséder",
+]
+answer = 3
+explanation = '''
+Une slice est une fenêtre empruntée : un pointeur vers les données plus une longueur, sans AUCUNE copie ni allocation. Elle ne possède rien — s reste la propriétaire et doit vivre au moins aussi longtemps que toutes les slices qui la regardent. Piège pratique : découper une &str à des indices qui coupent un caractère UTF-8 en deux (un « é » fait 2 octets) provoque un panic à l’exécution ; ici « bon » est purement ASCII, donc tout va bien.
+'''
+related = ["slices", "string-vs-str"]

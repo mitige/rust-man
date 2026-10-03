@@ -1,0 +1,100 @@
+id = "chaines-bases"
+title = "chaînes — String possède, &str observe"
+category = "bases"
+tags = ["string", "str", "utf-8", "format", "chars"]
+difficulty = 2
+semaine = "S03"
+synopsis = "let mut s = String::from(\"bonjour\"); s.push_str(\" le monde\");  // len() compte des OCTETS"
+description = '''
+## En une phrase
+
+`String` est un texte **possédé et modifiable** sur le tas, `&str` une **vue empruntée** sur du texte — et les deux parlent UTF-8, ce qui change tout.
+
+## En pratique
+
+1. **Créer** : trois portes d'entrée quotidiennes :
+
+```rust
+let a = String::from("bonjour");  // String possédée
+let b = "salut".to_string();      // conversion depuis un littéral
+let c: &str = "coucou";           // vue sur un littéral (stocké dans le binaire)
+```
+
+2. **Faire grandir** : `push_str` ajoute un `&str` à une `String` mutable (il existe aussi `push` pour un seul `char`) :
+
+```rust
+let mut s = String::from("bon");
+s.push_str("jour");
+```
+
+3. **Assembler sans déplacer** : `format!` fabrique une **nouvelle** `String` et laisse les originaux intacts — l'équivalent du f-string de Python :
+
+```rust
+let titre = format!("{a} et {b}");
+```
+
+4. **`len()` compte des OCTETS.** En UTF-8, `é` occupe 2 octets : `"été".len()` vaut **5**, pas 3. Pour compter les caractères : `s.chars().count()`.
+
+5. **Pas d'indexation `s[0]`.** Le compilateur refuse, et il a raison : un octet isolé peut couper un caractère en deux. Que voudrait dire `s[0]` — un octet ? un caractère ? Rust refuse de choisir à ta place.
+
+6. **Itérer proprement** : `.chars()` pour les caractères, `.bytes()` pour les octets bruts :
+
+```rust
+for ch in "été".chars() { /* 'é', puis 't', puis 'é' */ }
+```
+
+Pour le duel complet possession vs emprunt (quel type prendre en paramètre, pourquoi `&String` se convertit en `&str`...), file à la fiche `string-vs-str`.
+
+## À retenir
+
+- `String::from`, `.to_string()`, littéral `&str` : trois créations pour deux types différents.
+- `push_str` modifie une `String` ; `format!` en crée une nouvelle sans rien déplacer.
+- `len()` = octets UTF-8, **jamais** des caractères : `"été".len()` == 5.
+- `s[0]` ne compile pas : l'UTF-8 rend l'indexation par position ambiguë et dangereuse.
+- `.chars()` itère les caractères, `.bytes()` les octets — choisis consciemment.
+- Possession vs emprunt, conversion `&String` → `&str` : voir `string-vs-str`.
+'''
+example = '''
+fn main() {
+    // Trois façons de créer du texte
+    let a = String::from("bonjour"); // String : possédée, sur le tas
+    let b = "salut".to_string();     // conversion depuis un littéral
+    let c: &str = "coucou";          // &str : vue empruntée sur un littéral
+
+    // push_str ajoute un &str à une String (qui doit être mut)
+    let mut message = a;
+    message.push_str(" le monde");
+    println!("{message} | {b} | {c}");
+
+    // format! construit une NOUVELLE String sans toucher aux originaux
+    let titre = format!("{b}, {c} !");
+    println!("titre : {titre}");
+
+    // len() compte des OCTETS, pas des caractères — UTF-8 oblige
+    let mot = String::from("été");
+    println!("{mot} : {} octets, {} caractères", mot.len(), mot.chars().count());
+
+    // mot[0] serait refusé à la compilation : un octet n'est pas un caractère
+    // On itère caractère par caractère avec .chars()
+    for ch in mot.chars() {
+        println!("  caractère : {ch}");
+    }
+
+    // .bytes() existe aussi, pour les octets bruts
+    println!("octets de {mot} : {:?}", mot.bytes().collect::<Vec<u8>>());
+}
+'''
+gotchas = [
+    "`\"été\".len()` renvoie 5 : deux `é` à 2 octets chacun plus le `t` — raisonne en octets dès que tu manipules du texte.",
+    "`s[0]` est une erreur de compilation, pas un avertissement : utilise `.chars().next()` pour le premier caractère.",
+    "`+` existe entre `String` et `&str` (`s1 + &s2`) mais **déplace** `s1` ; `format!` ne déplace rien.",
+    "Un littéral `\"...\"` est un `&'static str`, pas une `String` : `push_str` n'existe pas dessus.",
+    "`.chars().count()` est en O(n) : l'UTF-8 à taille variable oblige à tout parcourir pour compter.",
+    "Couper avec `&s[..n]` à un index qui n'est pas une frontière de caractère panique à l'exécution.",
+]
+exercises = [
+    "Écris `fn compter_voyelles(s: &str) -> usize` avec `.chars()` et teste-la sur `\"hibou\"` et `\"où\"`.",
+    "Construis `String::from(\"Rust\")`, pousse `\" !\"` avec `push_str`, et affiche `len()` et `chars().count()` côte à côte.",
+    "Sans compiler, prédis `\"ça va\".len()` et `\"ça va\".chars().count()` — puis vérifie.",
+]
+related = ["string-vs-str", "slices", "string-manipulation", "variables-mutabilite", "vec"]

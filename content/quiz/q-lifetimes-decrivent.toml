@@ -1,0 +1,15 @@
+id = "q-lifetimes-decrivent"
+category = "pratique"
+difficulty = 3
+question = "Dans `fn plus_long<'a>(x: &'a str, y: &'a str) -> &'a str`, que fait l’annotation `<'a>` ?"
+choices = [
+    "Elle force les deux arguments à vivre au moins aussi longtemps que l’appelant",
+    "Elle copie les chaînes sur le tas pour garantir leur survie après le retour",
+    "Elle DÉCRIT au compilateur la relation entre les durées de vie des entrées et du retour — sans jamais les prolonger",
+    "Elle demande au compilateur d’allonger la durée de vie des valeurs passées en argument",
+]
+answer = 2
+explanation = '''
+Les annotations de durée de vie ne changent rien à l’exécution : elles décrivent des relations déjà vraies pour que le compilateur puisse vérifier que la référence retournée reste valide. Ici, `'a` dit : le retour vit au plus aussi longtemps que le PLUS COURT des deux emprunts — le compilateur refusera un appel où le résultat survivrait à `x` ou à `y`. Règle générale : les lifetimes sont une documentation vérifiable par le compilateur, pas un mécanisme d’allocation. Piège : ajouter des `'a` partout ne répare jamais un « does not live long enough » — la solution est dans le flux de données (posséder une `String`, retourner une valeur, restructurer la fonction).
+'''
+related = ["lifetimes", "emprunts", "string-vs-str"]

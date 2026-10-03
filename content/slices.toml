@@ -1,0 +1,95 @@
+id = "slices"
+title = "slices — une fenêtre sur la séquence"
+category = "ownership"
+tags = ["slice", "str", "vue", "plage", "bounds-check"]
+difficulty = 3
+semaine = "S04"
+synopsis = "let vue = &v[1..3];  // fenêtre empruntée sur v — rien n'est copié"
+description = '''
+## En une phrase
+
+Une slice `&[T]` (ou `&str` pour le texte) est une **vue empruntée sur une séquence contiguë** — un pointeur + une longueur, zéro copie, zéro possession.
+
+## En pratique
+
+Création par plage d'indices :
+
+```rust
+let v = vec![10, 20, 30, 40, 50];
+let s = &v[1..4];   // [20, 30, 40] — les indices 1, 2, 3
+let t = &v[..];     // tout le Vec
+```
+
+Une slice, c'est un **fat pointer** :
+
+```
+v:        [10, 20, 30, 40, 50]
+                ▲
+&v[1..4]:  ptr ─┘  len = 3   →  voit [20, 30, 40]
+```
+
+1. La slice **emprunte** : tant qu'elle vit, le Vec d'origine est gelé — impossible de `push` (la réallocation casserait la fenêtre).
+2. `&str` est exactement ça pour le texte : une slice d'octets **garantis UTF-8 valides** (fiche `string-vs-str`).
+3. **Générosité d'API** : écris `fn f(s: &str)` plutôt que `fn f(s: &String)`, et `fn g(v: &[i32])` plutôt que `fn g(v: &Vec<i32>)`. Ta fonction acceptera alors String ET littéral ET sous-chaîne, Vec ET tableau ET sous-slice. Une fonction qui prend `&String` refuserait un simple `"abc"` — quel gâchis.
+4. **Bounds-check** : l'indexation vérifie les bornes à l'exécution — `v[10]` sur 5 éléments = **panic**, pas de lecture sauvage comme en C. Pour un accès incertain, `.get(10)` renvoie une `Option`.
+
+```rust
+let s = "rust";
+let t = &s[1..3];   // "us" — attention : les indices sont en OCTETS
+```
+
+## À retenir
+
+- `&v[a..b]` = fenêtre empruntée : rien n'est copié, rien n'est possédé.
+- Slice = (pointeur, longueur) ; `&str` = slice de texte UTF-8.
+- API : `&str` et `&[T]` en paramètres, jamais `&String` ni `&Vec<T>`.
+- Indices en octets pour le texte ; hors bornes = panic, `.get()` = Option.
+- Tant que la slice vit, la source est gelée : c'est la règle des emprunts.
+'''
+example = '''
+fn main() {
+    let v = vec![10, 20, 30, 40, 50];
+
+    // Une slice : fenêtre empruntée sur le Vec, RIEN n'est copié
+    let milieu = &v[1..4]; // [20, 30, 40]
+    let tout = &v[..]; // toute la séquence
+    let debut = &v[..2]; // [10, 20]
+    println!("milieu = {milieu:?} (len {})", milieu.len());
+    println!("tout = {tout:?}, début = {debut:?}");
+
+    // &str : la slice du texte (octets UTF-8 garantis valides)
+    let s = String::from("rustacean");
+    let tete = &s[0..4]; // "rust"
+    println!("tête de {s} : {tete}");
+
+    // API généreuse : une seule fonction accepte String, &str, littéral...
+    let possedee = String::from("bonjour");
+    println!("{}", saluer(&possedee)); // &String → &str automatique
+    println!("{}", saluer("le monde")); // un littéral EST un &str
+    println!("{}", saluer(&possedee[0..7])); // une sous-chaîne
+
+    // Hors bornes : panic. .get() renvoie Option — sans paniquer
+    match v.get(10) {
+        Some(x) => println!("élément 10 : {x}"),
+        None => println!("pas d'élément 10 : vérifié, pas de crash"),
+    }
+}
+
+// Prendre &str plutôt que &String : on accepte TOUT ce qui est du texte
+fn saluer(nom: &str) -> String {
+    format!("salut, {nom} !")
+}
+'''
+gotchas = [
+    "Oublier que les indices de &str sont en OCTETS, pas en caractères : couper un « é » en deux → panic immédiat.",
+    "Croire que la slice copie : elle emprunte — le Vec d'origine ne peut pas être modifié tant qu'elle vit.",
+    "Confondre `&v[1..3]` (indices 1 et 2) avec `&v[1..=3]` (indices 1, 2 ET 3) — un classique du off-by-one.",
+    "Indexer directement dans du code fragile : préfère .get() et un match quand l'indice n'est pas garanti.",
+    "Vouloir retourner une slice d'un Vec local à la fonction : la référence pendrait, le compilateur refuse (fiche lifetimes).",
+]
+exercises = [
+    "Écris fn somme(v: &[i32]) -> i32 et appelle-la avec un Vec, un tableau et une sous-slice.",
+    "Écris fn premiere_moitie(s: &str) -> &str et teste-la sur de l'ASCII pur pour éviter le piège des octets.",
+    "Provoque un panic d'indice hors bornes, puis remplace l'accès par .get() suivi d'un match.",
+]
+related = ["string-vs-str", "emprunts", "vec", "option", "chaines-bases"]

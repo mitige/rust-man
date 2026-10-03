@@ -1,0 +1,102 @@
+id = "dyn-trait"
+title = "dyn-trait — le dispatch dynamique, quand les types varient"
+category = "types"
+tags = ["dyn", "dispatch-dynamique", "vtable", "box", "object-safety"]
+difficulty = 5
+semaine = "S07"
+synopsis = "let v: Vec<Box<dyn Forme>> = vec![Box::new(Cercle), Box::new(Carre)];"
+description = '''
+## En une phrase
+
+Un objet-trait (`&dyn Trait`, `Box<dyn Trait>`) permet de manipuler **n'importe quel type implémentant le trait**, choisi à l'exécution plutôt qu'à la compilation.
+
+## En pratique
+
+1. Statique vs dynamique :
+
+```
+Génériques (T: Trait) : monomorphisation → type figé À LA COMPILATION
+dyn Trait             : vtable           → type choisi À L'EXÉCUTION
+```
+
+Le générique est plus rapide (inlining, zéro indirection) mais génère du code par instanciation ; `dyn` mutualise une seule version du code au prix d'un appel indirect.
+
+2. Syntaxe : `&dyn Forme` pour emprunter, `Box<dyn Forme>` pour posséder. La conversion depuis le type concret est automatique :
+
+```rust
+let c = Cercle { r: 1.0 };
+let f: &dyn Forme = &c;              // coercion
+let b: Box<dyn Forme> = Box::new(c); // possession
+```
+
+3. Quand tu EN AS BESOIN : collections **hétérogènes** et retours de types variés. Un `Vec<T>` ne contient qu'UN type concret ; un `Vec<Box<dyn Forme>>` mélange Cercle et Carre.
+
+```rust
+let formes: Vec<Box<dyn Forme>> = vec![
+    Box::new(Cercle { r: 1.0 }),
+    Box::new(Carre { c: 2.0 }),
+];
+```
+
+4. **Object safety** (mention) : tous les traits ne sont pas utilisables en `dyn`. Sont exclus : méthodes génériques, méthodes renvoyant `Self`, méthodes sans receveur `self`. Le compilateur te le dira : « cannot be made into an object ».
+
+5. Le coût : chaque appel de méthode passe par une **vtable** (table de pointeurs de fonctions), l'objet porte un pointeur supplémentaire, et l'inlining est impossible. Souvent négligeable — mesure avant d'éviter.
+
+## À retenir
+
+- `dyn` = dispatch dynamique via vtable, type concret choisi au runtime.
+- `&dyn` pour emprunter, `Box<dyn>` pour posséder.
+- Raison d'être : collections hétérogènes, API souples, moins de code généré.
+- Object safety : pas de génériques ni de `Self` en retour dans le trait.
+- Défaut = générique (statique) ; `dyn` quand l'hétérogénéité l'exige.
+'''
+example = '''
+trait Forme {
+    fn aire(&self) -> f64;
+}
+
+struct Cercle { r: f64 }
+struct Carre { c: f64 }
+
+impl Forme for Cercle {
+    fn aire(&self) -> f64 { 3.14159 * self.r * self.r }
+}
+impl Forme for Carre {
+    fn aire(&self) -> f64 { self.c * self.c }
+}
+
+// Dispatch DYNAMIQUE : le type concret est choisi à l'exécution (vtable).
+fn aire_totale(formes: &[Box<dyn Forme>]) -> f64 {
+    formes.iter().map(|f| f.aire()).sum()
+}
+
+// Référence sur objet-trait : emprunt dynamique, sans possession.
+fn affiche_aire(f: &dyn Forme) {
+    println!("aire = {:.2}", f.aire());
+}
+
+fn main() {
+    // Collection HÉTÉROGÈNE : impossible avec un seul type concret
+    let formes: Vec<Box<dyn Forme>> = vec![
+        Box::new(Cercle { r: 1.0 }),
+        Box::new(Carre { c: 2.0 }),
+    ];
+    println!("totale = {:.2}", aire_totale(&formes));
+
+    let c = Cercle { r: 3.0 };
+    affiche_aire(&c); // &Cercle -> &dyn Forme (coercion automatique)
+}
+'''
+gotchas = [
+    "Tenter `Vec<T: Forme>` pour mélanger plusieurs types : un seul type concret par instanciation — il faut `Vec<Box<dyn Forme>>`.",
+    "Utiliser en `dyn` un trait avec méthode générique ou `fn clone(&self) -> Self` : pas object-safe — c'est pourquoi `dyn Clone` n'existe pas.",
+    "Oublier le mot-clé `dyn` : `Box<Forme>` seul est refusé depuis l'édition 2021, écris `Box<dyn Forme>`.",
+    "Payer la vtable partout par habitude : le générique reste le choix par défaut, plus rapide et mieux vérifié statiquement.",
+    "Croire qu'on peut redescendre au type concret depuis un `&dyn Trait` sans outil : il faut `Any`/`downcast` (hors scope de cette fiche)."
+]
+exercises = [
+    "Crée un trait `Dessinable { fn dessiner(&self); }`, deux structs qui l'implémentent, et un `Vec<Box<dyn Dessinable>>` que tu parcours.",
+    "Réécris le même programme avec des génériques et constate que la collection hétérogène devient impossible.",
+    "Essaie de créer un `Box<dyn Clone>` et lis attentivement l'erreur du compilateur sur l'object safety."
+]
+related = ["traits", "generics", "trait-bounds", "types-associes", "vec"]

@@ -1,0 +1,120 @@
+id = "structs"
+title = "structs — des données regroupées, nommées, possédées"
+category = "bases"
+tags = ["struct", "champs", "instanciation", "update-syntax", "ownership"]
+difficulty = 2
+semaine = "S02"
+synopsis = "struct Point { x: i32, y: i32 }  // un type sur mesure : chaque champ a un nom, un type, un propriétaire"
+description = '''
+## En une phrase
+
+Une struct regroupe plusieurs valeurs nommées sous un seul type, et **chaque champ possède sa donnée** — la struct suit les mêmes règles d'ownership que n'importe quelle valeur.
+
+## En pratique
+
+1. **Déclaration à champs nommés** — la forme que tu écriras 90 % du temps :
+
+```rust
+struct Etudiant {
+    nom: String,   // ce champ POSSÈDE sa String
+    age: u8,
+    inscrit: bool,
+}
+```
+
+2. **Instanciation** : tu fournis tous les champs, dans l'ordre que tu veux, entre accolades. Accès ensuite par le point : `e.nom`, `e.age`.
+
+3. **Field init shorthand** : quand la variable porte le même nom que le champ, tu n'écris le nom qu'une fois :
+
+```rust
+fn creer(nom: String, age: u8) -> Etudiant {
+    Etudiant { nom, age, inscrit: true }  // au lieu de nom: nom, age: age
+}
+```
+
+4. **Update syntax** : `..base` recopie les champs que tu n'as pas mentionnés depuis une autre instance. Piège d'ownership : les champs non-Copy sont **déplacés** hors de `base`.
+
+```rust
+let e2 = Etudiant { age: 21, ..e1 };  // e1.nom est déplacée dans e2
+```
+
+5. **Structs tuple** : les champs n'ont pas de nom, on accède par position (`c.0`). Pratique quand le nom du type dit déjà tout :
+
+```rust
+struct Couleur(u8, u8, u8);
+```
+
+6. **Structs unit-like** : zéro champ. Elles servent de marqueurs, souvent avec des traits :
+
+```rust
+struct Marqueur;
+```
+
+7. **Mutabilité : tout ou rien.** Rust ne permet pas `mut` sur un seul champ : c'est l'instance entière qui est mutable ou non.
+
+```rust
+let mut e = creer(String::from("Awa"), 20);
+e.age = 21;  // ok parce que e est mut
+```
+
+## À retenir
+
+- Struct nommée = un type sur mesure : nom + champs typés, instanciation entre accolades.
+- `Etudiant { nom, age }` : shorthand quand variable et champ portent le même nom.
+- `..base` remplit le reste mais **déplace** les champs non-Copy hors de `base`.
+- La mutabilité se déclare sur l'instance entière, jamais champ par champ.
+- Un champ `String` possède sa donnée : déplacer la struct déplace la String.
+- Tuple struct = positions, unit-like = rien du tout : deux formes à reconnaître.
+'''
+example = '''
+struct Etudiant {
+    nom: String,
+    age: u8,
+    inscrit: bool,
+}
+
+// Struct tuple : champs sans nom, accès par position
+struct Couleur(u8, u8, u8);
+
+// Struct unit-like : aucun champ, sert de marqueur
+struct Badge;
+
+// Raccourci d'init : les paramètres alimentent les champs du même nom
+fn creer_etudiant(nom: String, age: u8) -> Etudiant {
+    Etudiant { nom, age, inscrit: true }
+}
+
+fn main() {
+    let awa = creer_etudiant(String::from("Awa"), 20);
+
+    // Update syntax : ..awa recopie `inscrit`, déplace `nom`
+    let mut bo = Etudiant {
+        age: 21,
+        ..awa
+    };
+    // awa.nom n'existe plus ici : elle a été déplacée dans bo
+
+    bo.inscrit = false; // mutabilité déclarée sur l'instance entière
+    println!("{} a {} ans, inscrit : {}", bo.nom, bo.age, bo.inscrit);
+
+    let rouge = Couleur(255, 0, 0);
+    println!("rouge pur : R{} G{} B{}", rouge.0, rouge.1, rouge.2);
+
+    let _b = Badge; // une valeur sans donnée, juste un type
+    println!("badge distribué !");
+}
+'''
+gotchas = [
+    "`..base` ne copie pas gratuitement : chaque champ non-Copy est déplacé, et `base` ne peut plus être utilisée en entier.",
+    "Impossible de déclarer un seul champ mutable : `struct S { mut x: i32 }` n'existe pas, c'est `let mut s = ...` qui décide.",
+    "Oublier un champ à l'instanciation = erreur de compilation ; Rust n'a pas de valeurs par défaut implicites.",
+    "`struct Couleur(u8, u8, u8)` et `struct Teinte(u8, u8, u8)` sont deux types différents malgré un contenu identique.",
+    "Une struct qui stocke une référence exige des lifetimes explicites : commence par posséder (`String`, pas `&str`).",
+    "L'ordre des champs est libre à l'instanciation ; à la déclaration, Rust peut les réordonner en mémoire pour optimiser.",
+]
+exercises = [
+    "Écris `struct Livre { titre: String, pages: u32, lu: bool }`, une fonction `fn neuf(titre: String, pages: u32) -> Livre` avec shorthand, et affiche un livre.",
+    "Crée un second livre avec `..premier` en changeant `pages`, puis lis l'erreur de rustc quand tu tentes d'afficher `premier.titre`.",
+    "Ajoute `fn gris(n: u8) -> Couleur` qui produit un gris uniforme, et affiche ses trois canaux.",
+]
+related = ["methodes-impl", "enums", "tuples", "ownership", "chaines-bases"]

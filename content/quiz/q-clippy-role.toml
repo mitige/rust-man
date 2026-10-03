@@ -1,0 +1,15 @@
+id = "q-clippy-role"
+category = "outils"
+difficulty = 2
+question = "Ton code compile parfaitement avec `cargo check`. Que peut t’apporter `cargo clippy` de plus ?"
+choices = [
+    "Détecter les fuites mémoire à l’exécution grâce à un profiler intégré",
+    "Corriger automatiquement les erreurs de compilation restantes",
+    "Signaler des constructions non idiomatiques, des pièges de performance et des bugs probables dans du code qui compile",
+    "Reformater le code source selon le style officiel",
+]
+answer = 2
+explanation = '''
+Clippy est un linter : il analyse du code déjà correct pour le compilateur et suggère les idiomes Rust — par exemple `.is_empty()` plutôt que `.len() == 0`, ou un `if let` plutôt qu’un `match` à un seul bras utile. Il complète le compilateur sans le remplacer, et il ne formate rien : ça, c’est le travail de rustfmt. Règle générale : fais passer clippy régulièrement et lis chaque lint comme une leçon d’idiome. Piège : ses suggestions ne sont pas des ordres — face à un faux positif, un `#[allow(clippy::...)]` ciblé est parfaitement légitime.
+'''
+related = ["clippy", "idiomes-rust"]

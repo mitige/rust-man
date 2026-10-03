@@ -1,0 +1,68 @@
+id = "bienvenue"
+title = "bienvenue — ton manuel Rust dans le terminal"
+category = "demarrer"
+tags = ["rust-man", "prise-en-main", "terminal", "quiz", "parcours"]
+difficulty = 1
+semaine = "S01"
+synopsis = "rust-man bienvenue   # tout commence ici"
+description = '''
+## En une phrase
+
+rust-man est un **manuel de Rust qui vit dans ton terminal** : des fiches courtes, des exemples qui compilent, des quiz pour vérifier que ça tient.
+
+## En pratique
+
+Tu suis des cours de Rust et tu veux réviser sans ouvrir un navigateur de 40 onglets ? C'est exactement pour ça que rust-man existe.
+
+Les commandes de base :
+
+```text
+rust-man <sujet>     # affiche la fiche, ex: rust-man ownership
+rust-man -l          # liste toutes les fiches, par catégorie
+rust-man quiz        # lance un quiz sur ce que tu as lu
+rust-man exo         # propose les micro-exercices des fiches
+```
+
+La philosophie, en quatre règles :
+
+1. **Fiches courtes.** Une fiche = une idée. Tu la lis en 5 minutes, pas en 45.
+2. **Exemples compilables.** Chaque exemple compile avec `rustc --edition 2021`. Copie-le, lance-le, casse-le.
+3. **Pièges explicites.** La section « gotchas » liste les erreurs que tout le monde fait — fais-les une fois, ici, pas en partiel.
+4. **Progression balisée.** Les fiches sont rangées par semaine (S01 à S08) : suis la `roadmap` ou pioche à la demande.
+
+Commence par `rust-man roadmap` pour voir le parcours complet, ou `rust-man -l` pour explorer librement.
+
+## À retenir
+
+- `rust-man <sujet>` affiche une fiche, `rust-man -l` liste tout.
+- Chaque exemple compile : tu peux le recopier et le lancer tel quel.
+- Les quiz et exercices transforment la lecture en apprentissage actif.
+- Le parcours tient en 8 semaines, à côté de tes cours.
+'''
+example = '''
+fn main() {
+    // Simule une session rust-man : liste puis fiche.
+    let fiches = ["bienvenue", "roadmap", "installer-rust", "premier-programme"];
+
+    println!("$ rust-man -l");
+    for (i, f) in fiches.iter().enumerate() {
+        println!("  {:>2}. {}", i + 1, f);
+    }
+
+    println!("\n$ rust-man {}", fiches[0]);
+    println!("Bienvenue ! Lis une fiche, tape son exemple, casse-le, répare-le.");
+    println!("Puis lance le quiz : c'est là que ça s'ancre vraiment.");
+}
+'''
+gotchas = [
+    "Lire une fiche sans taper l'exemple ne sert à rien : Rust s'apprend les mains dans le code, pas les yeux sur le texte.",
+    "Ne saute pas les gotchas : ils décrivent des erreurs de compilation réelles que tu rencontreras toi-même cette semaine.",
+    "rust-man -l affiche beaucoup de fiches d'un coup : ne panique pas, suis la roadmap semaine par semaine.",
+    "Un quiz raté n'est pas un échec, c'est un pointeur vers la fiche à relire.",
+    "Ne cherche pas à tout mémoriser : la doc et rust-man existent précisément pour être reconsultés.",
+]
+exercises = [
+    "Lance rust-man -l et repère une fiche par catégorie que tu ne connais pas encore.",
+    "Copie l'exemple de cette fiche dans un fichier .rs, compile-le avec rustc --edition 2021, puis modifie le texte affiché.",
+]
+related = ["roadmap", "premier-programme", "methode-apprentissage", "installer-rust"]

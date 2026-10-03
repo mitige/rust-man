@@ -1,0 +1,15 @@
+id = "q-cargo-check"
+category = "outils"
+difficulty = 1
+question = "Pendant que tu développes, tu veux vérifier ton code vite fait. Que fait `cargo check` exactement ?"
+choices = [
+    "Il compile puis lance le programme directement, sans garder de binaire sur le disque",
+    "Il vérifie uniquement la syntaxe, sans analyser les types ni les emprunts",
+    "Il compile et vérifie tout (types, borrow checker) mais ne génère pas de binaire — c’est bien plus rapide",
+    "Il génère un binaire allégé dans target/check/, prêt à être distribué",
+]
+answer = 2
+explanation = '''
+`cargo check` fait tourner tout le front-end du compilateur — analyse des types, borrow checker, résolution des traits — mais saute la génération de code : aucun binaire n’est produit, d’où une vitesse nettement supérieure à un build complet. Règle générale : dans ta boucle de développement tu enchaînes les `cargo check`, et tu ne fais un `cargo build` ou `cargo run` que quand tu veux un binaire ou exécuter le programme. Piège classique : croire que `check` n’est qu’une vérif syntaxique légère — non, s’il passe, ton programme est correct pour le compilateur, il ne lui manque que l’assemblage final.
+'''
+related = ["cargo-bases", "lire-erreur-rustc"]

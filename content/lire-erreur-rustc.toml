@@ -1,0 +1,99 @@
+id = "lire-erreur-rustc"
+title = "lire-erreur-rustc — anatomie d'un diagnostic"
+category = "pratique"
+tags = ["rustc", "erreurs", "diagnostic", "compilation", "explain"]
+difficulty = 2
+semaine = "S02"
+synopsis = "error[E0308] + --> fichier:ligne + ^^^^ + help : un diagnostic se lit de haut en bas, et le fix y est souvent écrit."
+description = '''
+## En une phrase
+
+Un diagnostic rustc n'est pas une insulte mais une **notice de réparation** : code d'erreur, position exacte, soulignés qui expliquent, et souvent un `help` qui contient littéralement la correction.
+
+## En pratique
+
+Anatomie d'un vrai diagnostic (un `String` passé là où on attend un `&str`) :
+
+```
+error[E0308]: mismatched types            <- QUOI : code d'erreur + résumé
+ --> src/main.rs:3:12                     <- OÙ : fichier, ligne, colonne
+  |
+3 |     affiche(nom);
+  |     ------- ^^^ expected `&str`, found `String`
+  |     |
+  |     arguments to this function are incorrect
+  |
+help: consider borrowing here             <- LE FIX, souvent applicable tel quel
+  |
+3 |     affiche(&nom);
+  |             +
+```
+
+1. **La première ligne** : `error[E0308]` = gravité + code. Le code est une clé : `rustc --explain E0308` affiche l'explication longue officielle, avec exemples.
+
+2. **La flèche `-->`** : fichier:ligne:colonne. C'est ton point de départ de lecture — pas forcément la ligne à modifier.
+
+3. **Les soulignés** : `^^^^` marque l'expression fautive, `----` marque ce qui justifie l'attente (ici l'appel de fonction). Le texte à droite dit toujours `expected X, found Y`.
+
+4. **Les notes et le help** : lis-les VRAIMENT. `help: consider borrowing here: &nom` est applicable tel quel dans l'immense majorité des cas débutants.
+
+5. **Corrige la PREMIÈRE erreur, puis recompile.** Les erreurs se lisent de haut en bas ; une seule vraie faute en génère souvent dix en cascade. La première est la cause, les suivantes des dominos.
+
+6. Un diagnostic qui montre du code de la std ? Remonte la pile : la cause est dans TON appel, le message pointe juste l'endroit où le conflit devient visible.
+
+## À retenir
+
+- `error[EXXXX]` : donne le code à `rustc --explain EXXXX` pour la version longue.
+- `--> fichier:ligne:colonne` est le point de départ ; `^^^^` = fautif, `----` = source de l'attente.
+- Les blocs `note:` et `help:` contiennent souvent la correction mot pour mot : lis-les AVANT de coder.
+- Une seule correction à la fois : corrige la première erreur, recompile, recompte.
+- Les cascades sont des dominos : réparer la cause fait disparaître les erreurs d'aval.
+'''
+example = '''
+// Cette fiche apprend à LIRE les erreurs : ici, tout compile.
+// Chaque commentaire nomme l'erreur que tu verrais SI tu cassais la ligne.
+
+fn parse_entier(s: &str) -> i32 {
+    // Sans le type cible (`::<i32>` ou l'annotation de retour) : E0282
+    // « type annotations needed » — rustc ne peut pas deviner le type du parse.
+    match s.trim().parse::<i32>() {
+        Ok(n) => n,
+        // Sans ce bras Err : E0004 (match non exhaustif) ; avec un bras qui
+        // retourne autre chose qu'un i32 : E0308 « mismatched types ».
+        Err(_) => 0,
+    }
+}
+
+fn main() {
+    let texte = String::from("42");
+    // Si tu passais `texte` directement : E0308 « expected &str, found String »,
+    // avec un help qui propose exactement le fix ci-dessous : emprunter.
+    let n = parse_entier(&texte);
+
+    // Si tu écrivais `if n == "42"` : E0308 aussi (i32 contre &str).
+    if n == 42 {
+        println!("la réponse !");
+    } else {
+        println!("n = {n}");
+    }
+
+    // Un code d'erreur t'intrigue ? `rustc --explain E0308` donne la version
+    // longue officielle, avec exemples corrigés.
+    let total: i32 = [1, 2, 3].iter().sum();
+    println!("total = {total}");
+}
+'''
+gotchas = [
+    "Lire seulement la ligne « error: ... » et foncer modifier le code : le fix est plus bas, dans le bloc help.",
+    "Corriger les erreurs de bas en haut : tu répares des cascades au lieu de la cause.",
+    "Ignorer la colonne dans « 3:12 » : elle pointe le caractère exact, pas juste la ligne.",
+    "Survoler les diagnostics de lifetimes par peur : ils ont la même structure que les autres — une section à la fois.",
+    "Traiter warnings et erreurs pareil : un warning ne bloque pas la compile, mais un warning propre aujourd'hui évite un bug demain.",
+    "Oublier que le code d'erreur se donne à `rustc --explain` : c'est la documentation officielle, gratuite et hors ligne.",
+]
+exercises = [
+    "Provoque un E0308 volontairement, lis chaque section du diagnostic à voix haute, puis applique le help proposé sans réfléchir : ça marche ?",
+    "Lance `rustc --explain E0382` et résume en deux phrases ce que la version longue ajoute au diagnostic court.",
+    "Casse ton programme en cinq endroits, ne corrige que la PREMIÈRE erreur affichée, recompile, et observe les cascades disparaître.",
+]
+related = ["erreurs-frequentes", "methodologie-debug", "debugging", "cargo-bases"]

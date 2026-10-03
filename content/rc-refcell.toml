@@ -1,0 +1,97 @@
+id = "rc-refcell"
+title = "Rc et RefCell — partager et muter, sous surveillance"
+category = "ownership"
+tags = ["rc", "refcell", "partage", "mutabilite-interieure", "arc"]
+difficulty = 5
+semaine = "S06"
+synopsis = "Rc<RefCell<T>> : plusieurs propriétaires, mutabilité vérifiée à l'exécution"
+description = '''
+## En une phrase
+
+`Rc<T>` autorise **plusieurs propriétaires** par comptage de références (mono-thread), `RefCell<T>` offre la **mutabilité intérieure** vérifiée à l'exécution — et `Rc<RefCell<T>>` combine les deux.
+
+## En pratique
+
+**Rc<T>** (Reference Counted) : quand un seul propriétaire ne suffit pas (graphes, structures partagées).
+
+```rust
+let a = Rc::new(String::from("donnée"));
+let b = Rc::clone(&a);  // compteur : 2 — PAS de copie du String !
+// la valeur est droppée quand le compteur retombe à 0
+```
+
+Mono-thread **uniquement** (le compilateur refuse d'envoyer un Rc à un autre thread). Et partagé = **immuable** : plusieurs propriétaires, c'est plusieurs lecteurs — la règle d'or interdit l'écriture.
+
+**RefCell<T>** : la mutabilité intérieure. Les règles d'emprunt sont vérifiées **à l'exécution** au lieu de la compilation :
+
+```rust
+let x = RefCell::new(5);
+let m1 = x.borrow_mut();
+let m2 = x.borrow_mut();  // panique à l'exécution : déjà emprunté en mut !
+```
+
+`borrow()` donne un `Ref<T>` (lecture), `borrow_mut()` un `RefMut<T>` (écriture) : mêmes règles que `&`/`&mut`, mais un conflit **panique** au lieu de refuser de compiler. Tu gagnes de la souplesse, tu perds la garantie statique.
+
+**Le combo `Rc<RefCell<T>>`** : plusieurs propriétaires + mutation partagée — LE pattern des graphes et listes doublement chaînées en mono-thread :
+
+```rust
+let partage = Rc::new(RefCell::new(vec![1, 2]));
+let vue = Rc::clone(&partage);
+vue.borrow_mut().push(3); // visible depuis tous les propriétaires
+```
+
+**Multi-thread** : `Arc<T>` (compteur atomique) et `Mutex<T>` (verrou) sont les cousins thread-safe de Rc et RefCell.
+
+**Piège mortel** : un **cycle** de Rc (A pointe B, B pointe A) garde les compteurs au-dessus de 0 pour toujours = **fuite mémoire**. `Weak<T>`, la référence non-propriétaire, sert à casser les cycles.
+
+## À retenir
+
+- Rc = compteur de propriétaires ; `Rc::clone` incrémente le compteur, sans copier la valeur.
+- RefCell = mutabilité intérieure : `borrow()`/`borrow_mut()`, conflit = panic à l'exécution.
+- `Rc<RefCell<T>>` : le standard pour partager ET muter en mono-thread.
+- Threads → `Arc` + `Mutex` : mêmes idées, version atomique et verrouillée.
+- Cycles de Rc = fuites garanties ; `Weak<T>` pour les casser.
+'''
+example = '''
+use std::cell::RefCell;
+use std::rc::Rc;
+
+fn main() {
+    // Rc : plusieurs propriétaires, UNE seule valeur sur le tas
+    let texte = Rc::new(String::from("partagé"));
+    let p1 = Rc::clone(&texte); // compteur : 2 — AUCUNE copie du String
+    let p2 = Rc::clone(&texte); // compteur : 3
+    println!("propriétaires : {}", Rc::strong_count(&texte));
+    println!("même tas : {}", p1.as_ptr() == p2.as_ptr());
+    println!("p1 = {p1}, p2 = {p2}");
+
+    // RefCell : mutabilité intérieure, règles vérifiées À L'EXÉCUTION
+    let compte = RefCell::new(0);
+    *compte.borrow_mut() += 10; // l'emprunt mutable meurt en fin d'instruction
+    *compte.borrow_mut() += 32; // donc celui-ci est accepté
+    println!("compte = {}", compte.borrow()); // lecture
+
+    // Le combo classique : partagé ET mutable
+    let historique: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]));
+    let vue1 = Rc::clone(&historique);
+    let vue2 = Rc::clone(&historique);
+    vue1.borrow_mut().push(String::from("login"));
+    vue2.borrow_mut().push(String::from("click"));
+    println!("historique partagé : {:?}", historique.borrow());
+    // Deux borrow_mut VIVANTS en même temps → panic (voir la description)
+}
+'''
+gotchas = [
+    "Confondre Rc::clone et .clone() : Rc::clone incrémente un compteur (quasi gratuit), .clone() sur la valeur copierait tout.",
+    "Garder un borrow() vivant puis appeler borrow_mut() : panic à l'exécution — le compilateur n'y voit rien.",
+    "Utiliser Rc entre threads : le compilateur refuse (Rc n'est pas Send) — c'est Arc qu'il te faut.",
+    "Créer un cycle de Rc (parent pointe enfant, enfant pointe parent) : fuite mémoire garantie — casse avec Weak<T>.",
+    "Croire que RefCell supprime les règles d'emprunt : il les DÉPLACE à l'exécution — un conflit panique au lieu d'empêcher de compiler.",
+    "Oublier que RefCell n'est pas Sync : en multi-thread, ses équivalents sont Mutex et RwLock.",
+]
+exercises = [
+    "Construis un Rc<RefCell<Vec<i32>>> partagé par trois variables, ajoute un élément via chacune, puis affiche le vecteur final.",
+    "Provoque volontairement le panic « already mutably borrowed » avec deux borrow_mut vivants, puis corrige en limitant leurs scopes.",
+    "Affiche Rc::strong_count avant et après plusieurs drop de clones pour visualiser le compteur qui descend.",
+]
+related = ["ownership", "clone-copy", "drop-raii", "lifetimes", "vec"]

@@ -1,0 +1,25 @@
+id = "q-struct-init"
+category = "bases"
+difficulty = 2
+question = '''
+Que signifie la syntaxe de la dernière ligne ?
+
+```rust
+struct User { nom: String, age: u8 }
+
+fn new(nom: String, age: u8) -> User {
+    User { nom, age }
+}
+```
+'''
+choices = [
+    "C’est une erreur : il faut obligatoirement écrire `User { nom: nom, age: age }`",
+    "C’est la syntaxe de mise à jour qui copie les champs depuis une autre instance de User",
+    "C’est le raccourci « field init shorthand » : les champs prennent la valeur des variables locales du même nom",
+    "Les variables nom et age sont clonées puis déplacées dans la struct",
+]
+answer = 2
+explanation = '''
+Quand une variable locale porte exactement le nom du champ, Rust permet de n’écrire le nom qu’une fois : `User { nom, age }` vaut `User { nom: nom, age: age }`. C’est purement syntaxique, aucun clone supplémentaire : les valeurs sont déplacées normalement dans la struct. Le piège : confondre avec la syntaxe de mise à jour `User { age: 30, ..autre }` qui, elle, récupère les champs RESTANTS depuis une autre instance — le `..` fait toute la différence.
+'''
+related = ["structs"]

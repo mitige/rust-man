@@ -1,0 +1,92 @@
+id = "variables-mutabilite"
+title = "let — immuable par défaut, mutable sur demande"
+category = "bases"
+tags = ["let", "mut", "shadowing", "const", "immuabilite"]
+difficulty = 1
+semaine = "S01"
+synopsis = "let x = 5;  // x est figée — mut la déverrouille, un nouveau let la redéfinit"
+description = '''
+## En une phrase
+
+En Rust, toute variable est **immuable par défaut** : la mutabilité est un droit que tu accordes explicitement avec `mut`, jamais un défaut.
+
+## En pratique
+
+1. `let x = 5;` crée une variable immuable : tenter `x = 6;` est refusé à la compilation.
+2. `let mut x = 5;` autorise la réassignation : `x = 6;` passe. Mais le type reste figé.
+3. Le shadowing : `let x = x + 1;` crée une NOUVELLE variable qui masque l'ancienne. Le type peut changer, et la nouvelle redevient immuable.
+
+```rust
+let espaces = "   ";
+let espaces = espaces.len(); // &str → usize : shadowing, pas de mut
+```
+
+4. mut vs shadowing, la différence qui compte :
+
+```
+mut       → MÊME variable, MÊME type, contenu modifié
+shadowing → NOUVELLE variable, type libre, ancienne inaccessible
+```
+
+5. `const` : une vraie constante de compilation — MAJUSCULES par convention, type OBLIGATOIRE, valeur connue à la compilation, jamais de `mut`.
+
+```rust
+const VITESSE_MAX: u32 = 130;
+```
+
+6. `static`, en une mention : une variable globale qui vit tout le programme (durée 'static), type obligatoire. `static mut` existe mais exige `unsafe` — n'y touche pas encore.
+
+Pourquoi ce défaut ? Une variable qui ne peut pas changer est une variable que tu n'as pas à traquer. Le compilateur te force à déclarer tes intentions — et la majorité des variables n'ont jamais besoin de changer.
+
+## À retenir
+
+- immuable par défaut, `mut` sur demande
+- shadowing = nouveau `let`, type différent possible
+- mut réassigne la même case, shadowing en crée une nouvelle
+- `const NOM: Type = valeur;` : MAJUSCULES, type requis, pas de mut
+- `static` = globale pour tout le programme ; `static mut` = unsafe
+- entre mut et shadowing, le shadowing se lit souvent mieux
+'''
+example = '''
+const NB_VIES_MAX: u32 = 3; // const : MAJUSCULES + type obligatoire
+
+static VERSION: &str = "1.0.0"; // static : globale, vit tout le programme
+
+fn main() {
+    // 1. immuable par défaut
+    let score = 0;
+    println!("score initial : {score}");
+
+    // 2. mut autorise la réassignation
+    let mut vies = NB_VIES_MAX;
+    vies -= 1; // aïe
+    println!("vies restantes : {vies}/{NB_VIES_MAX}");
+
+    // 3. shadowing : on redéfinit avec un nouveau let
+    let x = 5;
+    let x = x + 1; // nouvelle variable, l'ancienne est masquée
+    let x = format!("valeur : {x}"); // le type peut changer !
+    println!("x après deux shadowings : {x}");
+
+    // mut n'aurait pas permis ce changement de type
+    let saisie = "  42  ";
+    let saisie: u32 = saisie.trim().parse().expect("nombre attendu");
+    println!("saisie convertie : {saisie}");
+
+    println!("version du programme : {VERSION}");
+}
+'''
+gotchas = [
+    "« cannot assign twice to immutable variable » : il manque un mut — ou, mieux, un shadowing.",
+    "Le shadowing peut changer de type, pas mut : let mut s = \"txt\"; s = 3; est refusé.",
+    "Après un shadowing, l'ancienne valeur est masquée mais pas détruite : une référence prise avant reste valide.",
+    "Une const n'accepte ni mut ni valeur calculée à l'exécution : tout doit être connu à la compilation.",
+    "static mut est unsafe : y toucher exige un bloc unsafe, garde ça pour plus tard.",
+    "Masquer une variable par accident (un let de trop) la rend silencieusement inaccessible : nomme clairement.",
+]
+exercises = [
+    "Convertis un prix saisi en texte (\"19.99\") en nombre puis en prix TTC, uniquement par shadowing, sans aucun mut.",
+    "Déclare const TAUX_TVA: f64 = 0.20; et utilise-la dans le calcul précédent.",
+    "Reprends un de tes programmes avec mut et réécris-le en shadowing : lequel se lit le mieux ?",
+]
+related = ["types-scalaires", "expressions-vs-instructions", "ownership", "clone-copy"]

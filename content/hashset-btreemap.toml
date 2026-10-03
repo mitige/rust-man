@@ -1,0 +1,93 @@
+id = "hashset-btreemap"
+title = "hashset-btreemap — ensembles et ordre trié"
+category = "collections"
+tags = ["hashset", "btreemap", "btreeset", "tri", "ensembles"]
+difficulty = 3
+semaine = "S05"
+synopsis = '''let s: HashSet<_> = [1, 2, 2].into_iter().collect(); // {1, 2} — doublon éliminé'''
+description = '''
+## En une phrase
+
+`HashSet` est une HashMap sans valeur (un **ensemble** : présence et dédoublonnage), et `BTreeMap` / `BTreeSet` sont leurs cousins **triés** par la clé.
+
+## En pratique
+
+1. `HashSet<T>` : `insert` ignore les doublons (et renvoie `false` si l'élément y était déjà), `contains(&x)` → `bool`. Parfait pour « est-ce que je l'ai déjà vu ? ».
+2. L'algèbre des ensembles est incluse : `union`, `intersection`, `difference`, `symmetric_difference`. Chacune renvoie un **itérateur paresseux** : collecte-le pour obtenir un nouveau set.
+
+```rust
+let commun: HashSet<_> = a.intersection(&b).collect();
+```
+
+3. `BTreeMap<K, V>` et `BTreeSet<T>` : même API que Hash*, mais les clés sont **toujours parcourues dans l'ordre trié**. La clé doit être `Ord` (pas besoin de `Hash`).
+4. Sous le capot : un arbre B équilibré au lieu d'une table de hachage → get/insert en **O(log n)** au lieu de O(1) moyen. En échange : ordre garanti, `first_key_value()`, et `range(a..b)` pour les intervalles.
+5. Comment choisir :
+
+```
+Besoin                              →  Collection
+accès par clé le plus rapide        →  HashMap / HashSet
+itérer dans l'ordre trié des clés   →  BTreeMap / BTreeSet
+recherche par intervalle (range)    →  BTreeMap / BTreeSet
+clé Ord mais difficile à hasher     →  BTreeMap / BTreeSet
+```
+
+6. Mention perf : la table de hachage de la std (SipHash) résiste aux attaques par collisions ; pour du calcul purement interne, des crates comme `fxhash` hachent plus vite (hors std, à connaître).
+7. Dédoublonner un vec en deux lignes : `v.into_iter().collect::<HashSet<_>>()` — ou `collect::<BTreeSet<_>>()` si tu veux en plus le tri.
+
+## À retenir
+
+- HashSet = présence + dédoublonnage, `contains` en O(1) moyen.
+- `union` / `intersection` / `difference` : itérateurs paresseux à collecter.
+- BTreeMap / BTreeSet = triés par la clé (clé `Ord`), O(log n).
+- HashMap rapide et non triée vs BTreeMap ordonnée : choisis selon ton besoin d'ordre.
+- Dans un Set, il n'y a pas de valeur : la donnée EST la clé.
+'''
+example = '''
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+fn main() {
+    // HashSet : chaque élément une seule fois
+    let mut presents = HashSet::new();
+    presents.insert("alice");
+    presents.insert("bob");
+    presents.insert("alice"); // doublon ignoré, insert renvoie false
+    println!("{} présents, alice ? {}", presents.len(), presents.contains("alice"));
+
+    // Algèbre des ensembles : union / intersection (itérateurs paresseux)
+    let a: HashSet<i32> = [1, 2, 3].into_iter().collect();
+    let b: HashSet<i32> = [2, 3, 4].into_iter().collect();
+    let commun: HashSet<_> = a.intersection(&b).collect();
+    println!("intersection : {:?}", commun); // {2, 3}
+
+    // BTreeSet : toujours trié, dédoublonné
+    let notes: BTreeSet<i32> = [15, 9, 12, 9].into_iter().collect();
+    println!("trié et dédoublonné : {:?}", notes); // {9, 12, 15}
+
+    // BTreeMap : clés parcourues dans l'ordre trié
+    let mut classement = BTreeMap::new();
+    classement.insert("carol", 90);
+    classement.insert("alice", 75);
+    classement.insert("bob", 82);
+    for (nom, note) in &classement {
+        println!("{} : {}", nom, note); // alice, bob, carol : ordre garanti
+    }
+
+    // Bonus BTreeMap : range sur un intervalle de clés
+    let n_en_b: BTreeMap<_, _> = classement.range("b"..).collect();
+    println!("à partir de b : {:?}", n_en_b);
+}
+'''
+gotchas = [
+    "union et intersection renvoient des itérateurs paresseux : sans collect(), rien ne s'exécute.",
+    "BTreeMap exige Ord sur la clé, pas Hash : un struct non hashable peut quand même en être la clé.",
+    "L'ordre d'itération d'une HashSet est pseudo-aléatoire : trie avant de comparer un affichage dans un test.",
+    "HashSet::insert renvoie un bool : false signifie que l'élément y était déjà.",
+    "Dans un BTreeSet, deux éléments égaux selon Ord ne cohabitent pas : insert remplace l'ancien.",
+    "collect::<HashSet<_>>() dédoublonne mais perd l'ordre d'origine ; collect::<BTreeSet<_>>() trie.",
+]
+exercises = [
+    "Lis une phrase et affiche ses mots uniques triés alphabétiquement avec un BTreeSet<&str>.",
+    "Avec deux HashSet<i32>, affiche l'intersection puis la différence symétrique.",
+    "Simule un annuaire trié (BTreeMap<String, String>) et n'affiche que les noms entre 'a' et 'm' avec range.",
+]
+related = ["hashmap", "vec", "option", "iterateurs", "traits"]

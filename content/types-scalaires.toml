@@ -1,0 +1,86 @@
+id = "types-scalaires"
+title = "types scalaires — entiers, flottants, bool, char, unit"
+category = "bases"
+tags = ["i32", "f64", "bool", "char", "overflow", "unit"]
+difficulty = 1
+semaine = "S01"
+synopsis = "let n = 42;  // n: i32 — l'entier par défaut ; suffixes et underscores à la rescousse"
+description = '''
+## En une phrase
+
+Rust a **quatre familles de types scalaires** — entiers, flottants, booléens, caractères — plus le type unit `()`, et chaque littéral a un défaut : i32 pour les entiers, f64 pour les flottants.
+
+## En pratique
+
+1. Entiers : signés i8 i16 i32 i64 i128, non signés u8 u16 u32 u64 u128, et isize/usize calés sur l'architecture (64 bits sur un PC moderne). Sans annotation, un littéral entier est **i32**.
+
+```
+type        taille     plage
+i8          1 octet    -128 ..= 127
+u8          1 octet    0 ..= 255
+i32         4 octets   ±2,1 milliards     ← le défaut
+u32         4 octets   0 ..= 4,2 milliards
+i64         8 octets   ±9,2 · 10^18
+isize/usize archi      index, tailles, adresses (usize partout)
+```
+
+2. Flottants : f32 (simple précision) et f64 (double). Défaut : **f64** — aussi rapide sur machine moderne, deux fois plus précis.
+3. bool : true ou false, un octet. Aucune conversion implicite depuis un nombre.
+4. char : un « Unicode scalar value », **4 octets**, entre apostrophes simples : 'a', 'é', '🦀'. Un char n'est PAS un octet — un octet brut, c'est u8.
+5. Le type unit `()` : le « rien » typé. Une fonction sans `->` renvoie (), une instruction vaut ().
+6. Littéraux : suffixe de type collé (`42u8`, `3.5f32`) et underscores libres pour la lisibilité : `1_000_000` vaut `1000000`.
+7. Dépassement (overflow) : en build debug, dépasser la plage fait PANIQUER le programme ; en release, la valeur s'enroule silencieusement (u8 : 255 + 1 → 0). Les méthodes checked_*, wrapping_*, saturating_* te redonnent le contrôle.
+
+## À retenir
+
+- entiers : i8..i128 / u8..u128 / isize-usize — défaut i32
+- flottants : f32 ou f64 — défaut f64
+- char = 4 octets Unicode ; un octet = u8
+- `()` est à la fois le type et la valeur « rien »
+- `1_000_000` et `42u8` : lisibilité et précision au niveau du littéral
+- overflow : panic en debug, enroulement en release → pense à checked_add
+'''
+example = '''
+fn main() {
+    // entiers : le suffixe ou l'annotation choisit le type
+    let a = 42;                 // i32 par défaut
+    let b: u8 = 255;            // non signé, 0..=255
+    let grand = 1_000_000_i64;  // underscores = lisibilité
+
+    // flottants : f64 par défaut
+    let pi = 3.14159;      // f64
+    let e: f32 = 2.71828;  // f32 explicite
+
+    // booléen et caractère
+    let est_majeur: bool = true;
+    let crabe: char = '🦀'; // char = 4 octets, Unicode complet
+
+    // le type unit () : la valeur « vide »
+    let rien: () = ();
+
+    println!("a={a}, b={b}, grand={grand}");
+    println!("pi={pi}, e={e}, majeur={est_majeur}, crabe={crabe}");
+    println!("unit : {rien:?}");
+
+    // dépassement : en debug ça panique — alors on calcule en sécurité
+    let max = u8::MAX;
+    println!("u8::MAX = {max}");
+    println!("max + 1 en contrôlé : {:?}", max.checked_add(1)); // None
+    println!("max + 1 en enroulé  : {}", max.wrapping_add(1));  // 0
+    println!("max + 1 en saturé   : {}", max.saturating_add(1)); // 255
+}
+'''
+gotchas = [
+    "let x: u8 = 256; ne compile pas : le dépassement de plage d'un littéral est détecté à la compilation.",
+    "En debug, 200u8 + 100 panique à l'exécution ; en --release, le résultat s'enroule à 44 sans prévenir.",
+    "La division entière par zéro panique TOUJOURS, même compilée en release.",
+    "Aucune conversion implicite entre numériques : additionner un i32 et un i64 exige un as ou un from explicite.",
+    "'a' est un char (4 octets), \"a\" est une &str, b'a' est un u8 : trois types, trois syntaxes.",
+    "Un calcul en f32 ne donne pas les mêmes décimales qu'en f64 : la précision fait partie du type.",
+]
+exercises = [
+    "Affiche les bornes de i8, u8 et i32 avec les constantes associées (i8::MIN, i8::MAX, ...).",
+    "Convertis une distance de f64 vers f32 puis vers i32 : qu'as-tu perdu à chaque étape ?",
+    "Provoque un overflow en debug avec let mut x = u8::MAX; x += 1;, lis le panic, puis répare avec checked_add.",
+]
+related = ["variables-mutabilite", "fonctions", "conversions", "expressions-vs-instructions"]

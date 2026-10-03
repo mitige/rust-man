@@ -1,0 +1,24 @@
+id = "q-emprunt-melange"
+category = "ownership"
+difficulty = 3
+question = '''
+Pourquoi ce code est-il refusé ?
+
+```rust
+let mut v = vec![1, 2, 3];
+let premier = &v[0];
+v.push(4);
+println!("{premier}");
+```
+'''
+choices = [
+    "On ne peut pas emprunter un élément d’un Vec, seulement le Vec entier",
+    "println! consomme premier, ce qui entre en conflit avec le push précédent",
+    "`push` prend un `&mut v` alors que l’emprunt immuable `premier` est encore utilisé après : mélange interdit",
+    "Le Vec n’a pas été créé avec une capacité suffisante pour un push après un emprunt",
+]
+answer = 2
+explanation = '''
+`push` a besoin d’un emprunt mutable de v, mais `premier` — un emprunt immuable — est encore vivant au moment du println! : un `&` et un `&mut` ne peuvent pas se chevaucher. La raison profonde est physique : push peut RÉALLOUER le buffer du Vec, et premier deviendrait alors un pointeur vers de la mémoire libérée. Piège : croire que le problème est l’ordre des lignes — ce qui compte, ce sont les durées de vie des emprunts (analysées par NLL) ; déplacer le println! avant le push rendrait le code valide.
+'''
+related = ["emprunts", "emprunts-mutables", "vec"]

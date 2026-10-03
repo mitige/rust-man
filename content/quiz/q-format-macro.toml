@@ -1,0 +1,8 @@
+id = "q-format-macro"
+category = "collections"
+difficulty = 1
+question = "Que fait exactement `let s = format!(\"{nom} a {age} ans\");` ?"
+choices = ["Elle affiche le texte sur la console puis renvoie `()`", "Elle modifie les variables `nom` et `age` pour y stocker le résultat", "Elle renvoie un `&str` emprunté à un buffer interne réutilisable", "Elle construit et renvoie une nouvelle `String`, sans rien afficher"]
+answer = 3
+explanation = '''`format!` est la sœur silencieuse de `println!` : même syntaxe de formatage, mais au lieu d'imprimer, elle alloue et renvoie une `String` possédée. C'est l'outil standard pour construire des chaînes par interpolation (bien plus lisible que les `+` ou `push_str` en chaîne). Règle générale : `print!`/`println!` écrivent, `format!` construit, `write!` remplit un buffer existant. Piège : oublier que le résultat est une `String` ALLouée — dans une boucle chaude, préfère `write!` sur une `String` réutilisée.'''
+related = ["chaines-bases", "string-manipulation", "string-vs-str"]

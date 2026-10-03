@@ -1,0 +1,15 @@
+id = "q-enum-donnees"
+category = "bases"
+difficulty = 2
+question = "Qu’est-ce qui distingue fondamentalement les enums de Rust de ceux du C ou de Java ?"
+choices = [
+    "Chaque variante peut transporter des données, de types différents d’une variante à l’autre",
+    "Les enums de Rust ne peuvent pas être comparés avec `==`, contrairement aux enums C",
+    "Les variantes sont obligatoirement numérotées de 0 à N par le compilateur",
+    "Un enum Rust ne peut pas avoir de méthodes, seulement des constantes",
+]
+answer = 0
+explanation = '''
+Un enum Rust est un type somme : `enum Message { Quitter, Deplacer { x: i32, y: i32 }, Texte(String) }` — chaque variante a sa propre forme et transporte ses propres données. On extrait ces données avec un `match`, qui force à traiter toutes les variantes. Les enums C ne sont que des entiers déguisés ; ceux de Java, des singletons. Piège : croire qu’enum = simple liste de constantes — c’est exactement cette idée reçue qui rend Option et Result si surprenants au début.
+'''
+related = ["enums", "match"]

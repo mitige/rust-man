@@ -1,0 +1,96 @@
+id = "methode-apprentissage"
+title = "methode-apprentissage — apprendre Rust à côté des cours"
+category = "demarrer"
+tags = ["methode", "regularite", "journal", "borrow-checker", "courbe"]
+difficulty = 1
+semaine = "S01"
+synopsis = "lire -> taper -> casser -> réparer -> quiz -> expliquer"
+description = '''
+## En une phrase
+
+Rust s'apprend comme un instrument : **peu mais tous les jours**, les mains sur le clavier, avec une boucle d'apprentissage actif au lieu de lectures passives.
+
+## En pratique
+
+La boucle, pour chaque fiche :
+
+```text
+lire  ->  taper l'exemple TOI-MÊME (pas copier-coller)
+       ->  le CASSER volontairement (enlever un &, muter une variable...)
+       ->  lire l'erreur du compilateur, RÉPARER
+       ->  passer le quiz de la fiche
+       ->  EXPLIQUER la notion à voix haute en 3 phrases
+```
+
+Pourquoi casser exprès ? L'erreur de compilation est le cœur de l'expérience Rust. Si tu ne vois les erreurs que par accident, elles te font peur ; si tu les provoques, elles deviennent des outils.
+
+La courbe d'apprentissage de Rust, telle que tout le monde la vit :
+
+1. **Semaines 1-2** : « c'est juste un langage de plus, avec un point-virgule en plus ».
+2. **Semaines 3-4** : le borrow checker devient ton ennemi. « Le compilateur me combat. » C'est NORMAL, c'est le passage obligé.
+3. **Semaines 5-6** : tu commences à anticiper ses refus avant de compiler.
+4. **Après** : le compilateur devient ton allié — il attrape des bugs que C ou Python laisseraient filer jusqu'en production. C'est là que Rust devient agréable.
+
+Les règles du jeu :
+
+- **Régularité > volume.** 30 minutes par jour battent 5 heures le dimanche. La mémoire se consolide entre les sessions, pas pendant.
+- **Tiens un journal** : un fichier texte, une ligne par session — ce que tu as lu, ce qui a coincé, ce que tu as compris. Relire « ce qui a coincé » une semaine plus tard est le meilleur quiz qui existe.
+- **Cale-toi sur tes cours** : quand le prof introduit l'ownership, refais les fiches S03 le soir même, pendant que c'est chaud.
+
+## À retenir
+
+- Taper l'exemple soi-même, jamais copier-coller : c'est la frappe qui apprend.
+- Casser volontairement le code transforme les erreurs du compilateur en outils pédagogiques.
+- Le borrow checker passe d'ennemi à allié autour des semaines 5-6 : tiens bon.
+- 30 minutes quotidiennes > 5 heures le week-end.
+- Un journal d'apprentissage (lu, coincé, compris) est ton meilleur outil de révision.
+'''
+example = '''
+// Un mini-journal d'apprentissage, version Rust.
+struct Session {
+    jour: &'static str,
+    sujet: &'static str,
+    coince: &'static str,   // ce qui a coincé
+    compris: &'static str,  // ce que tu as compris en réparant
+}
+
+fn main() {
+    let journal = [
+        Session {
+            jour: "lundi",
+            sujet: "variables-mutabilite",
+            coince: "réassigner une variable non mut",
+            compris: "immutabilité par défaut, mut explicite",
+        },
+        Session {
+            jour: "mardi",
+            sujet: "premier-programme",
+            coince: "println sans le !",
+            compris: "println! est une macro, pas une fonction",
+        },
+    ];
+
+    println!("=== Journal Rust ===");
+    for s in &journal {
+        println!("{} : {}", s.jour, s.sujet);
+        println!("   coincé sur : {}", s.coince);
+        println!("   compris    : {}", s.compris);
+    }
+
+    // La boucle magique : lire -> taper -> casser -> réparer -> quiz -> expliquer.
+    println!("\nProchaine session : 30 min, une fiche, les mains sur le clavier.");
+}
+'''
+gotchas = [
+    "Le copier-coller des exemples donne une illusion de compétence : tu reconnais le code, mais tu ne sais pas le produire.",
+    "Bachoter 5 heures la veille du cours marche encore moins en Rust qu'ailleurs : l'ownership demande du temps de maturation.",
+    "Abandonner pendant les semaines 3-4, exactement au moment où le borrow checker est le plus pénible — c'est à deux semaines du déclic.",
+    "Ne pas lire les messages d'erreur du compilateur : ils sont remarquablement pédagogiques, les lire EST la méthode.",
+    "Tenir un journal qu'on ne relit jamais : la valeur est dans la relecture, pas dans l'écriture.",
+]
+exercises = [
+    "Crée ton fichier journal et écris-y la première entrée : fiche lue, ce qui a coincé, ce que tu as compris.",
+    "Prends l'exemple de cette fiche, casse-le (retire un & devant journal), lis l'erreur, répare, et note l'erreur dans ton journal.",
+    "Explique à voix haute, en trois phrases, la différence entre mut et une réassignation classique en C : si tu hésites, relis la fiche variables-mutabilite.",
+]
+related = ["roadmap", "bienvenue", "borrow-checker-paix", "lire-erreur-rustc", "conseils-cours"]

@@ -1,0 +1,113 @@
+id = "rustdoc"
+title = "rustdoc — une documentation qui passe les tests"
+category = "outils"
+tags = ["rustdoc", "documentation", "doctests", "markdown"]
+difficulty = 2
+semaine = "S05"
+synopsis = "/// documente en markdown, et les exemples de la doc sont compilés et exécutés par cargo test."
+description = '''
+## En une phrase
+
+Les commentaires de doc `///` rédigent la documentation en **markdown** au-dessus de chaque élément, et les blocs de code qu'ils contiennent sont exécutés comme de vrais tests par `cargo test` — une doc obsolète fait échouer la build.
+
+## En pratique
+
+1. `///` documente l'élément qui SUIT (fonction, struct, champ, enum) ; `//!` documente l'élément qui CONTIENT (module, fichier, crate) et se place en tout début de fichier.
+
+```rust
+//! Utilitaires de notes pour le semestre.   // <- le module
+
+/// Calcule la moyenne.                      // <- la fonction qui suit
+fn moyenne(notes: &[f64]) -> f64 { /* ... */ }
+```
+
+2. Le markdown complet est disponible : **gras**, `code`, listes, liens, titres. Les conventions de sections : `# Examples`, `# Panics`, `# Errors`, `# Safety` (pour l'unsafe).
+
+3. `# Panics` et `# Errors` : documente QUAND la fonction panique et QUELLES erreurs elle peut renvoyer — c'est le contrat que ton utilisateur lit en premier, avant même tes exemples.
+
+```rust
+/// # Panics
+/// Panique si `notes` est vide.
+/// # Errors
+/// Renvoie `Err` si le fichier est illisible.
+```
+
+4. Les exemples sont des **doctests** : compilés et exécutés par `cargo test`. Une doc qui ment (fonction renommée, comportement changé) fait échouer la suite — c'est le garde-fou anti-doc-périmée, et ça change tout par rapport aux commentaires du C ou de Python.
+
+5. Lignes masquées (mention) : un `#` en début de ligne de doctest l'exécute sans l'afficher dans la doc générée — parfait pour cacher le boilerplate.
+
+```rust
+/// ```
+/// # fn main() {
+/// let m = moyenne(&[10.0, 14.0]);   // cette ligne, elle, reste visible
+/// # }
+/// ```
+```
+
+6. `cargo doc --open` génère le site HTML (le même moteur que docs.rs) et l'ouvre dans ton navigateur — avec la doc de tes dépendances incluse.
+
+## À retenir
+
+- `///` pour l'élément qui suit, `//!` pour le module ou fichier qui contient.
+- Markdown complet ; sections conventionnelles : `# Examples`, `# Panics`, `# Errors`, `# Safety`.
+- Les blocs ``` de la doc sont des doctests : compilés et exécutés par `cargo test`.
+- `#` en tête de ligne de doctest = exécuté mais masqué dans le HTML.
+- `cargo doc --open` génère et ouvre la doc HTML locale.
+'''
+example = '''
+//! Mini-bibliothèque de notes — génère la doc avec `cargo doc --open`.
+//! Les lignes `//!` documentent l'élément qui les contient : ici, le fichier.
+
+/// Calcule la moyenne d'une série de notes.
+///
+/// # Panics
+///
+/// Panique si la série est vide.
+///
+/// # Examples
+///
+/// ```
+/// let notes = [10.0, 12.0, 14.0];
+/// assert_eq!(moyenne(&notes), 12.0);
+/// ```
+fn moyenne(notes: &[f64]) -> f64 {
+    assert!(!notes.is_empty(), "moyenne d'une série vide");
+    notes.iter().sum::<f64>() / notes.len() as f64
+}
+
+/// Renvoie la meilleure note de la série.
+///
+/// # Errors
+///
+/// Renvoie `Err` si la série est vide.
+fn meilleure(notes: &[f64]) -> Result<f64, String> {
+    notes
+        .iter()
+        .copied()
+        .reduce(f64::max)
+        .ok_or_else(|| "série vide".to_string())
+}
+
+fn main() {
+    let notes = [10.0, 12.0, 14.0];
+    println!("moyenne : {}", moyenne(&notes));
+    match meilleure(&notes) {
+        Ok(m) => println!("meilleure note : {m}"),
+        Err(e) => println!("erreur : {e}"),
+    }
+    // Dans un vrai projet, `cargo test` exécuterait aussi l'exemple de la doc.
+}
+'''
+gotchas = [
+    "Un exemple de doc obsolète fait échouer `cargo test` : la doc est du code, maintiens-la comme du code.",
+    "Placer `//!` après du code : il doit être en tout début de fichier ou de module, sinon erreur de compilation.",
+    "Documenter seulement le QUOI (« renvoie la moyenne ») sans le contrat : `# Panics` et `# Errors` sont les sections que l'utilisateur cherche.",
+    "Oublier que les doctests s'exécutent comme des utilisateurs EXTERNES de ta crate : ils ne voient que le `pub`.",
+    "Écrire des doctests dépendants de l'environnement (fichiers, réseau, ordre) : ils tournent en parallèle, comme tous les tests.",
+]
+exercises = [
+    "Documente une de tes fonctions avec `///`, ajoute un `# Examples`, puis fais échouer le doctest volontairement pour voir le message de `cargo test`.",
+    "Ajoute `//!` en tête d'un module, un `# Panics` et un `# Errors`, lance `cargo doc --open` et relis-toi comme un utilisateur.",
+    "Masque le boilerplate d'un doctest avec des lignes `#` et vérifie le rendu dans le HTML généré.",
+]
+related = ["tests", "lire-la-doc", "modules-use", "cargo-bases"]

@@ -1,0 +1,96 @@
+id = "clone-copy"
+title = "Copy et Clone — la copie invisible et la copie assumée"
+category = "ownership"
+tags = ["copy", "clone", "copie", "move", "derive"]
+difficulty = 2
+semaine = "S04"
+synopsis = "Copy copie en silence (i32) — Clone copie quand tu le demandes (.clone())"
+description = '''
+## En une phrase
+
+Les types `Copy` se **dupliquent implicitement** à l'affectation ; tout le reste se déplace — et `Clone` offre une **copie profonde explicite** via `.clone()`.
+
+## En pratique
+
+**Copy** est un trait marqueur pour les types dont la copie bit-à-bit suffit :
+
+- scalaires : `i32`, `u64`, `f64`, `bool`, `char`...
+- tuples et tableaux **de Copy** : `(i32, bool)`, `[u8; 4]`
+- tes propres structs si TOUS les champs sont Copy : `#[derive(Copy, Clone)]`
+
+```rust
+let x = 42;
+let y = x;      // COPIE : x reste valide — i32 est Copy
+```
+
+Pour ces types, tout tient sur la pile : copier ne coûte rien, invalider l'original serait absurde. `String` et `Vec` ne seront **jamais** Copy : ils possèdent une ressource sur le tas, et deux copies naïves libéreraient le même tas.
+
+**Clone** : la copie profonde, explicite.
+
+```rust
+let a = String::from("data");
+let b = a.clone();  // nouvelle allocation, octets copiés — a ET b vivent
+```
+
+Pourquoi Rust rend-il la copie chère **visible** ? Parce que cloner une String d'un méga-octet alloue et copie un méga-octet. Un langage qui cache ce coût derrière `=` te fait écrire du code lent sans le savoir. Le `.clone()` est une signature : « j'assume le coût, ici ».
+
+**Move vs clone, en pratique** :
+
+1. Tu n'as plus besoin de l'originale → **move** (gratuit).
+2. Tu veux juste la consulter → **emprunte** `&T` (gratuit).
+3. Tu veux deux possesseurs indépendants → **clone** (payant, assumé).
+
+Note : `Copy` implique `Clone` (tout type Copy est aussi Clone), l'inverse est faux.
+
+## À retenir
+
+- Copy = copie implicite et triviale, réservée aux types 100 % pile.
+- Clone = copie profonde explicite via `.clone()`, visible à la lecture du code.
+- Move d'abord, emprunt ensuite, clone en dernier recours.
+- `String` et `Vec` : jamais Copy — le tas ne se duplique pas en silence.
+- `#[derive(Copy, Clone)]` : les deux ensemble, et tous les champs doivent être Copy.
+'''
+example = '''
+fn main() {
+    // Copy : copie implicite, l'originale survit
+    let x = 42;
+    let y = x; // COPIE (i32 est Copy) — x reste valide
+    println!("x = {x}, y = {y} : les deux vivent");
+
+    // Scalaires, char, bool, tuples de Copy : tous Copy
+    let t = ('é', 3.5, true);
+    let t2 = t; // copie aussi
+    println!("t = {t:?}, t2 = {t2:?}");
+
+    // String n'est PAS Copy : c'est un move
+    let s1 = String::from("originale");
+    let s2 = s1; // MOVE — s1 n'existe plus
+    // println!("{s1}"); // décommente → erreur
+    println!("s2 = {s2}");
+
+    // Clone : copie profonde EXPLICITE — deux Strings, deux tas
+    let a = String::from("partagée");
+    let b = a.clone(); // nouvelle allocation, a survit
+    println!("a = {a}, b = {b} : deux propriétaires indépendants");
+
+    // Modifier le clone ne touche jamais l'originale
+    let mut v1 = vec![1, 2, 3];
+    let mut v2 = v1.clone();
+    v1.push(0);
+    v2.push(4);
+    println!("v1 = {v1:?}, v2 = {v2:?}");
+}
+'''
+gotchas = [
+    "Abuser de .clone() pour faire taire le borrow checker : chaque clone alloue — emprunte d'abord, clone en dernier recours.",
+    "Croire que Copy marche pour String/Vec : jamais — ils possèdent une ressource sur le tas, copier serait un double free en puissance.",
+    "Oublier que #[derive(Copy, Clone)] exige que TOUS les champs de ta struct soient Copy, sinon la dérivation échoue.",
+    "Penser que le clone d'un Vec<Vec<T>> est superficiel : non, Clone copie profondément, tout est dupliqué.",
+    "Confondre les deux mots « copie » : Copy est implicite et gratuit, Clone est explicite et potentiellement coûteux.",
+]
+exercises = [
+    "Crée une struct Point { x: f64, y: f64 }, dérive Copy et Clone, et montre que `let p2 = p1;` garde p1 valide.",
+    "Écris une fonction qui reçoit une String et garde-la utilisable après l'appel DEUX façons : par référence, puis par clone. Compare.",
+    "Sur une grosse String, compare len, capacity et as_ptr avant/après un move puis un clone pour visualiser la différence.",
+]
+related = ["ownership", "types-scalaires", "derive", "structs"]

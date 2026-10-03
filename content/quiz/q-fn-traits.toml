@@ -1,0 +1,8 @@
+id = "q-fn-traits"
+category = "types"
+difficulty = 4
+question = "Une closure fait `compteur += 1` sur une variable `compteur` capturée de son environnement. Quel trait de closure implémente-t-elle AU MINIMUM ?"
+choices = ["`Fn`, car elle ne fait que lire l'environnement", "`FnOnce`, car elle ne peut être appelée qu'une fois", "`FnMut`, car elle modifie son environnement capturé", "Aucun : seules les fonctions nommées implémentent ces traits"]
+answer = 2
+explanation = '''Les trois traits forment une hiérarchie selon ce que la closure fait de ses captures : `Fn` (emprunte, lisible à volonté), `FnMut` (emprunte mutablement, peut modifier), `FnOnce` (consomme une capture, appelable une seule fois). Modifier `compteur` exige `FnMut` — et une fonction qui attend un `Fn` refusera cette closure, car `Fn` promet de ne rien muter. Règle générale : le compilateur déduit le trait le plus permissif compatible avec le corps. Piège : `FnOnce` ne veut pas dire « appelée une fois », il veut dire « PEUT ÊTRE appelée une seule fois » car elle vide une capture.'''
+related = ["closures", "traits", "emprunts-mutables"]

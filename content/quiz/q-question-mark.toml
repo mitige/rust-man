@@ -1,0 +1,8 @@
+id = "q-question-mark"
+category = "erreurs"
+difficulty = 2
+question = "Dans une fonction qui renvoie `Result<i32, io::Error>`, que fait l'expression `let n = lire_nombre()?;` si `lire_nombre()` renvoie `Err(e)` ?"
+choices = ["Le programme panique, comme `unwrap()`", "La fonction courante s'arrête et renvoie `Err(e)` (converti si besoin) à l'appelant", "`n` reçoit la valeur par défaut de `i32` et l'exécution continue", "L'erreur est affichée sur stderr puis ignorée"]
+answer = 1
+explanation = '''L'opérateur `?` sur un `Result` déballe la valeur en cas de `Ok`, et en cas de `Err` fait un `return Err(e)` depuis la fonction courante — avec conversion automatique du type d'erreur via `From` si les types diffèrent. Ce n'est PAS un panic : l'erreur est proprement propagée à l'appelant, qui décidera quoi en faire. Règle générale : `?` remplace les `match` verbeux « si Err, retourne l'erreur ». Piège : utiliser `?` dans `main` ou une fonction qui ne renvoie pas un type compatible — ça ne compile pas.'''
+related = ["operateur-question", "result", "erreurs-custom"]

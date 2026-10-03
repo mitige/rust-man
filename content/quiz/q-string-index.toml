@@ -1,0 +1,8 @@
+id = "q-string-index"
+category = "collections"
+difficulty = 3
+question = "Pourquoi `let c = s[0];` est-il refusé par le compilateur sur un `String` ?"
+choices = ["Parce que les indices de `String` commencent à 1 en Rust", "Parce qu'il faut d'abord appeler `.as_bytes()` pour obtenir le droit d'indexer", "Parce qu'un `String` est UTF-8 : un octet ne correspond pas forcément à un caractère, donc indexer serait ambigu", "C'est accepté en fait : `s[0]` renvoie le premier caractère"]
+answer = 2
+explanation = '''Un `String` stocke du UTF-8 : « é » occupe 2 octets, un emoji 4. `s[0]` voudrait dire quoi — le premier OCTET ou le premier CARACTÈRE ? Plutôt que de choisir une sémantique piégeuse (et à coût O(n) pour les caractères), Rust interdit l'indexation directe. Règle générale : `s.chars().next()` pour le premier caractère, `s.as_bytes()[0]` si tu veux vraiment l'octet, `&s[0..1]` pour une tranche aux frontières de caractères. Piège : `&s[0..1]` panique si tu coupes au milieu d'un caractère multi-octets.'''
+related = ["string-vs-str", "chaines-bases", "string-manipulation"]

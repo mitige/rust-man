@@ -1,0 +1,15 @@
+id = "q-cargo-role"
+category = "demarrer"
+difficulty = 1
+question = "À quoi sert principalement `cargo` quand tu développes en Rust ?"
+choices = [
+    "C’est le compilateur : il traduit directement les fichiers .rs en binaire",
+    "C’est un éditeur de code fourni avec Rust, avec coloration syntaxique",
+    "C’est l’outil de gestion de projet : il compile (via rustc), télécharge les dépendances, lance les tests et exécute le programme",
+    "C’est l’installateur qui télécharge et met à jour le langage Rust lui-même",
+]
+answer = 2
+explanation = '''
+Cargo est l’outil de build et le gestionnaire de paquets de Rust : `cargo build`, `cargo run`, `cargo test`, `cargo add`… Il ne compile pas lui-même : il pilote `rustc` avec les bonnes options et la bonne liste de dépendances. Le piège classique est de confondre cargo avec `rustup` : rustup installe et met à jour les toolchains (rustc, cargo, la std), cargo gère TON projet. Retiens : rustup installe les outils, cargo pilote le projet, rustc traduit le code.
+'''
+related = ["cargo-bases", "premier-programme"]

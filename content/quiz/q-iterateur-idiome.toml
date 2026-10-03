@@ -1,0 +1,15 @@
+id = "q-iterateur-idiome"
+category = "pratique"
+difficulty = 2
+question = "Tu veux sommer les éléments d’un `Vec<i32>`. Quelle version est idiomatique en Rust ?"
+choices = [
+    "`let mut s = 0; for i in 0..v.len() { s += v[i]; }` — l’index rend le parcours explicite",
+    "`let s: i32 = v.iter().sum();` — l’itérateur exprime l’intention, sans index à gérer",
+    "Convertir le `Vec` en tableau de taille fixe d’abord, puis boucler avec un index",
+    "`let mut s = 0; let mut i = 0; while i < v.len() { s += v[i]; i += 1; }` — `while` évite les surprises",
+]
+answer = 1
+explanation = '''
+Les itérateurs sont l’idiome central de Rust : `iter`, `map`, `filter`, `sum`, `collect` expriment l’intention directement et se compilent en un code aussi rapide que la boucle à index — c’est l’abstraction à coût zéro. La version `for i in 0..v.len()` avec `v[i]` paie une vérification de bornes à chaque accès et expose le classique décalage d’un (off-by-one) dès que la logique se complique. Règle générale : boucle simple → `for x in &v`, transformation ou agrégation → chaîne d’itérateurs, index → seulement quand la position compte vraiment. Piège : vouloir modifier `v` pendant qu’un itérateur l’emprunte — le compilateur refuse, et c’est exactement le bug que la boucle à index aurait laissé passer.
+'''
+related = ["iterateurs", "vec", "idiomes-rust"]

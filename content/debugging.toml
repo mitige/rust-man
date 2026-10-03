@@ -1,0 +1,96 @@
+id = "debugging"
+title = "debugging — dbg!, backtraces et méthode"
+category = "outils"
+tags = ["debug", "dbg", "backtrace", "panic", "println"]
+difficulty = 2
+semaine = "S04"
+synopsis = "dbg! affiche fichier:ligne et REND la valeur ; RUST_BACKTRACE=1 déroule la pile d'un panic."
+description = '''
+## En une phrase
+
+Déboguer en Rust, c'est d'abord **afficher intelligemment** : `dbg!` inspecte une expression sans la consommer, `{:?}` affiche n'importe quelle structure, et `RUST_BACKTRACE=1` transforme un panic en carte du crime.
+
+## En pratique
+
+1. `dbg!(expr)` affiche sur stderr `[src/main.rs:12:5] expr = valeur` — fichier, ligne, expression ET valeur — puis **rend la valeur** : tu l'insères au milieu d'une chaîne d'appels sans rien casser.
+
+```rust
+let total = dbg!(prix.iter().sum::<f64>()) * 1.2;
+```
+
+2. `println!("{x:?}")` : le format `Debug`, disponible sur presque tout (dérive `#[derive(Debug)]` sur tes structs). `{x:#?}` = version multi-lignes indentée, idéale pour les grosses structures.
+
+3. Un panic affiche son message ; ajoute `RUST_BACKTRACE=1` (ou `full`) pour la pile complète :
+
+```
+$ RUST_BACKTRACE=1 cargo run
+thread 'main' panicked at src/main.rs:12:5:
+index out of bounds: the len is 3 but the index is 5
+stack backtrace:
+   0: rust_begin_unwind
+   1: core::panicking::panic_bounds_check
+   2: mon_projet::main        <- TA frame : commence à lire ICI
+```
+
+Lis la trace en cherchant TES frames (le nom de ton crate), pas la mécanique de la std.
+
+4. La méthode avant l'outil :
+
+- **Reproduire minimal** : isole le plus petit input qui plante.
+- **Diviser** : coupe le programme en deux (commentaire, test, `dbg!`) — le bug est dans la moitié fautive ; itère.
+- **Afficher** : `dbg!` aux frontières (entrées et sorties de chaque fonction suspecte).
+
+Et en Rust, relis d'abord l'erreur du compilateur : la majorité de tes « bugs » sont déjà expliqués par rustc (fiche lire-erreur-rustc).
+
+5. Les vrais debuggers (mention) : `rust-gdb` et `rust-lldb` sont des wrappers installés par rustup qui apprennent les types Rust à gdb et lldb. Sur un binaire debug : `rust-gdb target/debug/mon_projet`. Utile quand l'affichage ne suffit plus — plus rare que tu ne crois.
+
+6. Les petits plus : `std::panic::catch_unwind` pour rattraper un panic (utile en test), `debug_assert!` pour une vérif active seulement en debug, `eprintln!` pour ne pas polluer stdout.
+
+## À retenir
+
+- `dbg!(expr)` = fichier:ligne + valeur affichée, valeur RENDUE : inspecte sans couper la chaîne.
+- `{:?}` pour une ligne, `{:#?}` pour une structure lisible ; dérive `Debug` sur tes types.
+- `RUST_BACKTRACE=1 cargo run` → la pile complète ; lis d'abord TES frames.
+- Méthode : reproduire minimal → diviser en deux → afficher aux frontières.
+- `rust-gdb` / `rust-lldb` existent pour aller plus loin ; rustc est ton premier debugger.
+'''
+example = '''
+use std::panic;
+
+fn calculer_total(prix: &[f64]) -> f64 {
+    let somme: f64 = prix.iter().sum();
+    // dbg! affiche [fichier:ligne] somme * 1.20 = <valeur> ... et REND la valeur.
+    dbg!(somme * 1.20)
+}
+
+fn main() {
+    let panier = vec![9.99, 24.50, 3.20];
+    dbg!(&panier); // inspecte par référence : le panier reste utilisable
+    println!("panier : {:?}", panier); // {:?} = format Debug
+    println!("panier joli : {:#?}", panier); // {:#?} = multi-lignes
+
+    let total = calculer_total(&panier);
+    println!("total TTC : {total:.2}");
+
+    // Un panic affiche sa pile complète avec RUST_BACKTRACE=1 dans l'environnement.
+    // Ici on le rattrape juste pour que l'exemple continue.
+    let rattrape = panic::catch_unwind(|| {
+        panic!("exemple de panic pour lire la stack trace");
+    });
+    println!("panic rattrapé : {}", rattrape.is_err());
+}
+'''
+gotchas = [
+    "Chercher tes `println!` dans un test qui passe : cargo capture la sortie — `-- --nocapture` pour les voir.",
+    "Oublier de dériver `Debug` sur tes structs : `{:?}` refusera de compiler dessus.",
+    "Lire la backtrace depuis le haut (les frames de la std) : l'information utile est dans TES frames, au milieu.",
+    "Laisser traîner des `dbg!` dans un rendu : ça écrit sur stderr, et ça se voit.",
+    "Croire qu'un bug qui disparaît quand tu ajoutes un `println!` est résolu : tu as déplacé le problème, cherche la cause.",
+    "Déboguer en `--release` : l'inlining rend les backtraces bien moins lisibles — reste en build debug.",
+]
+exercises = [
+    "Prends un programme qui calcule faux, insère trois `dbg!` aux frontières des fonctions, localise la ligne fautive sans tout relire, puis retire-les.",
+    "Provoque un index out of bounds, lance avec `RUST_BACKTRACE=1`, et retrouve TA ligne dans la trace.",
+    "Écris un test qui reproduit un panic (`#[should_panic]`), corrige le code, et remplace le test par un `assert!` vert.",
+]
+related = ["tests", "panic", "lire-erreur-rustc", "methodologie-debug"]
