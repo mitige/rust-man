@@ -74,15 +74,16 @@ fn run_exo_test(id: &str) -> (String, Vec<String>, bool) {
     // Rust : écrit le harnais (#[path] -> solution), compile avec rustc, exécute
     let testc = dir.join("_test.rs");
     std::fs::write(&testc, exo::harness_complet(e)).unwrap_or_default();
+    let bin_name = format!("_t{}", std::env::consts::EXE_SUFFIX);
     let comp = std::process::Command::new("rustc")
         .args(["--edition", "2021", "-o"])
-        .arg("_t")
+        .arg(&bin_name)
         .arg("_test.rs")
         .current_dir(&dir)
         .output();
     match comp {
         Ok(o) if o.status.success() => {
-            let r = std::process::Command::new("./_t").current_dir(&dir).output().unwrap();
+            let r = std::process::Command::new(dir.join(&bin_name)).current_dir(&dir).output().unwrap();
             let txt = String::from_utf8_lossy(&r.stdout);
             let ok = r.status.success();
             out.extend(txt.lines().map(|l| l.to_string()));

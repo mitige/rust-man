@@ -826,7 +826,7 @@ mod tests {
             std::fs::write(&test, harness_complet(exo)).unwrap();
             let out = std::process::Command::new("rustc")
                 .args(["--edition", "2021", "-o"])
-                .arg(dir.join("_t"))
+                .arg(dir.join(format!("_t{}", std::env::consts::EXE_SUFFIX)))
                 .arg(&test)
                 .current_dir(&dir)
                 .output()

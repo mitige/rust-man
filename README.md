@@ -21,6 +21,32 @@ Ou sans root (binaire dans `~/.local/bin`, déjà dans le PATH de la plupart des
 cargo install --path . --root ~/.local
 ```
 
+## Sous Windows
+
+Le dossier `windows/` contient les binaires précompilés (`rust-man.exe`,
+`rust-nano.exe`) : copie-les dans un dossier de ton PATH (ex.
+`%USERPROFILE%\bin`) ou lance-les directement. Pour recompiler depuis la
+source : installe [rustup](https://rustup.rs) puis `cargo install --path . --root %USERPROFILE%\.cargo`.
+
+L'éditeur rust-nano et le TUI fonctionnent dans le Terminal Windows, PowerShell
+et cmd (UTF-8 recommandé : `chcp 65001`).
+
+## Configurer l'IA
+
+Les agents IA (ask, defend, review, plan…) parlent aux modèles via une clé API
+compatible OpenAI. Deux façons de la fournir :
+
+```sh
+# 1. variable d'environnement
+export OPP_API_KEY="ta-clé"          # Windows : setx OPP_API_KEY "ta-clé"
+
+# 2. ou dans ~/.dsh/.credentials.yaml :
+OPP_API_KEY: ta-clé
+```
+
+`rust-man doctor` vérifie que tout est branché. Sans clé, tout le reste marche
+(doc, style, quiz, exos) — seules les fonctions IA sont désactivées.
+
 ## rust-nano (éditeur)
 
 `rust-nano <fichier>` (ou `rust-man edit <fichier>`) — éditeur CLI minimaliste :

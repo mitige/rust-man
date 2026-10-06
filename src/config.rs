@@ -73,24 +73,25 @@ pub fn config_path() -> PathBuf {
     dirs_config().join("rust-man").join("config.toml")
 }
 
+/// HOME portable : HOME, sinon USERPROFILE (Windows).
+fn home_dir() -> PathBuf {
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
 pub fn data_dir() -> PathBuf {
     let base = std::env::var_os("XDG_DATA_HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| ".".into()))
-                .join(".local")
-                .join("share")
-        });
+        .unwrap_or_else(|| home_dir().join(".local").join("share"));
     base.join("rust-man")
 }
 
 fn dirs_config() -> PathBuf {
     std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| ".".into()))
-                .join(".config")
-        })
+        .unwrap_or_else(|| home_dir().join(".config"))
 }
 
 pub fn load() -> Config {

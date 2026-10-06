@@ -1013,7 +1013,8 @@ fn cmd_test(path: &str) -> ! {
     let res = compile::compile_target(dir);
     print_out(&compile_text(&res));
     if res.success {
-        let bin = Path::new("/tmp/rust-man-build.out");
+        let bin = compile::temp_bin();
+        let bin = bin.as_path();
         if bin.exists() {
             if let Ok(r) = std::process::Command::new(bin).output() {
                 print_out(&format!("── exécution ──\n{}", String::from_utf8_lossy(&r.stdout)));
@@ -1054,8 +1055,12 @@ fn cmd_doctor() -> ! {
     let check = |nom: &str, ok: bool, hint: &str| {
         format!("  {} {:<22} {}\n", if ok { "✓" } else { "✗" }, nom, if ok { "" } else { hint })
     };
-    let has = |cmd: &str| std::process::Command::new("which").arg(cmd)
-        .output().map(|o| o.status.success()).unwrap_or(false);
+    // `which` n'existe pas sous Windows : on tente `where`, sinon --version direct
+    let has = |cmd: &str| {
+        let probe = if cfg!(windows) { "where" } else { "which" };
+        std::process::Command::new(probe).arg(cmd)
+            .output().map(|o| o.status.success()).unwrap_or(false)
+    };
     // outils
     out.push_str(&check("rustc", has("rustc"), "→ installe rustup : rust-man installer-rust"));
     out.push_str(&check("cargo", has("cargo"), "→ fourni avec rustup"));
@@ -1415,15 +1420,16 @@ fn cmd_exo(id: Option<&str>, test: bool, indice: Option<usize>) -> ! {
         }
         let testrs = dir.join("_test.rs");
         std::fs::write(&testrs, exo::harness_complet(e)).unwrap();
+        let bin_name = format!("_t{}", std::env::consts::EXE_SUFFIX);
         let out = std::process::Command::new("rustc")
             .args(["--edition", "2021", "-o"])
-            .arg("_t")
+            .arg(&bin_name)
             .arg("_test.rs")
             .current_dir(&dir)
             .output();
         match out {
             Ok(o) if o.status.success() => {
-                let run = std::process::Command::new("./_t").current_dir(&dir).output().unwrap();
+                let run = std::process::Command::new(dir.join(&bin_name)).current_dir(&dir).output().unwrap();
                 let txt = String::from_utf8_lossy(&run.stdout);
                 print_out(&format!("── tests de {id} ──\n{txt}"));
                 if run.status.success() {
@@ -1842,7 +1848,7 @@ fn cmd_journal(texte: Option<&str>, relire: Option<u32>) -> ! {
 
 /// Le dossier de données rust-man.
 fn dirs_home() -> std::path::PathBuf {
-    std::path::PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| ".".into()))
+    std::path::PathBuf::from(std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| ".".into()))
         .join(".local/share/rust-man")
 }
 

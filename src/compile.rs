@@ -1,8 +1,13 @@
 //! Compilation intégrée : lance rustc/cargo, capture et explique les diagnostics,
 //! pointe vers la fiche rust-man pertinente.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+
+/// Binaire temporaire produit par compile_target (portable : temp_dir + .exe sous Windows).
+pub fn temp_bin() -> PathBuf {
+    std::env::temp_dir().join(format!("rust-man-build{}", std::env::consts::EXE_SUFFIX))
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DiagLevel {
@@ -182,7 +187,7 @@ pub fn compile_target(target: &Path) -> CompileResult {
                 "--edition".into(),
                 "2021".into(),
                 "-o".into(),
-                "/tmp/rust-man-build.out".into(),
+                temp_bin().to_string_lossy().into(),
                 main.to_string_lossy().into(),
             ],
             Some(target.to_path_buf()),
@@ -194,7 +199,7 @@ pub fn compile_target(target: &Path) -> CompileResult {
                 "--edition".into(),
                 "2021".into(),
                 "-o".into(),
-                "/tmp/rust-man-build.out".into(),
+                temp_bin().to_string_lossy().into(),
                 target.to_string_lossy().into(),
             ],
             None,
