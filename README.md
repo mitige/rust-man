@@ -23,7 +23,7 @@ cargo install --path . --root ~/.local
 
 ## Sous Windows
 
-Le dossier `windows/` contient les binaires précompilés (`rust-man.exe`,
+Le zip `rust-man-windows.zip` contient les binaires précompilés dans `windows/` (`rust-man.exe`,
 `rust-nano.exe`) : copie-les dans un dossier de ton PATH (ex.
 `%USERPROFILE%\bin`) ou lance-les directement. Pour recompiler depuis la
 source : installe [rustup](https://rustup.rs) puis `cargo install --path . --root %USERPROFILE%\.cargo`.
